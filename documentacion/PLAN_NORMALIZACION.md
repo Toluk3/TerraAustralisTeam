@@ -324,7 +324,7 @@ Pruebas automáticas:
 3. **Alcance geográfico:** la app muestra una sola zona, Río Negro y Neuquén. La relación VIIRS/MODIS cambia por región (≈3,5× Argentina, ≈4,0× Brasil, ≈5,3× Australia). Por otro lado, la zona tiene pocos focos, y muchos estratos región × mes × día/noche no van a llegar a `min_source_count`. Propuesta: procesar toda Argentina, ajustar `k` con el respaldo jerárquico de §5.3 (que en la zona va a caer seguido en r2 o en el nivel país) y validar el resultado sobre la zona. El `k` regional solo se puede validar con más de un país.
 3b. **Gas flares en Neuquén (Vaca Muerta):** es la zona de prueba de la máscara estática (paso 3). Los pozos que empezaron a quemar gas hace pocos meses vienen como NRT sin `type` y pueden no estar en la máscara: revisarlos antes de la demo.
 4. **Fechas de deriva:** `modis_stable_until` y `switch_date` salen de documentación de NASA; confirmarlas con el gráfico de `local_solar_hour`.
-5. **`Documentacion/` y `Datos/`** no están en el repo: los cortes de confianza y versiones se tomaron de `PLAN_MODULO_DATOS.md` sin contrastarlos con los PDF.
+5. **`referencias/` (PDFs técnicos) y `Datos/`** no están en el repo: los cortes de confianza y versiones se tomaron de `PLAN_MODULO_DATOS.md` sin contrastarlos con los PDF.
 6. **Actualizar `PLAN.md` y `PLAN_MODULO_DATOS.md`:** grilla H3, serie que pasa a VIIRS en `switch_date` (no "MODIS hasta su fin"), y decisiones abiertas #1, #2, #3, #6 y #8 resueltas acá.
 
 ## Referencias

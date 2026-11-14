@@ -2,7 +2,7 @@
 
 Estado: **borrador para revisar con el equipo.**
 Relacionado: `PLAN.md` (plan general del hackatón).
-Documentación de referencia en `Documentacion/`: *MODIS C6/C6.1 Active Fire Product User's Guide 1.0* (Giglio et al., 2021), *VIIRS C2 AF-375m User Guide 1.2* y *Active Fire Data Attributes for MODIS and VIIRS* (FIRMS).
+Documentación de referencia en `referencias/` (no se versiona): *MODIS C6/C6.1 Active Fire Product User's Guide 1.0* (Giglio et al., 2021), *VIIRS C2 AF-375m User Guide 1.2* y *Active Fire Data Attributes for MODIS and VIIRS* (FIRMS).
 
 ## Objetivo
 
@@ -27,7 +27,7 @@ Ojo con S-NPP: según FIRMS, Suomi NPP ya no entrega datos nuevos, así que es p
 
 ## Diccionario de campos
 
-Los dos sensores tienen 15 columnas con el mismo orden. Solo cambian los nombres de los dos canales de brillo y el formato de `confidence`. Fuentes: los tres documentos de `Documentacion/` y el readme incluido en los zips. Los zips están en `Datos/`.
+Los dos sensores tienen 15 columnas con el mismo orden. Solo cambian los nombres de los dos canales de brillo y el formato de `confidence`. Fuentes: los tres documentos de `referencias/` y el readme incluido en los zips. Los zips están en `Datos/`.
 
 | Columna MODIS | Columna VIIRS | Definición | Unidad / valores | Observado en nuestros datos |
 |---|---|---|---|---|

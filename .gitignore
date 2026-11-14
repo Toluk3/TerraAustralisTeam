@@ -1,7 +1,8 @@
 # Datos (no se versionan)
 Datos/
 data/
-Documentacion/
+# PDFs técnicos de referencia (guías MODIS y VIIRS, atributos de FIRMS)
+referencias/
 *.zip
 *.parquet
 *.duckdb
