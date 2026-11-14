@@ -72,8 +72,14 @@ CREATE TABLE IF NOT EXISTS data_years (
 CREATE TABLE IF NOT EXISTS calibration_meta (
     config_hash       VARCHAR,
     data_fingerprint  VARCHAR,
-    sources           VARCHAR,
+    sources           VARCHAR,     -- calibration_key de la calibración común (NULL si es propia)
     fitted_at         TIMESTAMPTZ
+);
+
+-- Configuración con la que se armaron las tablas de apoyo (calendar, coverage, series_source)
+CREATE TABLE IF NOT EXISTS support_meta (
+    config_hash  VARCHAR,
+    built_at     TIMESTAMPTZ
 );
 
 -- Inicio, fin y cortes de cada plataforma (§4.5)

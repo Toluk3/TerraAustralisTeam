@@ -36,7 +36,8 @@ def run(cfg: Config, con) -> dict:
 
     # Lo documentado (config.yaml) + lo que efectivamente hay en Datos/ (kind = datos): un solo bloque
     # por plataforma, del primer al último año publicado.
-    #  - Año publicado = hay un archivo de ese año para la plataforma (data_years, de cualquier país) o
+    #  - Año publicado = hay un archivo de ese año para la plataforma (data_years: un zip de todos los
+    #    países o un CSV de un país pedido) o
     #    hay focos. El archivo de FIRMS es anual y continuo: un año intermedio sin archivo para los
     #    países pedidos significa 0 focos, no falta de datos.
     #  - El bloque termina el 31/12 si el último año viene de un archivo anual completo; si viene de
@@ -95,6 +96,8 @@ def run(cfg: Config, con) -> dict:
         """)
 
     build_series_source(cfg, con)
+    con.execute("DELETE FROM support_meta")
+    con.execute("INSERT INTO support_meta VALUES (?, current_timestamp)", [cfg.config_hash])
     n = con.execute("SELECT count(*) FROM calendar").fetchone()[0]
     log.info("apoyo: calendario %s → %s (%d días)", start, end, n)
     return {"calendar_days": n, "calendar_end": str(end)}

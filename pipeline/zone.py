@@ -16,6 +16,7 @@ import logging
 from .calibrate import k_lookup_sql
 from .config import Config
 from .db import load_spatial, sql_str
+from .rollup import check_hash
 
 log = logging.getLogger(__name__)
 PERIODS = {"month": ("month", "month_start"), "8d": ("period_8d", "period_8d_start")}
@@ -41,6 +42,7 @@ def build_cells(cfg: Config, con) -> int:
 
 
 def run(cfg: Config, con) -> dict:
+    check_hash(cfg, con)
     n_cells = build_cells(cfg, con)
     con.execute(f"""
         CREATE OR REPLACE TEMP TABLE _zone_daily AS

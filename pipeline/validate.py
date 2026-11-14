@@ -2,6 +2,7 @@
 
 Para cada año del solape estable se ajusta k con los demás años y se predice el excluido:
 predicción = Σ fuente × k, observado = Σ referencia (MODIS), comparados en región r3 × mes.
+Siempre con los datos de la corrida, aunque k se ajuste con calibration_from: mide el método en cada lote.
 """
 from __future__ import annotations
 
@@ -9,7 +10,7 @@ import logging
 import statistics
 from collections import defaultdict
 
-from .calibrate import calibration_daily, eligible_months, fit_windows
+from .calibrate import eligible_months, fit_windows
 from .config import METRICS, Config
 from .db import sql_in
 from .qc import clear_step, write_qc
@@ -40,7 +41,7 @@ def load_overlap(cfg: Config, con, src: str, a, b) -> list[dict]:
         f"coalesce(sum(f.{m}) FILTER (f.platform = '{src}'), 0)::DOUBLE" for m in METRICS)
     rows = con.execute(f"""
         SELECT f.region_r3, {regs}year(f.local_date), month(f.local_date), f.is_day, {sums}
-        FROM {calibration_daily(cfg, con)} f
+        FROM fires_daily f
         JOIN _eligible e ON e.source_platform = '{src}' AND e.year = year(f.local_date)
              AND e.month = month(f.local_date)
         WHERE f.local_date BETWEEN DATE '{a}' AND DATE '{b}' AND f.platform IN ({ref}, '{src}')

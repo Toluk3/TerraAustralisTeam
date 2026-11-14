@@ -1,6 +1,6 @@
 # Lote L6_africa_angola_zambia (global, por continente): ver documentacion/PLAN_ANALISIS_LOTES.md §3.
-# Solo lo que cambia respecto de config.yaml (extends). Las rutas son relativas a esta carpeta.
-extends: ../config.yaml
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
 
 paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L6_africa_angola_zambia, publish_dir: ../data/lotes/L6_africa_angola_zambia/publish}
 countries: [Angola, Zambia]

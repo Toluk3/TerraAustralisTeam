@@ -13,7 +13,6 @@ Comenzar por [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md). Resum
 | [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md) | Método vigente de normalización, agregación, calibración y validación |
 | [`PLAN_ANALISIS_LOTES.md`](PLAN_ANALISIS_LOTES.md) | Diseño de la campaña por lotes y evidencia disponible |
 | [`ARQUITECTURA.md`](ARQUITECTURA.md) | Flujo implementado y alternativas de integración aún no comprometidas |
-| [`DECISIONES.md`](DECISIONES.md) | Registro de decisiones tomadas, con su motivo y cómo revertirlas, y decisiones abiertas |
 | [`AREAS.md`](AREAS.md) | Responsabilidades y coordinación de trabajo entre áreas |
 
 Estos documentos describen el sistema actual y las tareas que todavía están abiertas. Las propuestas técnicas previas solo se conservan cuando ayudan a explicar una decisión o una limitación.

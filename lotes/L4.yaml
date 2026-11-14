@@ -1,6 +1,6 @@
 # Lote L4: contrastes
-# Solo lo que cambia respecto de config.yaml (extends). Las rutas son relativas a esta carpeta.
-extends: ../config.yaml
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
 
 paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L4, publish_dir: ../data/lotes/L4/publish}
 countries: [Australia, United States, Canada, Qatar, Iceland]

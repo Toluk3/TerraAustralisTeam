@@ -4,7 +4,7 @@
 
 Este documento describe cómo se utilizan los datos de focos activos de NASA FIRMS en Terra Australis y cómo el pipeline los prepara para el análisis y la demostración del mapa. El pipeline procesa productos MODIS y VIIRS en un flujo común; las decisiones efectivamente implementadas se detallan en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md).
 
-La disponibilidad de un producto o de un archivo descargado no significa que las corridas lo incluyan. S-NPP está disponible en FIRMS pero no integra la serie ([`DECISIONES.md`](DECISIONES.md)).
+La disponibilidad de un producto o de un archivo descargado no significa que las corridas lo incluyan. S-NPP está disponible en FIRMS pero no integra la serie ([`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md), sección 7).
 
 ## 1. Fuentes y cobertura
 
@@ -14,7 +14,7 @@ Los productos de entrada provienen de NASA FIRMS. La configuración actual y los
 |---|---|---|---|
 | MODIS | Terra | Desde noviembre de 2000 | Parte inicial de la serie histórica |
 | MODIS | Aqua | Desde julio de 2002 | Complementa la referencia MODIS |
-| VIIRS | Suomi NPP (S-NPP) | Desde enero de 2012 | Fuera de la serie y de la descarga por defecto; ver `DECISIONES.md` |
+| VIIRS | Suomi NPP (S-NPP) | Desde enero de 2012 | Fuera de la serie y de la descarga por defecto; ver `PLAN_NORMALIZACION.md` §7 |
 | VIIRS | NOAA-20 | Desde abril de 2018 | Usado en las corridas por lote documentadas |
 | VIIRS | NOAA-21 | Desde enero de 2024 | Configurado como plataforma posible; su participación en la publicación debe confirmarse |
 

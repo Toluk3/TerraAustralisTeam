@@ -55,8 +55,10 @@ def discover(cfg: Config) -> list[Source]:
 def scan(cfg: Config) -> tuple[list[Source], dict[tuple[str, int], bool], list[str]]:
     """Fuentes a ingerir, inventario de años publicados y archivos ignorados por no tener país.
 
-    El inventario es {(plataforma, año): completo} y se arma con TODOS los archivos de input_dir, no solo
-    con los de los países pedidos: que exista modis_2020_<otro país>.csv prueba que 2020 está publicado.
+    El inventario es {(plataforma, año): completo}. Un zip <sensor>_<año>_all_countries.zip trae todos
+    los países con focos, así que prueba que el año está publicado aunque los países pedidos no figuren
+    (no tuvieron focos). Un CSV suelto solo prueba el año para su país: si se bajó 2024 nada más que para
+    Argentina, eso no dice nada de 2024 en otro lote.
     `completo` es False para las descargas NRT (cubren solo unos días del año).
     """
     root = cfg.input_dir
@@ -67,30 +69,32 @@ def scan(cfg: Config) -> tuple[list[Source], dict[tuple[str, int], bool], list[s
     years: dict[tuple[str, int], bool] = {}
     unnamed: list[str] = []
 
-    def country_of(name: str) -> str:
+    def keep(country: str) -> bool:
+        return not countries or country.lower() in countries
+
+    def country_of(name: str, from_zip: bool) -> str:
         m = NAME_RE.match(Path(name).name)
         if m:
-            complete = "nrt" not in m.group("prefix").lower()
-            for plat in platforms_of(m.group("prefix")):
-                key = (plat, int(m.group("year")))
-                years[key] = years.get(key, False) or complete
-            return m.group("country").replace("_", " ")
+            country = m.group("country").replace("_", " ")
+            if from_zip or keep(country):
+                complete = "nrt" not in m.group("prefix").lower()
+                for plat in platforms_of(m.group("prefix")):
+                    key = (plat, int(m.group("year")))
+                    years[key] = years.get(key, False) or complete
+            return country
         if not cfg.get("default_country"):
             unnamed.append(name)
         return cfg.get("default_country") or "unknown"
-
-    def keep(country: str) -> bool:
-        return not countries or country.lower() in countries
 
     for z in sorted(root.rglob("*.zip")):
         with zipfile.ZipFile(z) as zf:
             members = sorted(n for n in zf.namelist() if n.lower().endswith(".csv"))
         for m in members:
-            c = country_of(m)
+            c = country_of(m, True)
             if keep(c):
                 out.append(Source(f"{z.name}!{m}", c, _extract(z, m)))
     for f in sorted(root.rglob("*.csv")):
-        c = country_of(f.name)
+        c = country_of(f.name, False)
         if keep(c):
             out.append(Source(f.relative_to(root).as_posix(), c, lambda tmp, f=f: f))
     return out, years, unnamed

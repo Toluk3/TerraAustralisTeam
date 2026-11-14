@@ -2,6 +2,8 @@
 
   python lotes/correr_lote.py L2                 # pasos por defecto del lote + consolidar
   python lotes/correr_lote.py L1 --solo-consolidar
+  python lotes/correr_lote.py L2 --fase 1        # hasta aggregate; --fase 2 = de calibrate en adelante
+  bash lotes/correr_todos.sh                     # todos los lotes, en el orden que pide la calibración común
 
 Cada lote tiene su propia base (data/lotes/<L>/prehack.duckdb). Al terminar, sus tablas de resultados
 se copian a data/lotes/lotes.duckdb con una columna `lote` (reemplazando lo que hubiera de ese lote),
@@ -27,6 +29,9 @@ from pipeline.config import load_config  # noqa: E402
 from pipeline.db import connect, sql_str  # noqa: E402
 
 CORE = ["ingest", "normalize", "support", "aggregate", "calibrate", "rollup", "validate", "qc"]
+# Fase 1: hasta los agregados diarios. Fase 2: de la calibración en adelante. Los lotes con calibración
+# común (lotes/_comun.yaml) necesitan la fase 1 de todos antes de la fase 2 de cualquiera.
+FASE_1 = ["ingest", "normalize", "support", "aggregate"]
 # L1 y L5 tienen la zona de la demo; L1 además publica, para compararla con la corrida principal.
 DEFAULT_STEPS = {"L1": CORE + ["zone", "export"]}
 CONSOLIDATED = ROOT / "data" / "lotes" / "lotes.duckdb"
@@ -139,12 +144,21 @@ def main(argv=None) -> int:
     ap.add_argument("lote", help="L1, L2, L3, L4, L5_<conf>_<meses>")
     ap.add_argument("--pasos", nargs="+", help="pasos del pipeline (por defecto, los del lote)")
     ap.add_argument("--solo-consolidar", action="store_true")
+    ap.add_argument("--fase", type=int, choices=(1, 2),
+                    help="1 = hasta aggregate (no consolida); 2 = de calibrate en adelante")
     args = ap.parse_args(argv)
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)-7s %(name)s: %(message)s",
                         datefmt="%H:%M:%S")
     cfg = load_config(ROOT / "lotes" / f"{args.lote}.yaml")
     steps = args.pasos or DEFAULT_STEPS.get(args.lote) or (CORE + ["zone"] if args.lote.startswith("L5") else CORE)
+    if args.fase == 1:
+        steps = [s for s in steps if s in FASE_1]
+    elif args.fase == 2:
+        steps = [s for s in steps if s not in FASE_1]
     times = {} if args.solo_consolidar else run_steps(cfg, steps)
+    if args.fase == 1:
+        logging.info("lote %s: fase 1 lista (falta la fase 2 para consolidar)", args.lote)
+        return 0
     res = consolidate(args.lote, cfg, times)
     logging.info("lote %s consolidado en %s: %s", args.lote, CONSOLIDATED, json.dumps(res, default=str))
     return 0

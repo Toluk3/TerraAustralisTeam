@@ -136,6 +136,22 @@ class Config:
         return [(self.base_dir / p).resolve() for p in (self.raw.get("calibration_from") or [])]
 
     @property
+    def calibration_key(self) -> str | None:
+        """Identifica una calibración común: mismos parámetros (sin `countries`) y mismas bases.
+
+        Dos lotes con la misma clave llegan al mismo k, así que el segundo puede copiarlo del primero.
+        """
+        if not self.calibration_from:
+            return None
+        # Sin el calendario: cada lote puede cortar su serie en otra fecha. Que la ventana de ajuste sea
+        # la misma se verifica al copiar (calibrate.reuse_common).
+        skip = ("countries", "calibration_from", "calendar_start", "calendar_end")
+        sub = {k: self.raw.get(k) for k in HASHED_KEYS if k not in skip}
+        sub["bases"] = sorted(str(p).lower() for p in self.calibration_from)
+        blob = json.dumps(sub, sort_keys=True, default=str, ensure_ascii=False)
+        return hashlib.sha256(blob.encode()).hexdigest()[:12]
+
+    @property
     def min_conf_rank(self) -> int:
         return CONF_ORDER.index(self.raw["min_conf_class"])
 

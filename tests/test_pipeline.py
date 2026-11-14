@@ -253,6 +253,7 @@ def _hasta_support(tmp_path, preparar):
     from pipeline.db import connect
     from .conftest import synthetic
 
+    tmp_path.mkdir(parents=True, exist_ok=True)
     synthetic(tmp_path / "Datos")
     preparar(tmp_path / "Datos")
     cfg = make_config(tmp_path)
@@ -289,12 +290,23 @@ def test_sensor_que_termina_antes_no_tiene_cobertura_despues(tmp_path):
     con.close()
 
 
-def test_archivo_de_otro_pais_prueba_que_el_anio_esta_publicado(tmp_path):
-    """El inventario mira todos los archivos de la carpeta, no solo los de los países pedidos."""
-    def preparar(d):
+def test_zip_de_todos_los_paises_prueba_que_el_anio_esta_publicado(tmp_path):
+    """Un zip all_countries sin el país pedido significa 0 focos; un CSV suelto de otro país no prueba nada."""
+    import zipfile
+
+    def suelto(d):
         f = d / "modis/2022/modis_2022_Argentina.csv"
         f.rename(f.with_name("modis_2022_Chile.csv"))
-    cfg, con = _hasta_support(tmp_path, preparar)
+    cfg, con = _hasta_support(tmp_path / "suelto", suelto)
+    assert _cov(con, "terra", 2022) == (0.0, 0.0)
+    con.close()
+
+    def en_zip(d):
+        f = d / "modis/2022/modis_2022_Argentina.csv"
+        with zipfile.ZipFile(d / "modis_2022_all_countries.zip", "w") as zf:
+            zf.write(f, "modis/2022/modis_2022_Chile.csv")
+        f.unlink()
+    cfg, con = _hasta_support(tmp_path / "zip", en_zip)
     assert _cov(con, "terra", 2022) == (1.0, 1.0)
     assert con.execute("SELECT count(*) FROM fires_norm WHERE sensor = 'MODIS' AND year = 2022").fetchone()[0] == 0
     con.close()
@@ -366,4 +378,17 @@ def test_calibracion_comun_a_varios_lotes(tmp_path):
     assert comun.config_hash != cfg_b.config_hash
     calibrate.run(comun, con_b)
     assert con_b.execute(q).fetchone()[0] == pytest.approx(solo_a + solo_b)
+    k_b = con_b.execute("SELECT k FROM calibration WHERE level = 'global' ORDER BY ALL").fetchall()
     con_b.close()
+
+    # El otro lote, con la misma lista, no vuelve a ajustar: copia el k común y queda con su config_hash
+    comun_a = make_config(tmp_path / "a", calibration_from=["data", "../b/data"])
+    assert comun_a.calibration_key == comun.calibration_key
+    con_a = connect(comun_a)
+    support.run(comun_a, con_a)         # cambió la configuración: las tablas de apoyo se rehacen
+    res = calibrate.run(comun_a, con_a)
+    assert "copiada_de" in res
+    assert con_a.execute("SELECT k FROM calibration WHERE level = 'global' ORDER BY ALL").fetchall() == k_b
+    assert {r[0] for r in con_a.execute("SELECT DISTINCT config_hash FROM calibration").fetchall()} == {comun_a.config_hash}
+    rollup.run(comun_a, con_a)          # el k copiado sirve para los rollups del lote
+    con_a.close()

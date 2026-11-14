@@ -13,6 +13,8 @@ def run(cfg: Config, con) -> dict:
     require_view(con, "fires_norm")
     r3, r2 = cfg["h3"]["region_res"], cfg["h3"]["fallback_res"]
     con.execute("DELETE FROM fires_daily")
+    # Con agregados nuevos, el k ajustado antes ya no corresponde: que ningún lote lo copie de acá.
+    con.execute("DELETE FROM calibration_meta")
     con.execute(f"""
         INSERT INTO fires_daily
         SELECT h3_r7 AS cell,

@@ -45,7 +45,7 @@ El directorio `lotes/resumen/` contiene subdirectorios para L1–L4 y las ocho v
 
 Las corridas por lote no usan Suomi NPP: la comparación de solape se hace con NOAA-20 (abril de 2018 a diciembre de 2021).
 
-Desde la rama `fixes-juana`, `config.yaml` tampoco lo incluye, así que la configuración principal y los lotes coinciden. El motivo y cómo revertirlo están en [`DECISIONES.md`](DECISIONES.md).
+`config.yaml` tampoco lo incluye, así que la configuración principal y los lotes coinciden. El motivo está en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md), sección 7.
 
 ## 5. Ejecución y resultados versionados
 
@@ -75,13 +75,19 @@ Las bases locales y los datos originales no se versionan. Si no existen en la m�
 
 ### Calibración común a todos los lotes
 
-Por defecto cada lote ajusta `k` solo con sus países, de modo que el nivel `global` es "global del lote" y una región H3 que cruza dos lotes recibe dos `k` distintos. Para evitarlo:
+Los lotes L1–L4 y L6 extienden `lotes/_comun.yaml`, que lista sus carpetas de datos en `calibration_from`. Al ajustar `k` se suman los agregados diarios de todos, de modo que una región H3 que cruza dos lotes y el nivel `global` tienen el mismo `k` en todos. Las variantes L5 y la muestra S1 repiten países y calibran solas.
 
-1. Correr todos los lotes hasta `aggregate`: `python lotes/correr_lote.py <L> --pasos ingest normalize support aggregate`.
-2. Declarar en cada YAML (o en uno común del que extiendan) `calibration_from` con las carpetas de datos de todos los lotes que no repiten países (L1–L4 y L6; no las variantes L5).
-3. Correr el resto: `python lotes/correr_lote.py <L> --pasos calibrate rollup validate qc`.
+Eso obliga a correr en dos fases, y `lotes/correr_todos.sh` lo hace en orden:
 
-Queda como decisión del equipo activarlo: triplica el tiempo de `calibrate` y obliga a tener todas las bases en la misma máquina.
+1. **Fase 1** de todos (`--fase 1`: `ingest` → `aggregate`).
+2. **Fase 2** de todos (`--fase 2`: `calibrate` en adelante). El primer lote ajusta `k` con los datos de todos; los demás lo copian si la configuración y la ventana de ajuste coinciden.
+3. Las ocho variantes L5.
+
+```bash
+bash lotes/correr_todos.sh
+```
+
+La validación (ablación) sigue siendo por lote, con los datos de cada uno. Todas las bases tienen que estar en la misma máquina.
 
 ## 6. Pendientes para cerrar el análisis
 
@@ -89,7 +95,6 @@ Queda como decisión del equipo activarlo: triplica el tiempo de `calibrate` y o
 - Determinar si L4 y las variantes de sensibilidad L5 son necesarias para sostener las conclusiones de la entrega.
 - Implementar scripts reproducibles de análisis en `analisis/scripts/` y guardar resultados interpretados en `analisis/resultados/`.
 - Entregar al pipeline cualquier cambio recomendado de métrica, fechas de transición, parámetros o celdas que deban enmascararse, con la evidencia correspondiente.
-- Decidir si se activa la calibración común (`calibration_from`) antes de la corrida final; ver [`DECISIONES.md`](DECISIONES.md).
 - Publicar o ejecutar de nuevo los análisis sobre la configuración final si la selección de métrica o plataforma cambia.
 
 Los valores de duración y tamaño que aparecían en estimaciones previas son dependientes del equipo y de los datos disponibles; no se consideran criterios de cierre.

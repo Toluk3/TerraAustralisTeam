@@ -22,6 +22,12 @@ def check_hash(cfg: Config, con, table: str = "calibration") -> None:
             f"{table} tiene config_hash {sorted(hashes)} y la configuración actual es {cfg.config_hash}. "
             f"Cambió algún filtro o parámetro: volver a correr `python -m pipeline calibrate rollup`.")
     if table == "calibration":
+        sup = {r[0] for r in con.execute("SELECT config_hash FROM support_meta").fetchall()}
+        if sup and sup != {cfg.config_hash}:
+            raise ConfigHashMismatch(
+                f"Las tablas de apoyo (cobertura, composición de la serie) se armaron con config_hash "
+                f"{sorted(sup)} y la configuración actual es {cfg.config_hash}: "
+                f"volver a correr `python -m pipeline support calibrate rollup`.")
         fitted = {r[0] for r in con.execute("SELECT DISTINCT data_fingerprint FROM calibration_meta").fetchall()}
         now = data_fingerprint(con)
         if fitted and now is not None and fitted != {now}:

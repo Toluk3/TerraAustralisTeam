@@ -40,8 +40,8 @@ reference: terra_aqua         # terra_aqua | aqua
 modis_stable_until: 2021-12-31
 switch_date: 2022-01-01
 terra_fit_to: 2019-12-31      # k Terra → referencia: se ajusta entre el inicio de Aqua y esta fecha
-# S-NPP queda fuera de la serie (documentacion/DECISIONES.md): no hay archivos suyos y los lotes ya
-# se corrieron sin él. Para volver a usarlo: agregarlo acá y en platform_periods, y bajar viirs-snpp.
+# S-NPP queda fuera de la serie (PLAN_NORMALIZACION.md §7): no hay archivos suyos y los lotes se
+# corren sin él. Para volver a usarlo: agregarlo acá y en platform_periods, y bajar viirs-snpp.
 viirs_priority: [noaa20, noaa21]
 # NOAA-21 no tiene solape estable con MODIS: usa el k de NOAA-20.
 k_fallback_platform: {noaa21: noaa20}
@@ -52,7 +52,8 @@ min_source_count: 500         # Σ fuente mínima del estrato para usar ese nive
 calibration_levels: [r3, r2, r1, global]
 # Bases de otros lotes (carpeta de datos o prehack.duckdb, relativas a este archivo) cuyos fires_daily se
 # suman al ajustar k. Con la misma lista en todos los lotes, el k de las regiones de frontera y el nivel
-# global son los mismos en todos. Vacío = cada corrida calibra solo con sus datos.
+# global son los mismos en todos. Vacío = cada corrida calibra solo con sus datos (corrida principal,
+# L5 y S1). Los lotes L1–L4 y L6 la declaran en lotes/_comun.yaml.
 calibration_from: []
 bootstrap_reps: 200
 bootstrap_seed: 42

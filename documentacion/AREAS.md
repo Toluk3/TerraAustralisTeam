@@ -44,7 +44,7 @@ El flujo activo para la demostración no requiere un backend: el pipeline produc
 | Decisión | Participación necesaria |
 |---|---|
 | Métrica de la serie que se publicará (`n_fires`, `n_clusters` o `n_clusters_r7`) | Datos y análisis |
-| Plataformas que integran la corrida final (S-NPP quedó fuera; ver `DECISIONES.md`) | Datos y análisis |
+| Plataformas que integran la corrida final (S-NPP quedó fuera; ver `PLAN_NORMALIZACION.md` §7) | Datos y análisis |
 | Identificación de la publicación y versión de los JSON estáticos | Datos y frontend |
 | Hosting estático y verificación de la URL pública | Frontend y producto |
 | Necesidad futura de API o backend | Producto, frontend y datos; debe aprobarse antes de ampliar el alcance |

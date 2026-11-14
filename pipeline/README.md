@@ -26,11 +26,13 @@ Se puede usar `--config` para apuntar a una configuración específica, por ejem
 - **`extends`:** un YAML puede partir de otro y declarar solo lo que cambia (así están los de `lotes/`). Las rutas siempre son relativas al archivo que se pasa en `--config`.
 - **`TERRA_INPUT_DIR`:** variable de entorno que reemplaza `paths.input_dir`, para no tocar los YAML en cada máquina.
 - **`calibration_levels`:** `r<resolución H3>` de más fina a más gruesa y `global` al final.
-- **`calibration_from`:** bases de otros lotes que se suman al ajustar `k`. Con la misma lista en todos los lotes, el `k` de las regiones de frontera y el nivel global coinciden. Requiere dos pasadas: todos los lotes hasta `aggregate`, y después `calibrate` en adelante.
+- **`calibration_from`:** bases de otros lotes que se suman al ajustar `k`. Con la misma lista en todos los lotes, el `k` de las regiones de frontera y el nivel global coinciden. Los lotes L1–L4 y L6 la declaran en `lotes/_comun.yaml` y se corren con `bash lotes/correr_todos.sh` (fase 1 de todos, después fase 2): el primero ajusta `k` y el resto lo copia.
 - **`baseline_years`:** período base de la mediana y la anomalía.
 - **Extensión `h3` de DuckDB:** es obligatoria y se instala sola la primera vez (hace falta red). `PIPELINE_H3_PYTHON=1` habilita un respaldo lento con h3 de Python, sin el paso `zone`, solo para pruebas chicas.
 
 Las vistas `fires_raw`, `fires_norm` y `fires_excluded` son temporales: existen en las conexiones abiertas con `pipeline.db.connect`, no dentro del `.duckdb`.
+
+Si cambia la configuración hay que volver a correr desde `support`: `rollup` y `zone` se niegan a usar tablas de apoyo o un `k` armados con otra configuración u otros datos.
 
 ## Productos
 
@@ -47,7 +49,7 @@ Las etapas del pipeline y las pruebas automáticas están implementadas. Los dat
 Antes de una publicación final hay que identificar la configuración exacta y verificar:
 
 - La métrica elegida para la serie, con la evidencia de validación.
-- Las plataformas activas: Terra, Aqua, NOAA-20 y NOAA-21. S-NPP quedó fuera ([`DECISIONES.md`](../documentacion/DECISIONES.md)).
+- Las plataformas activas: Terra, Aqua, NOAA-20 y NOAA-21. S-NPP quedó fuera ([`PLAN_NORMALIZACION.md`](../documentacion/PLAN_NORMALIZACION.md), sección 7).
 - Los datos y el intervalo temporal efectivamente incluidos.
 - El `config_hash` de los productos generados.
 

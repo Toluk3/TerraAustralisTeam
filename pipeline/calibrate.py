@@ -16,6 +16,8 @@ import datetime as dt
 import logging
 import random
 
+import duckdb
+
 from .config import METRICS, Config
 from .db import sql_in, sql_str
 from .qc import data_fingerprint
@@ -26,32 +28,77 @@ VIIRS_PLATFORMS = ("snpp", "noaa20", "noaa21")
 DAILY_COLS = "cell, region_r3, region_r2, local_date, sensor, platform, is_day, n_fires, n_clusters, n_clusters_r7"
 
 
+def attach_others(cfg: Config, con) -> list[str]:
+    """Adjunta en solo lectura las bases de calibration_from (menos la propia) y devuelve sus alias."""
+    aliases = []
+    attached = {r[0] for r in con.execute("SELECT database_name FROM duckdb_databases()").fetchall()}
+    for i, p in enumerate(cfg.calibration_from):
+        db = p / "prehack.duckdb" if p.is_dir() or p.suffix == "" else p
+        if db.resolve() == cfg.db_path.resolve():
+            continue
+        if not db.exists():
+            raise FileNotFoundError(
+                f"calibration_from: no existe {db}. Correr antes ese lote hasta `aggregate` "
+                f"(python lotes/correr_lote.py <lote> --fase 1).")
+        alias = f"calib_{i}"
+        if alias not in attached:
+            con.execute(f"ATTACH '{sql_str(db)}' AS {alias} (READ_ONLY)")
+        aliases.append(alias)
+    return aliases
+
+
 def calibration_daily(cfg: Config, con) -> str:
     """Tabla o vista con los agregados diarios que entran al ajuste de k.
 
     Sin `calibration_from` es fires_daily. Con `calibration_from`, la unión de fires_daily con los de
     las otras bases (la propia se saltea si figura en la lista, así todos los lotes comparten la lista).
     """
-    others = []
-    for p in cfg.calibration_from:
-        db = p / "prehack.duckdb" if p.is_dir() else p
-        if db.resolve() == cfg.db_path.resolve():
-            continue
-        if not db.exists():
-            raise FileNotFoundError(f"calibration_from: no existe {db}. Correr antes ese lote hasta `aggregate`.")
-        others.append(db)
-    if not others:
+    aliases = attach_others(cfg, con)
+    if not aliases:
         return "fires_daily"
-    attached = {r[0] for r in con.execute("SELECT database_name FROM duckdb_databases()").fetchall()}
-    parts = [f"SELECT {DAILY_COLS} FROM fires_daily"]
-    for i, db in enumerate(others):
-        alias = f"calib_{i}"
-        if alias not in attached:
-            con.execute(f"ATTACH '{sql_str(db)}' AS {alias} (READ_ONLY)")
-        parts.append(f"SELECT {DAILY_COLS} FROM {alias}.fires_daily")
+    parts = [f"SELECT {DAILY_COLS} FROM fires_daily"] + [f"SELECT {DAILY_COLS} FROM {a}.fires_daily" for a in aliases]
     con.execute("CREATE OR REPLACE TEMP VIEW _calib_daily AS " + " UNION ALL ".join(parts))
-    log.info("calibración común: fires_daily + %d bases de calibration_from", len(others))
+    log.info("calibración común: fires_daily + %d bases de calibration_from", len(aliases))
     return "_calib_daily"
+
+
+def reuse_common(cfg: Config, con, windows: dict) -> str | None:
+    """Copia la calibración común de otra base que ya la ajustó con la misma clave (calibration_key).
+
+    La calibración común es idéntica para todos los lotes que comparten la lista: se calcula una vez y
+    el resto la copia. De cada nivel solo se copian las regiones que el lote usa, más el nivel global.
+    """
+    key = cfg.calibration_key
+    if not key:
+        return None
+    for alias in attach_others(cfg, con):
+        try:
+            ok = con.execute(f"""SELECT (SELECT count(*) FROM {alias}.calibration_meta WHERE sources = ?) > 0
+                                    AND (SELECT count(*) FROM {alias}.calibration) > 0""", [key]).fetchone()[0]
+        except duckdb.Error:      # base anterior a calibration_meta
+            ok = False
+        if not ok:
+            continue
+        theirs = {r[0]: (r[1], r[2]) for r in con.execute(
+            f"SELECT DISTINCT source_platform, fit_from, fit_to FROM {alias}.calibration").fetchall()}
+        if theirs != windows:     # otro calendario u otros datos: la ventana de ajuste no coincide
+            continue
+        mine = " OR ".join(
+            f"(c.level = '{lv}' AND c.region IN (SELECT DISTINCT {cfg.level_region_sql(lv)} FROM fires_daily f))"
+            for lv in cfg["calibration_levels"] if lv != "global") or "false"
+        h = cfg.config_hash
+        for table in ("calibration", "calibration_boot"):
+            con.execute(f"""INSERT INTO {table} BY NAME
+                            SELECT * REPLACE ('{h}' AS config_hash) FROM {alias}.{table} c
+                            WHERE c.level = 'global' OR {mine}""")
+        con.execute("DELETE FROM k_by_year")
+        con.execute(f"INSERT INTO k_by_year BY NAME SELECT * FROM {alias}.k_by_year")
+        con.execute("INSERT INTO calibration_meta VALUES (?, ?, ?, current_timestamp)",
+                    [h, data_fingerprint(con), key])
+        db = con.execute("SELECT path FROM duckdb_databases() WHERE database_name = ?", [alias]).fetchone()[0]
+        log.info("calibración común %s: copiada de %s", key, db)
+        return db
+    return None
 
 
 def fit_windows(cfg: Config, con) -> dict[str, tuple[dt.date, dt.date]]:
@@ -136,6 +183,9 @@ def run(cfg: Config, con) -> dict:
     if not windows:
         log.warning("calibración: no hay solape entre fuente y referencia; no se ajusta k")
         return {"rows": 0}
+    src_db = reuse_common(cfg, con, windows)
+    if src_db:
+        return {"rows": con.execute("SELECT count(*) FROM calibration").fetchone()[0], "copiada_de": src_db}
     for p in cfg["viirs_priority"]:
         if p not in windows and p not in (cfg.get("k_fallback_platform") or {}):
             log.warning("calibración: %s está en viirs_priority pero no tiene datos en el solape con MODIS; "
@@ -164,7 +214,7 @@ def run(cfg: Config, con) -> dict:
     for src, (a, b) in windows.items():
         con.execute("UPDATE calibration SET fit_from = ?, fit_to = ? WHERE source_platform = ?", [a, b, src])
     con.execute("INSERT INTO calibration_meta VALUES (?, ?, ?, current_timestamp)",
-                [h, data_fingerprint(con), ", ".join(str(p) for p in cfg.calibration_from)])
+                [h, data_fingerprint(con), cfg.calibration_key])
     bootstrap(cfg, con, windows)
     k_by_year(cfg, con)
     for row in con.execute("""

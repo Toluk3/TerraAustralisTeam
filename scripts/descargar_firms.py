@@ -44,7 +44,7 @@ SENSORES = {
 }
 # Fuentes NRT de la API
 NRT_SOURCES = ["MODIS_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
-# S-NPP no integra la serie (documentacion/DECISIONES.md): se puede bajar pidiéndolo, pero no por defecto.
+# S-NPP no integra la serie (PLAN_NORMALIZACION.md §7): se puede bajar pidiéndolo, pero no por defecto.
 SENSORES_DEFAULT = [s for s in SENSORES if s != "viirs-snpp"]
 # Código ISO 3166-1 alfa-3 que pide la API por país. Antes se usaba una caja (API de área), que
 # traía también focos de Chile, Uruguay, Paraguay y Brasil etiquetados como Argentina.
