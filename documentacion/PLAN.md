@@ -20,7 +20,7 @@ El desafío que da origen al proyecto plantea dos componentes:
 El alcance comprobable en el repositorio es:
 
 - Un pipeline de datos Python con DuckDB y H3 que ingiere, normaliza, agrega, calibra, valida y exporta productos para la zona.
-- Una demostración frontend con Vite, MapLibre y deck.gl que muestra las celdas H3, los focos y una barra de navegación temporal.
+- Una aplicación frontend con Vite, MapLibre y deck.gl que ofrece exploración de celdas H3 y focos, detalle científico, navegación temporal y comparación de mapas mensuales con una cortina deslizable.
 - Un flujo de datos estáticos: el pipeline publica productos y `frontend/map/scripts/build_mocks.py` genera JSON que consume el frontend.
 - Un adaptador para una fuente API opcional, sin backend implementado en este repositorio.
 

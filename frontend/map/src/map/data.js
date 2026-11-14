@@ -7,8 +7,10 @@
  *   getCalendar()              → columnar { year[], month[], n_equiv[], p05[], p95[], status[], median[], anomaly_pct[], ... }
  *   getTimeline8d()            → columnar { year[], period_8d[], period_start[], n_equiv[], ... }
  *   getCells(res, month)       → columnar { length, cell[], n_equiv[], anomaly_pct[] }
+ *   getCellSeries(res, tile)   → columnar { length, cell[], month[], n_equiv[] }
  *   getPointIndex(month)       → { tile_res, tiles: { <h3 r2>: cantidad } }
- *   getPoints(month, tile)     → columnar { length, lat[], lon[], t[], d[], frp[], day[], platform[], conf[] }
+ *   getPoints(month, tile)     → columnar { length, lat[], lon[], t[], d[], frp[], t_mir[], t_tir[],
+ *                                            scan[], track[], day[], platform[], conf[] }
  *
  * `createStaticSource` lee los JSON de public/mock-api (scripts/build_mocks.py).
  * `createApiSource` habla con el backend (formato propuesto en README.md).
@@ -51,7 +53,11 @@ function cached(fn) {
 }
 
 const EMPTY_CELLS = { length: 0, cell: [], n_equiv: [], anomaly_pct: [] };
-const EMPTY_POINTS = { length: 0, lat: [], lon: [], t: [], d: [], frp: [], day: [], platform: [], conf: [] };
+const EMPTY_CELL_SERIES = { length: 0, cell: [], month: [], n_equiv: [] };
+const EMPTY_POINTS = {
+  length: 0, lat: [], lon: [], t: [], d: [], frp: [], t_mir: [], t_tir: [],
+  scan: [], track: [], day: [], platform: [], conf: [],
+};
 const EMPTY_INDEX = { tiles: {} };
 
 export function createStaticSource(baseUrl = '/mock-api') {
@@ -61,6 +67,7 @@ export function createStaticSource(baseUrl = '/mock-api') {
     getCalendar: cached(() => getJson(`${base}/calendar.json`)),
     getTimeline8d: cached(() => getJson(`${base}/timeline_8d.json`)),
     getCells: cached((res, month) => getJsonOr(`${base}/map/res=${res}/${month}.json`, EMPTY_CELLS)),
+    getCellSeries: cached((res, tile) => getJsonOr(`${base}/series/res=${res}/${tile}.json`, EMPTY_CELL_SERIES)),
     getPointIndex: cached((month) => getJsonOr(`${base}/points/${month}/index.json`, EMPTY_INDEX)),
     getPoints: cached((month, tile) => getJsonOr(`${base}/points/${month}/${tile}.json`, EMPTY_POINTS)),
   };
@@ -73,6 +80,7 @@ export function createApiSource(baseUrl = '/api') {
     getCalendar: cached(() => getJson(`${base}/calendar`)),
     getTimeline8d: cached(() => getJson(`${base}/timeline?step=8d`)),
     getCells: cached((res, month) => getJsonOr(`${base}/map?res=${res}&month=${month}`, EMPTY_CELLS)),
+    getCellSeries: cached((res, tile) => getJsonOr(`${base}/map/series?res=${res}&tile=${tile}`, EMPTY_CELL_SERIES)),
     getPointIndex: cached((month) => getJsonOr(`${base}/points/index?month=${month}`, EMPTY_INDEX)),
     getPoints: cached((month, tile) => getJsonOr(`${base}/points?month=${month}&tile=${tile}`, EMPTY_POINTS)),
   };

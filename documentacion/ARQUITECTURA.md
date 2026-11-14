@@ -2,7 +2,7 @@
 
 ## Resumen
 
-La arquitectura implementada de Terra Australis se organiza alrededor de un pipeline de datos offline y una demostración web estática. El pipeline procesa los productos FIRMS y genera productos Parquet; un generador transforma esos productos a JSON que el frontend consume. El mapa está implementado con Vite, MapLibre, deck.gl y H3.
+La arquitectura implementada de Terra Australis se organiza alrededor de un pipeline de datos offline y una aplicación web estática. El pipeline procesa los productos FIRMS y genera productos Parquet; un generador transforma esos productos a JSON que el frontend consume. La aplicación está implementada con Vite, MapLibre, deck.gl y H3, con modos de exploración y comparación temporal.
 
 La arquitectura Django, API, Google Cloud Run y Google Maps descrita en versiones anteriores fue una propuesta de despliegue. No corresponde al flujo presente en el código y no debe presentarse como implementada ni como requisito aprobado para el cierre inmediato.
 
@@ -40,7 +40,7 @@ El resultado de publicación se genera en `data/publish/`. La configuración pri
 
 ### 2.3 Frontend del mapa
 
-El frontend de demostración utiliza Vite, MapLibre GL, deck.gl y `h3-js`. Muestra el contorno de la zona, celdas H3 con valores armonizados, focos detectados y controles de navegación temporal. Los mapas base disponibles dependen de servicios de teselas externos, por lo que requieren conectividad.
+El frontend utiliza Vite, MapLibre GL, deck.gl y `h3-js`. Muestra el contorno de la zona, celdas H3 con valores armonizados, focos detectados y navegación temporal. Incluye detalle por celda/detección y un comparador de mapas sincronizados con cortina: celdas mensuales y detecciones filtradas por hasta ocho días. Los mapas base disponibles dependen de servicios de teselas externos, por lo que requieren conectividad.
 
 La interfaz muestra una serie armonizada y distingue los focos de la métrica agregada: los puntos son detecciones satelitales; no equivalen a los valores calibrados de la serie.
 

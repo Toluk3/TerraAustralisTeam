@@ -7,6 +7,7 @@ Imitan lo que va a devolver la API (propuesta en frontend/map/README.md). Todo e
   calendar.json                     serie mensual de la zona (barra de tiempo, panel)
   timeline_8d.json                  serie de 8 días de la zona
   map/res=<r>/<YYYY-MM>.json        valor armonizado por celda H3 en ese mes
+  series/res=<r>/<tesela>.json      historial mensual por celda H3 de una tesela r2
   points/<YYYY-MM>/index.json       teselas H3 r2 con focos ese mes y cuántos tiene cada una
   points/<YYYY-MM>/<r2>.json        focos de esa tesela y mes (mes de la fecha local solar)
 
@@ -118,6 +119,20 @@ def main() -> None:
             })
         print(f"  map r{res}: escala hasta {domain[res]:.1f}")
 
+        history = con.execute(f"""
+            SELECT lower(hex(h3_cell_to_parent(cell, {TILE_RES}))) AS tile, lower(hex(cell)) AS cell,
+                   year * 100 + month AS ym, round(n_equiv, 3) AS n_equiv
+            FROM read_parquet('{src}', hive_partitioning = false)
+            ORDER BY tile, cell, ym""").fetchnumpy()
+        for s, e in split_runs(history["tile"]):
+            tile = str(history["tile"][s])
+            write(out / "series" / f"res={res}" / f"{tile}.json", {
+                "res": res, "tile": tile, "length": e - s,
+                "cell": history["cell"][s:e].tolist(),
+                "month": [f"{ym // 100}-{ym % 100:02d}" for ym in history["ym"][s:e]],
+                "n_equiv": history["n_equiv"][s:e].tolist(),
+            })
+
     # --- points/: teselas r2 por mes de la fecha local ---
     pts = f"read_parquet('{q(pub / 'points')}/**/*.parquet', hive_partitioning = true)"
     years = [r[0] for r in con.execute(f"SELECT DISTINCT year(local_date) FROM {pts} ORDER BY 1").fetchall()]
@@ -128,7 +143,10 @@ def main() -> None:
                    round(latitude, 4) AS lat, round(longitude, 4) AS lon,
                    CAST(epoch(datetime_utc) AS BIGINT) AS t,
                    CAST(local_date - DATE '1970-01-01' AS INTEGER) AS d,
-                   round(frp_mw, 1) AS frp, CAST(is_day AS INTEGER) AS day, platform, conf_class AS conf
+                   round(frp_mw, 1) AS frp, round(t_mir_k, 1) AS t_mir,
+                   round(t_tir_k, 1) AS t_tir, round(scan_km, 3) AS scan,
+                   round(track_km, 3) AS track, CAST(is_day AS INTEGER) AS day,
+                   platform, conf_class AS conf
             FROM {pts} WHERE year(local_date) = {year}
             ORDER BY m, tile, datetime_utc""").fetchnumpy()
         for ms, me in split_runs(a["m"]):
@@ -140,7 +158,10 @@ def main() -> None:
                 index[tile] = e - s
                 write(out / "points" / key / f"{tile}.json", {
                     "month": key, "tile": tile, "length": e - s,
-                    **{c: a[c][s:e].tolist() for c in ("lat", "lon", "t", "d", "frp", "day", "platform", "conf")},
+                    **{c: a[c][s:e].tolist() for c in (
+                        "lat", "lon", "t", "d", "frp", "t_mir", "t_tir", "scan", "track",
+                        "day", "platform", "conf",
+                    )},
                 })
                 n_files += 1
             write(out / "points" / key / "index.json", {"month": key, "tile_res": TILE_RES, "tiles": index})

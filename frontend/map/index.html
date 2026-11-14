@@ -3,41 +3,154 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Mapa de focos · demo del módulo</title>
-  <style>
-    html, body { margin: 0; height: 100%; background: #0e1117; color: #e8eaed;
-      font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-    body { display: flex; flex-direction: column; }
-    header { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 8px 16px;
-      background: #161b22; border-bottom: 1px solid #2a313c; }
-    header h1 { font-size: 15px; margin: 0 8px 0 0; }
-    label { display: inline-flex; gap: 6px; align-items: center; }
-    input, select { font: inherit; color: inherit; background: #0e1117; border: 1px solid #39414d;
-      border-radius: 5px; padding: 3px 6px; }
-    #map { flex: 1; min-height: 0; }
-    #timebar { border-top: 1px solid #2a313c; }
-    #info { position: fixed; right: 12px; bottom: 130px; width: 260px; max-width: calc(100% - 24px);
-      background: rgba(18,22,30,.9); border-radius: 8px; padding: 10px 12px; font-size: 12px; white-space: pre-wrap;
-      margin: 0; }
-    #info:empty { display: none; }
-  </style>
+  <meta name="theme-color" content="#f5f3ed">
+  <meta name="description" content="Explora observaciones satelitales de focos de calor y una serie armonizada para la Patagonia.">
+  <title>Terra Australis · Observatorio de fuego</title>
 </head>
 <body>
-  <header>
-    <h1 id="title">Mapa de focos</h1>
-    <label>Mapa <select id="basemap"></select></label>
-    <label>Color <select id="metric">
-      <option value="value">Focos equivalentes</option>
-      <option value="anomaly">Anomalía (un mes)</option>
-    </select></label>
-    <label>Opacidad <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.75"></label>
-    <label><input id="l-cells" type="checkbox" checked> Celdas</label>
-    <label><input id="l-points" type="checkbox" checked> Focos</label>
-    <label><input id="l-mask" type="checkbox" checked> Máscara</label>
-  </header>
-  <div id="map"></div>
-  <div id="timebar"></div>
-  <pre id="info"></pre>
+  <div class="app">
+    <header class="topbar">
+      <button class="brand" id="home-button" type="button" aria-label="Ir al inicio">
+        <span class="brand__mark" aria-hidden="true">TA</span>
+        <span><strong>Terra Australis</strong><small>Observatorio de fuego</small></span>
+      </button>
+      <nav class="topbar__nav" id="mode-nav" aria-label="Modos de exploración" hidden>
+        <button type="button" data-screen="explore" aria-pressed="false">Mapa</button>
+        <button type="button" data-screen="compare" aria-pressed="false">Comparar</button>
+      </nav>
+      <span class="topbar__tag"><i></i> Ciencia satelital · Patagonia</span>
+    </header>
+
+    <main>
+      <section class="home-screen" id="home-screen">
+        <div class="hero">
+          <div class="hero__copy">
+            <p class="eyebrow"><span></span> RÍO NEGRO · NEUQUÉN</p>
+            <h1>El fuego, visto<br>en <em>perspectiva.</em></h1>
+            <p class="hero__lead">Explorá detecciones satelitales y una serie temporal armonizada para entender cómo cambia la actividad de fuego en el territorio.</p>
+            <p class="hero__note">Una detección no confirma por sí sola un incendio. La cobertura, el sensor y las estimaciones importan.</p>
+          </div>
+          <div class="hero__orb" aria-hidden="true">
+            <div class="orb orb--outer"></div><div class="orb orb--middle"></div><div class="orb orb--inner"></div>
+            <span class="orb__dot orb__dot--one"></span><span class="orb__dot orb__dot--two"></span>
+            <span class="orb__caption">SATÉLITE<br><b>×</b> TERRITORIO</span>
+          </div>
+        </div>
+
+        <div class="mode-heading">
+          <div><p class="eyebrow">DOS FORMAS DE MIRAR</p><h2>¿Qué querés investigar?</h2></div>
+          <p>Un mismo conjunto de datos.<br>Dos maneras de leer el cambio.</p>
+        </div>
+        <div class="mode-grid">
+          <button class="mode-card mode-card--explore" type="button" data-screen="explore">
+            <span class="mode-card__number">01 / EXPLORAR</span>
+            <span class="mode-card__icon" aria-hidden="true">↗</span>
+            <strong>Recorré el territorio</strong>
+            <span>Acercate a las celdas H3, seguí la línea temporal y consultá cada observación satelital.</span>
+            <span class="mode-card__link">Abrir mapa <b>→</b></span>
+          </button>
+          <button class="mode-card mode-card--compare" type="button" data-screen="compare">
+            <span class="mode-card__number">02 / COMPARAR</span>
+            <span class="mode-card__icon" aria-hidden="true">◫</span>
+            <strong>Deslizá entre períodos</strong>
+            <span>Elegí dos momentos y revelá el mapa de antes y después con un solo movimiento.</span>
+            <span class="mode-card__link">Abrir comparador <b>→</b></span>
+          </button>
+        </div>
+        <footer class="home-footer">
+          <span>MODIS + VIIRS <i>·</i> NASA FIRMS</span>
+          <span>Serie armonizada <i>·</i> Celdas H3</span>
+          <span>Observaciones ≠ confirmación de incendio</span>
+        </footer>
+      </section>
+
+      <section class="screen explore-screen" id="explore-screen" hidden>
+        <aside class="control-panel">
+          <button class="back-link" type="button" id="explore-back">← <span>Inicio</span></button>
+          <p class="eyebrow">01 / EXPLORACIÓN</p>
+          <h1>Actividad en<br><em>el territorio</em></h1>
+          <p class="panel-intro">Explorá la distribución espacial y temporal de las observaciones.</p>
+          <div class="panel-rule"></div>
+          <label class="field-label" for="basemap">Mapa base</label>
+          <select class="select-control" id="basemap"></select>
+          <label class="field-label" for="metric">Color de las celdas</label>
+          <select class="select-control" id="metric">
+            <option value="value">Focos equivalentes</option>
+            <option value="anomaly">Anomalía mensual</option>
+          </select>
+          <div class="range-label"><label class="field-label" for="opacity">Opacidad</label><span id="opacity-value">75 %</span></div>
+          <input class="range-control" id="opacity" type="range" min="0" max="1" step="0.05" value="0.75">
+          <p class="field-label field-label--spaced">Capas visibles</p>
+          <label class="check-row"><input id="l-cells" type="checkbox" checked><span class="check-box"></span><span>Celdas armonizadas</span><i class="swatch swatch--cells"></i></label>
+          <label class="check-row"><input id="l-points" type="checkbox" checked><span class="check-box"></span><span>Detecciones FIRMS</span><i class="swatch swatch--points"></i></label>
+          <label class="check-row"><input id="l-mask" type="checkbox" checked><span class="check-box"></span><span>Máscara del área</span><i class="swatch swatch--mask"></i></label>
+          <div class="science-note">
+            <span class="science-note__mark">i</span>
+            <p><strong>Dos señales distintas.</strong> El color representa la serie armonizada. Los puntos son detecciones observadas; no se suman para calcular esa serie.</p>
+          </div>
+        </aside>
+        <div class="map-column">
+          <div class="map-stage">
+            <div id="explore-map" class="map-host"></div>
+            <div class="stage-label"><span class="stage-label__dot"></span><span id="zone-title">Zona de estudio</span></div>
+            <button type="button" class="map-action" id="fit-zone" aria-label="Encuadrar zona de estudio" title="Encuadrar zona">⌖</button>
+          </div>
+          <div class="time-panel">
+            <div class="time-panel__heading"><div><p class="eyebrow">LÍNEA TEMPORAL</p><h2>Recorrido histórico</h2></div><p>Arrastrá el cursor para cambiar el período</p></div>
+            <div id="timebar"></div>
+          </div>
+          <div class="app-status" id="explore-status" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="screen compare-screen" id="compare-screen" hidden>
+        <div class="compare-heading">
+          <button class="back-link" type="button" id="compare-back">← <span>Inicio</span></button>
+          <div><p class="eyebrow">02 / COMPARACIÓN TEMPORAL</p><h1>Dos momentos.<br><em>Un territorio.</em></h1></div>
+          <p class="compare-heading__note">Arrastrá la cortina para revelar el cambio. Las celdas muestran valores mensuales; los focos, una ventana de hasta ocho días.</p>
+        </div>
+        <div class="compare-controls">
+          <div class="compare-date">
+            <label for="compare-month-a"><span class="compare-date__key">A</span><span><b>Período inicial</b><small>Serie armonizada · mes</small></span></label>
+            <select id="compare-month-a" class="select-control"></select>
+            <label class="date-label" for="compare-day-a">Ventana de detecciones</label>
+            <input id="compare-day-a" type="date" class="select-control">
+          </div>
+          <div class="compare-controls__divider" aria-hidden="true">⇄</div>
+          <div class="compare-date">
+            <label for="compare-month-b"><span class="compare-date__key compare-date__key--b">B</span><span><b>Período final</b><small>Serie armonizada · mes</small></span></label>
+            <select id="compare-month-b" class="select-control"></select>
+            <label class="date-label" for="compare-day-b">Ventana de detecciones</label>
+            <input id="compare-day-b" type="date" class="select-control">
+          </div>
+        </div>
+        <div class="compare-stage" id="compare-stage">
+          <div class="compare-map compare-map--before" id="compare-map-a"></div>
+          <div class="compare-map-clip" id="compare-map-clip">
+            <div class="compare-map compare-map--after" id="compare-map-b"></div>
+          </div>
+          <div class="compare-label compare-label--a"><span>A</span><b id="compare-label-a">Período inicial</b></div>
+          <div class="compare-label compare-label--b"><span>B</span><b id="compare-label-b">Período final</b></div>
+          <button class="compare-divider" id="compare-divider" type="button" role="slider" tabindex="0"
+            aria-label="Deslizador de comparación" aria-valuemin="10" aria-valuemax="90" aria-valuenow="50">
+            <span class="compare-divider__grip" aria-hidden="true">↔</span>
+          </button>
+          <button class="map-action compare-fit" type="button" id="compare-fit" aria-label="Encuadrar zona de estudio" title="Encuadrar zona">⌖</button>
+        </div>
+        <p class="compare-caption"><span><i class="swatch swatch--cells"></i> Celdas H3: valor armonizado por mes</span><span><i class="swatch swatch--points"></i> Detecciones FIRMS: ventana de hasta 8 días, sin equivaler a área quemada</span></p>
+        <p class="compare-summary" id="compare-summary" role="status" aria-live="polite"></p>
+        <div class="app-status" id="compare-status" role="status" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <dialog class="detail-dialog" id="detail-dialog" aria-labelledby="detail-title">
+      <div class="detail-dialog__top">
+        <span class="eyebrow">LECTURA CIENTÍFICA</span>
+        <button class="detail-close" id="detail-close" type="button" aria-label="Cerrar detalle">×</button>
+      </div>
+      <div id="detail-content"></div>
+    </dialog>
+  </div>
   <script type="module" src="/src/demo.js"></script>
 </body>
 </html>

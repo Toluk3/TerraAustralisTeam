@@ -4,7 +4,7 @@
 
 Terra Australis desarrolla una herramienta para explorar la actividad de fuego detectada por satélite en el norte de la Patagonia argentina, con foco en Río Negro y Neuquén. El proyecto combina observaciones históricas de MODIS con observaciones de mayor detalle espacial de VIIRS y las transforma en una serie temporal armonizada, apta para comparar períodos sin confundir diferencias entre sensores con cambios reales en la actividad observada.
 
-La solución que existe en el repositorio tiene dos componentes principales: un pipeline de datos en Python, DuckDB y H3, y una demostración web de mapa y navegación temporal construida con Vite, MapLibre y deck.gl. El frontend consume productos JSON estáticos generados a partir de la publicación del pipeline. No se encontró una implementación de Django/API ni evidencia verificable de que la aplicación esté desplegada públicamente.
+La solución que existe en el repositorio tiene dos componentes principales: un pipeline de datos en Python, DuckDB y H3, y una aplicación web construida con Vite, MapLibre y deck.gl. El frontend consume productos JSON estáticos generados a partir de la publicación del pipeline y ofrece modos de exploración y comparación temporal. No se encontró una implementación de Django/API ni evidencia verificable de que la aplicación esté desplegada públicamente.
 
 La prioridad inmediata es cerrar y publicar esa demostración estática con un conjunto de datos identificado y reproducible. Una API o un backend son posibles evoluciones, no compromisos del cierre actual.
 
@@ -18,7 +18,7 @@ El proyecto procesa los datos de NASA FIRMS para construir una serie comparable,
 
 El área principal de la demostración es el norte de la Patagonia, representado por las provincias de Río Negro y Neuquén. La interfaz implementada permite explorar focos y valores armonizados en el mapa mediante una barra temporal, con vistas mensuales y ventanas de ocho días.
 
-El alcance visible en el código es una demostración del mapa y su navegación temporal, no la aplicación completa de la propuesta inicial. No debe suponerse que ya están disponibles todas las vistas originalmente sugeridas, como un tablero independiente de calendario anual, indicadores generales, exportaciones de calendario o una aplicación de producción.
+El alcance visible en el código es la exploración del mapa, el detalle de observaciones/celdas y la comparación de mapas mensuales con un deslizador; no es la aplicación completa de la propuesta inicial. La comparación usa ventanas de hasta ocho días para los focos observados, pero la capa armonizada del mapa sigue siendo mensual. No debe suponerse que ya están disponibles todas las vistas originalmente sugeridas, como un tablero independiente de calendario anual, indicadores generales, exportaciones de calendario o una aplicación de producción.
 
 ## 3. Datos y método de armonización
 
@@ -42,7 +42,7 @@ La calibración compara métricas entre sensores durante períodos de solape y g
 
 ### 4.3 Mapa y navegación temporal
 
-La demostración del frontend está implementada como una aplicación Vite que usa MapLibre GL, deck.gl y H3. Representa las celdas armonizadas, los focos de FIRMS y la zona de estudio; permite navegar por meses o días con una ventana de ocho días. El generador `frontend/map/scripts/build_mocks.py` convierte los productos publicados por el pipeline en JSON estáticos que el frontend puede servir localmente.
+El frontend está implementado como una aplicación Vite que usa MapLibre GL, deck.gl y H3. Ofrece exploración de celdas armonizadas y focos FIRMS, detalle científico de las observaciones y comparación tipo cortina entre dos mapas sincronizados. La comparación conserva valores armonizados mensuales y filtra los focos por ventanas de hasta ocho días. El generador `frontend/map/scripts/build_mocks.py` convierte los productos publicados por el pipeline en JSON estáticos que el frontend puede servir localmente.
 
 El código también incluye un adaptador de fuente API, pero el flujo disponible por defecto utiliza archivos estáticos. La presencia del adaptador no implica que haya una API desplegada.
 

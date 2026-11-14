@@ -2,9 +2,9 @@
 
 ## Resumen
 
-La implementación del frontend es una demostración web centrada en un mapa y una barra de navegación temporal. Se encuentra en [`map/`](map/), y usa Vite, MapLibre GL, deck.gl y H3. El estado general y las limitaciones del producto se describen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md).
+La aplicación ofrece dos modos sobre los productos estáticos del pipeline: explorar el mapa y comparar dos períodos con una cortina deslizable. Se encuentra en [`map/`](map/), y usa Vite, MapLibre GL, deck.gl y H3. El estado general y las limitaciones del producto se describen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md).
 
-La interfaz muestra focos detectados y valores armonizados en celdas espaciales. Los focos son observaciones satelitales; no son equivalentes a los valores calibrados de la serie.
+La interfaz muestra focos detectados y valores armonizados en celdas espaciales. Al seleccionar una celda se puede consultar su serie mensual; al seleccionar un foco, se muestran atributos disponibles como FRP, temperatura de brillo, plataforma, confianza y huella nominal del píxel. FRP es una potencia radiativa observada, no energía total ni área quemada. Los focos son observaciones satelitales; no equivalen a los valores calibrados de la serie.
 
 ## Flujo de datos
 
@@ -29,7 +29,8 @@ El generador necesita los productos de `data/publish/` y las dependencias Python
 
 ## Alcance y límites
 
-- Implementado: mapa de la zona, celdas H3, capa de focos, selección de mapas base y navegación mensual o por ventanas de ocho días.
+- Implementado: selección entre modo de exploración y comparador; mapa de la zona, celdas H3, capa de focos, selección de mapas base, navegación mensual o por ventanas de ocho días, y cortina para comparar mapas mensuales.
+- En el comparador, las celdas H3 muestran el valor armonizado mensual; los focos se filtran en ventanas de hasta ocho días.
 - Los mapas base de OpenFreeMap/OSM y Esri dependen de servicios de teselas externos y requieren conectividad.
 - El repositorio no acredita una publicación pública del frontend.
 - La propuesta inicial incluía vistas y entregables adicionales —como un calendario independiente, panel completo de indicadores y descargas— que no deben darse por implementados sin verificación en el código.

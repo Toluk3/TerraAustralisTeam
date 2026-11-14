@@ -1,6 +1,6 @@
 # Mapa y barra de tiempo
 
-Dos módulos independientes que se conectan en una línea:
+La aplicación ofrece dos modos sobre los productos estáticos del pipeline: explorar el mapa y comparar dos períodos con una cortina deslizable. Usa Vite, MapLibre GL, deck.gl y H3, sin backend. Los módulos de mapa y barra temporal se conectan en una línea:
 
 ```js
 timebar.on('input', (periodo) => map.setPeriod(periodo));
@@ -10,6 +10,8 @@ timebar.on('input', (periodo) => map.setPeriod(periodo));
 - **Barra de tiempo** (`src/timebar/`): franja con el valor armonizado de la zona mes a mes y un cursor que se arrastra.
 
 **Regla de producto:** los números salen siempre de la serie armonizada. Los puntos muestran dónde y cuándo hubo fuego, pero no se cuentan: VIIRS detecta ~4 veces más puntos que MODIS.
+
+Al seleccionar una celda se puede consultar su serie mensual; al seleccionar un foco, se muestran FRP, temperatura de brillo, plataforma, confianza y huella nominal del píxel cuando estén disponibles. FRP es una potencia radiativa observada, no energía total ni área quemada. Los focos son observaciones satelitales; no equivalen a los valores calibrados de la serie.
 
 ## Mapa
 
@@ -27,6 +29,18 @@ timebar.on('input', (periodo) => map.setPeriod(periodo));
 - Las teselas se cargan de la más cercana al centro a la más lejana, hasta `pointBudget` (400.000 focos por defecto). Si no entran todas, el mapa lo avisa.
 - Si algún mes de la zona tiene más de 150.000 focos, `meta.points.min_zoom` vale 6 y los focos aparecen recién al acercar. Las celdas se ven siempre.
 - Así funciona igual con Río Negro y Neuquén que con seis países (ver *Prueba con 6 países*).
+
+### Comparar períodos
+
+- Se eligen dos meses de la serie publicada. La cortina superpone mapas con cámara sincronizada; se puede arrastrar su divisor o enfocarlo y usar las flechas del teclado.
+- Cada lado permite elegir una fecha dentro del mes. Los focos se filtran desde esa fecha hacia atrás hasta ocho días (menos al comienzo del mes); las celdas H3 siguen mostrando el valor armonizado mensual.
+- El mapa conserva sus avisos de cobertura, períodos estimados y ausencia de focos. La ausencia de una detección no demuestra que no haya habido fuego.
+
+### Detalle científico
+
+- El clic en una celda abre su serie de valores mensuales armonizados (últimos 24 meses disponibles hasta el período elegido); los meses sin fila publicada se muestran como huecos, nunca como ceros implícitos.
+- El clic en una detección muestra FRP (MW), temperatura de brillo media/térmica (K), sensor, plataforma, hora, confianza y dimensiones `scan × track` cuando esos valores existan. También grafica la FRP media observada por mes en la celda H3 (hasta 12 meses), sin armonizar sensores.
+- `scan × track` describe la huella nominal del píxel FIRMS, no superficie quemada. FRP no es energía acumulada y una detección no confirma por sí sola un incendio.
 
 ### Mapas base
 
@@ -64,7 +78,7 @@ python scripts/build_mocks.py      # con el venv del pipeline (necesita duckdb y
 npm run dev                        # http://localhost:5173
 ```
 
-- `index.html`: la demo, con el mapa, la barra de tiempo y controles de mapa base, color, opacidad y capas. Desde la consola se pueden usar `window.fireMap` y `window.timebar`. Con `?datos=mock-s1` usa otra carpeta de `public/` (otra salida de `build_mocks.py`).
+- `index.html`: la aplicación con selección de modo, mapa exploratorio, cortina de comparación y detalle científico. Desde la consola se pueden usar `window.fireMap`, `window.timebar` y `window.fireMapCompare`. Con `?datos=mock-s1` usa otra carpeta de `public/` (otra salida de `build_mocks.py`).
 - `capas-sin-mapa.html`: las mismas capas con deck.gl solo, sin mapa base. Muestra los datos "en plano" y no depende de las teselas de internet.
 
 ## Uso del mapa desde la app
@@ -87,7 +101,7 @@ map.setLayerVisible('points', false);   // 'cells' | 'points' | 'outline' | 'mas
 map.setBasemap('satelite');
 map.setFadeOldPoints(true);
 map.fitZone();
-map.getState();                  // { period, res, metric, estimated, cells, points: {tiles, loaded, zoomedOut, truncated} }
+map.getState();                  // { period, res, metric, estimated, cells, points: {tiles, loaded, periodVisible, zoomedOut, truncated} }
 
 map.on('click', (info) => …);    // { kind: 'cell', cell, res, total, monthlyMean, anomaly } o { kind: 'point', lat, lon, frp, sensor, … }
 map.on('hover' | 'change' | 'resolution' | 'error', …);
@@ -106,14 +120,18 @@ Todo en JSON **columnar** (un arreglo por columna más `length`): deck.gl lo lee
 | `GET /api/calendar` | `calendar.json` | `{ length, year[], month[], n_equiv[], p05[], p95[], coverage_frac[], status[], median[], anomaly_abs[], anomaly_pct[], pct_rank[] }`: una fila por mes, sin huecos (`zone/calendar.parquet`) |
 | `GET /api/timeline?step=8d` | `timeline_8d.json` | `{ length, year[], period_8d[], period_start[], n_equiv[], p05[], p95[], coverage_frac[], status[], median[], anomaly_pct[] }` (`zone/timeline_8d.parquet`) |
 | `GET /api/map?res=5\|6\|7&month=` | `map/res=<r>/<mes>.json` | `{ res, month, length, cell[], n_equiv[], anomaly_pct[] }`: solo las celdas con valor mayor a 0 |
+| `GET /api/map/series?res=&tile=` | `series/res=<r>/<tesela-r2>.json` | `{ res, tile, length, cell[], month[], n_equiv[] }`: historial mensual compacto de las celdas de una tesela H3 r2 |
 | `GET /api/points/index?month=` | `points/<mes>/index.json` | `{ month, tile_res: 2, tiles: { <h3 r2>: cantidad } }` |
-| `GET /api/points?month=&tile=` | `points/<mes>/<tesela>.json` | `{ month, tile, length, lat[], lon[], t[], d[], frp[], day[], platform[], conf[] }` |
+| `GET /api/points?month=&tile=` | `points/<mes>/<tesela>.json` | `{ month, tile, length, lat[], lon[], t[], d[], frp[], t_mir[], t_tir[], scan[], track[], day[], platform[], conf[] }` |
 
 - **`cell` y `tile`** van como **string hex** de H3 (`"87c365c72ffffff"`). Como número no entran en un `Number` de JavaScript (superan 2^53). En DuckDB: `lower(hex(cell))`, y para la tesela, `lower(hex(h3_latlng_to_cell(latitude, longitude, 2)))`.
 - **`meta.map.domain`** es el percentil 99 de los valores mensuales de cada resolución, para que la escala de color sea la misma en todos los meses.
+- La serie histórica por celda se agrupa en teselas H3 r2; al abrir un detalle se descarga solo la tesela de esa celda, no todos los JSON mensuales del mapa.
+- La FRP media mensual del detalle se calcula solo con las detecciones FIRMS dentro de la celda elegida. No es una métrica armonizada ni una energía acumulada; cambios de sensor o cobertura pueden afectar la comparación.
 - **Los focos van por mes de la fecha local solar (`local_date`).**
   - `t` son los segundos UTC desde 1970.
   - `d` es `local_date` en días desde 1970-01-01, y es lo que usa el filtro de fecha.
+  - `t_mir` y `t_tir` son temperaturas de brillo en kelvin; `scan` y `track` son dimensiones nominales del píxel en kilómetros. Los campos pueden ser nulos según el producto.
   - `day` vale 1 o 0.
   - El sensor se deduce de `platform` (terra/aqua = MODIS, el resto = VIIRS).
 - Un mes o tesela sin datos puede devolver 404: el módulo lo toma como vacío.
@@ -142,4 +160,5 @@ python frontend/map/scripts/build_mocks.py --publish data/lotes/S1/publish --out
 - **Focos sin celda:** algún foco puede aparecer sin hexágono debajo. Pasa cuando lo detectó una plataforma que no es la de la serie en ese período (por ejemplo, S-NPP cuando la serie usa NOAA-20). Es correcto: la celda es la serie armonizada.
 - **Mapa base externo:** las teselas vienen de OpenFreeMap y Esri. Sin internet, el mapa base queda vacío, pero las capas se siguen dibujando.
 - **Períodos largos:** las celdas de un período de más de 36 meses se calculan con los últimos 36 (`maxCellMonths`), y el mapa lo avisa.
+- **Campos científicos adicionales:** volver a ejecutar la exportación del pipeline y `scripts/build_mocks.py` para que la publicación de puntos incluya `t_mir_k`, `t_tir_k`, `scan_km` y `track_km`. Las publicaciones anteriores pueden seguir mostrando FRP, pero esos atributos nuevos no estarán disponibles hasta regenerarlas.
 - **deck.gl 9.4.0:** se usa esa versión porque la 9.1 (luma.gl 9.1.10) falla en Vite con `Cannot set properties of undefined (setting 'adapter')`.

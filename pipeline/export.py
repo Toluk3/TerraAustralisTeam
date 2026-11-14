@@ -72,8 +72,8 @@ def run(cfg: Config, con) -> dict:
 
     # points/: focos limpios de la zona, por año y celda r3
     _copy(con, f"""
-        SELECT latitude, longitude, datetime_utc, local_date, frp_mw, is_day, sensor, platform,
-               conf_class, scan_km, track_km, is_nrt, year,
+        SELECT latitude, longitude, datetime_utc, local_date, frp_mw, t_mir_k, t_tir_k,
+               is_day, sensor, platform, conf_class, scan_km, track_km, is_nrt, year,
                h3_parent(h3_r7, {cfg['h3']['region_res']}) AS h3_r3
         FROM fires_norm WHERE h3_r7 IN (SELECT cell FROM zone_cells)
         ORDER BY datetime_utc""", out / "points", partition="year, h3_r3")

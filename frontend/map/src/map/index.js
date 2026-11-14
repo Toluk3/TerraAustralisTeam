@@ -166,7 +166,7 @@ export async function createFireMap(container, options = {}) {
     layers: { ...opts.layers },
     beforeId: opts.labelsOnTop ? firstSymbolLayer(map) : undefined,
     cells: { key: null, rows: [], months: 0, clipped: false },
-    points: { chunks: [], zoomedOut: false, truncated: false, total: 0 },
+    points: { chunks: [], zoomedOut: false, truncated: false, total: 0, periodVisible: 0 },
   };
   const tables = new Map(); // `${res}|${mes}` → tabla de celdas, `p|${mes}|${tesela}` → tabla de focos
   let loadToken = 0;
@@ -198,7 +198,7 @@ export async function createFireMap(container, options = {}) {
   async function loadPoints(token) {
     if (!state.layers.points) return;
     if (map.getZoom() < pointsMinZoom) {
-      state.points = { chunks: [], zoomedOut: true, truncated: false, total: 0 };
+      state.points = { chunks: [], zoomedOut: true, truncated: false, total: 0, periodVisible: 0 };
       return;
     }
     const months = periodMonths().months.filter((m) => pointMonths.has(m));
@@ -229,7 +229,14 @@ export async function createFireMap(container, options = {}) {
       return { id: `${m}-${tile}`, table: tables.get(k) };
     }));
     if (token !== loadToken) return;
-    state.points = { chunks: chunks.filter((c) => c.table.length), zoomedOut: false, truncated, total };
+    const visibleChunks = chunks.filter((c) => c.table.length);
+    const periodVisible = visibleChunks.reduce((count, chunk) => {
+      for (let i = 0; i < chunk.table.length; i++) {
+        if (chunk.table.d[i] >= state.period.d0 && chunk.table.d[i] <= state.period.d1) count++;
+      }
+      return count;
+    }, 0);
+    state.points = { chunks: visibleChunks, zoomedOut: false, truncated, total, periodVisible };
   }
 
   async function ensureData() {
@@ -343,9 +350,11 @@ export async function createFireMap(container, options = {}) {
     if (id.startsWith('points-')) {
       const t = info.layer.props.data.src;
       const i = info.index;
-      return { kind: 'point', lat: t.lat[i], lon: t.lon[i], datetimeUtc: new Date(t.t[i] * 1000).toISOString(),
-        localDate: dayToIso(t.d[i]), frp: t.frp[i], isDay: Boolean(t.day[i]), sensor: SENSOR[t.platform[i]] ?? '',
-        platform: t.platform[i], confidence: t.conf[i] };
+      return { kind: 'point', lat: t.lat[i], lon: t.lon[i], cell: latLngToCell(t.lat[i], t.lon[i], state.res),
+        res: state.res, datetimeUtc: new Date(t.t[i] * 1000).toISOString(),
+        localDate: dayToIso(t.d[i]), frp: t.frp[i], tMir: t.t_mir?.[i] ?? null, tTir: t.t_tir?.[i] ?? null,
+        scanKm: t.scan?.[i] ?? null, trackKm: t.track?.[i] ?? null, isDay: Boolean(t.day[i]),
+        sensor: SENSOR[t.platform[i]] ?? '', platform: t.platform[i], confidence: t.conf[i] };
     }
     return null;
   }
@@ -386,7 +395,7 @@ export async function createFireMap(container, options = {}) {
     return { period: { from: state.period.from, to: state.period.to }, res: state.res, metric: effectiveMetric(),
       requestedMetric: state.metric, hexOpacity: state.hexOpacity, layers: { ...state.layers },
       estimated: state.period.d1 >= switchDay, cells: state.cells.rows.length,
-      points: { tiles: state.points.chunks.length, loaded: state.points.total,
+      points: { tiles: state.points.chunks.length, loaded: state.points.total, periodVisible: state.points.periodVisible,
         zoomedOut: state.points.zoomedOut, truncated: state.points.truncated } };
   }
 
