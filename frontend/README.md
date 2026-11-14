@@ -1,64 +1,40 @@
-# `frontend/` — Área 4 · Frontend y visualización
+# Frontend y visualización
 
-**Responsable:** _(completar)_
+## Resumen
 
-## Qué hace
+La implementación del frontend es una demostración web centrada en un mapa y una barra de navegación temporal. Se encuentra en [`map/`](map/), y usa Vite, MapLibre GL, deck.gl y H3. El estado general y las limitaciones del producto se describen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md).
 
-La app que ve el usuario: un mapa de Google Maps con la zona fija (Río Negro y Neuquén), una **barra de tiempo** que se recorre o se reproduce y va mostrando los focos, el calendario de quemas año × mes, el panel con los números del período y la descarga del CSV. Diseño y detalles en `documentacion/ARQUITECTURA.md` §4.4 y en el PDF de documentación (§2 y §8).
+La interfaz muestra focos detectados y valores armonizados en celdas espaciales. Los focos son observaciones satelitales; no son equivalentes a los valores calibrados de la serie.
 
-**Regla de producto:** todos los números que se muestran son de la serie armonizada. Nunca se muestran conteos por sensor, ni se cuentan los puntos del mapa.
+## Flujo de datos
 
-## Qué entrega y qué recibe
-
-| | Qué | A / de quién |
-|---|---|---|
-| Recibe | API según `CONTRATO_API.md` y la clave de Google Maps (variable de entorno) | Área 3 |
-| Recibe | Textos de la app (aclaraciones, atribución de FIRMS, ayudas) en `documentacion/TEXTOS_APP.md` | Área 5 |
-| Entrega | App desplegada para la demo | Área 5 |
-
-## Estructura sugerida
-
-Depende del framework que se elija. Como mínimo:
-
-```
-frontend/
-├── README.md
-├── mocks/           JSON de prueba armados según CONTRATO_API.md
-├── src/
-│   ├── map/         Google Maps + deck.gl (hexágonos y focos)
-│   ├── timebar/     barra de tiempo
-│   ├── calendar/    calendario año × mes
-│   └── panel/       números del período y descarga del CSV
-└── .env.example     nombres de las variables (sin valores)
+```text
+pipeline → data/publish/ → scripts/build_mocks.py → JSON estáticos → frontend/map
 ```
 
-## Tareas
+Los JSON se generan localmente a partir de una publicación del pipeline y no se versionan por defecto. El flujo principal del frontend consume archivos estáticos. También existe un adaptador de fuente API, pero el repositorio no incluye el backend ni endpoints desplegados.
 
-**P0**
-- [ ] Elegir el framework y acordar con el Área 3 si lo sirve Django o va aparte (Firebase Hosting)
-- [ ] JSON de prueba en `mocks/` según `CONTRATO_API.md`
-- [ ] Google Maps + deck.gl (`GoogleMapsOverlay`) con el contorno de la zona
-- [ ] Capa de hexágonos que cambia de resolución según el zoom (r5, r6, r7)
-- [ ] Barra de tiempo con paso mensual y play/pausa
-- [ ] Focos con `ScatterplotLayer` + `DataFilterExtension`, cargados por año
-- [ ] Panel del período: valor armonizado con banda, mediana histórica y anomalía
-- [ ] Calendario año × mes con rampa viridis
-- [ ] Descarga del CSV generada en el navegador con los focos ya cargados
+## Ejecución local
 
-**P1**
-- [ ] Paso diario con ventana de 8 días; los focos viejos se desvanecen
-- [ ] Marcas de "estimado" (desde `switch_date`) y de cobertura reducida
-- [ ] Mapa de anomalías con rampa PuOr
-- [ ] Accesibilidad: barra de tiempo manejable con teclado, contraste y textos de ayuda
-- [ ] Atribución de FIRMS y aclaraciones con los textos del Área 5
+Desde la carpeta del mapa:
 
-**P2**
-- [ ] Huellas MODIS (`scan × track`) con zoom ≥ 12
-- [ ] Exportar el calendario como PNG
-- [ ] Interfaz en español e inglés
+```bash
+cd frontend/map
+npm install
+python scripts/build_mocks.py
+npm run dev
+```
 
-## Reglas
+El generador necesita los productos de `data/publish/` y las dependencias Python del pipeline. Las instrucciones para seleccionar una publicación concreta, generar otras muestras, construir el frontend y conocer el formato de los JSON están en [`map/README.md`](map/README.md).
 
-- La clave de Google Maps nunca se commitea; va en `.env` (que está en `.gitignore`).
-- Los focos se pintan todos iguales (color y tamaño según FRP); el sensor solo aparece al pasar el mouse.
-- Si falta un dato en la API, se le pide al Área 3; no se calcula en el navegador.
+## Alcance y límites
+
+- Implementado: mapa de la zona, celdas H3, capa de focos, selección de mapas base y navegación mensual o por ventanas de ocho días.
+- Los mapas base de OpenFreeMap/OSM y Esri dependen de servicios de teselas externos y requieren conectividad.
+- El repositorio no acredita una publicación pública del frontend.
+- La propuesta inicial incluía vistas y entregables adicionales —como un calendario independiente, panel completo de indicadores y descargas— que no deben darse por implementados sin verificación en el código.
+- La prioridad inmediata es generar los datos estáticos de la configuración acordada, construir la aplicación y verificar su publicación.
+
+## Evolución posible
+
+Una interfaz conectada a API, un backend o nuevas vistas pueden evaluarse en una etapa posterior. No son requisitos de la ruta estática inmediata; cualquier extensión debe acordar el alcance con las áreas de datos y producto.

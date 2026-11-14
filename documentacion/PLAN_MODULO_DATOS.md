@@ -1,152 +1,78 @@
-# Plan del módulo de datos
+# Datos FIRMS: fuentes, estructura y preparación
 
-Estado: **borrador para revisar con el equipo.**
-Relacionado: `PLAN.md` (plan general del hackatón).
-Documentación de referencia en `referencias/` (no se versiona): *MODIS C6/C6.1 Active Fire Product User's Guide 1.0* (Giglio et al., 2021), *VIIRS C2 AF-375m User Guide 1.2* y *Active Fire Data Attributes for MODIS and VIIRS* (FIRMS).
+## Resumen
 
-## Objetivo
+Este documento describe cómo se utilizan los datos de focos activos de NASA FIRMS en Terra Australis y cómo el pipeline los prepara para el análisis y la demostración del mapa. El pipeline procesa productos MODIS y VIIRS en un flujo común; las decisiones efectivamente implementadas se detallan en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md).
 
-Convertir los zips crudos de FIRMS (MODIS y VIIRS) en un dataset limpio, indexado en H3 y harmonizado, que la web app pueda consultar por área y rango de fechas. El módulo está terminado cuando entrega tres cosas: series mensuales harmonizadas por celda H3, la mediana histórica por celda y mes, y la exportación a CSV de los focos crudos de un área.
+La disponibilidad de un producto o de un archivo descargado no significa que todas las corridas finales lo incluyan. En particular, el uso de S-NPP difiere entre la configuración principal y el análisis por lotes, y debe acordarse antes de congelar el conjunto que se publicará.
 
-## Criterios generales
+## 1. Fuentes y cobertura
 
-- Los zips originales no se modifican. Los datos generados van en una carpeta aparte y no se versionan en git.
-- Lo que todavía no está decidido (ver "Decisiones abiertas") se maneja como parámetro de configuración, para poder probar alternativas sin reescribir código.
+Los productos de entrada provienen de NASA FIRMS. La configuración actual y los planes de análisis contemplan las siguientes plataformas:
 
-## Datos de entrada
+| Sistema | Plataforma | Período de referencia en el proyecto | Observación de uso |
+|---|---|---|---|
+| MODIS | Terra | Desde noviembre de 2000 | Parte inicial de la serie histórica |
+| MODIS | Aqua | Desde julio de 2002 | Complementa la referencia MODIS |
+| VIIRS | Suomi NPP (S-NPP) | Desde enero de 2012 | Incluido en la prioridad de `config.yaml`; excluido de la campaña de lotes descrita en `PLAN_ANALISIS_LOTES.md` |
+| VIIRS | NOAA-20 | Desde abril de 2018 | Usado en las corridas por lote documentadas |
+| VIIRS | NOAA-21 | Desde enero de 2024 | Configurado como plataforma posible; su participación en la publicación debe confirmarse |
 
-| Fuente | Período | Estado |
+El pipeline y el README del proyecto documentan datos estándar de Argentina hasta 2025 y dejan la incorporación de observaciones NRT de 2026 como trabajo pendiente. Las fechas anteriores describen períodos de operación, no garantizan que todas las fuentes estén disponibles en cada ejecución local. Los archivos fuente se guardan fuera del control de versiones.
+
+## 2. Qué representa una detección
+
+Cada fila representa una detección del producto satelital asociada al centro de un píxel. No representa necesariamente la ubicación exacta del fuego ni un incendio individual confirmado. Un mismo evento puede producir varias detecciones, y un píxel puede contener más de una fuente de calor.
+
+MODIS tiene píxeles mayores y una serie histórica más larga. VIIRS observa con mayor detalle espacial y tiende a registrar más detecciones, incluidas fuentes pequeñas. Por ello, los conteos crudos de ambas plataformas no son directamente comparables.
+
+## 3. Campos relevantes para el procesamiento
+
+Los archivos de entrada presentan columnas equivalentes con nombres distintos según el producto. El pipeline conserva la procedencia y unifica los campos necesarios para filtrar, agregar y calibrar:
+
+| Información | Campos FIRMS habituales | Uso en el pipeline |
 |---|---|---|
-| MODIS (Terra + Aqua), `modis_YYYY_all_countries.zip` | 2000-11 → 2025 | Descargado |
-| VIIRS NOAA-20, `viirs-jpss1_YYYY_all_countries.zip` | 2018-04 → 2023 | Descargado |
-| VIIRS Suomi NPP | 2012-01 → 2025 | Descargado: archivo anual por país (CU-01) y pedido por área `DL_FIRE_SV-C2_846591.zip` |
+| Posición | `latitude`, `longitude` | Ubicación del centro del píxel y asignación a H3 |
+| Fecha y hora | `acq_date`, `acq_time` | Fecha UTC, fecha solar local y agregaciones temporales |
+| Plataforma y producto | `satellite`, `instrument`, `version` | Identificación del sensor, plataforma y época algorítmica |
+| Temperatura de brillo | `brightness` / `bright_ti4`, `bright_t31` / `bright_ti5` | Campos comunes de infrarrojo medio y térmico |
+| Calidad y tipo | `confidence`, `type` | Clasificación de confianza y exclusión de tipos no vegetales cuando corresponde |
+| Intensidad | `frp` | Potencia radiativa de fuego; no reemplaza el conteo armonizado |
+| Tamaño del píxel | `scan`, `track` | Control de geometría y contextualización de la resolución |
 
-Cada zip anual tiene una carpeta `<sensor>/<año>/` con un CSV por país (`<sensor>_<año>_<País>.csv`) y un `AttributesReadme.txt`. Si un país no tuvo detecciones ese año, no hay archivo: la ausencia equivale a 0. Coordenadas en WGS84.
+La clasificación de confianza no tiene el mismo formato en ambos sistemas: MODIS entrega una escala numérica y VIIRS categorías. El pipeline aplica una regla común configurable; su equivalencia es operativa y no una igualdad física entre algoritmos.
 
-Ojo con S-NPP: según FIRMS, Suomi NPP ya no entrega datos nuevos, así que la serie no llega hasta hoy. El archivo anual por país llega hasta 2025.
+## 4. Preparación y trazabilidad
 
-## Diccionario de campos
+La línea de procesamiento implementada es:
 
-Los dos sensores tienen 15 columnas con el mismo orden. Solo cambian los nombres de los dos canales de brillo y el formato de `confidence`. Fuentes: los tres documentos de `referencias/` y el readme incluido en los zips. Los zips están en `Datos/`.
+```text
+Archivos FIRMS → ingesta → normalización y QC → calendario/cobertura
+               → H3 y agregación → calibración → rollups
+               → validación → productos de publicación
+```
 
-| Columna MODIS | Columna VIIRS | Definición | Unidad / valores | Observado en nuestros datos |
-|---|---|---|---|---|
-| `latitude` | `latitude` | Latitud del **centro del píxel** con fuego, no la ubicación exacta del fuego; en un píxel puede haber más de un fuego. | grados WGS84 | — |
-| `longitude` | `longitude` | Longitud del centro del píxel. | grados WGS84 | — |
-| `brightness` | `bright_ti4` | Temperatura de brillo del píxel en el canal de infrarrojo medio: canales 21/22 en MODIS, canal I-4 en VIIRS. Es la señal principal de la detección. | Kelvin | ~300–500 K |
-| `scan` | `scan` | Tamaño real del píxel en la dirección del barrido (*along-scan*). Crece hacia los bordes de la pasada. | km (unidad no explícita en la doc) | MODIS 1–4,8 · VIIRS ~0,3–0,8 |
-| `track` | `track` | Tamaño real del píxel en la dirección de la órbita (*along-track*). | km | MODIS 1–2 · VIIRS ~0,4–0,8 |
-| `acq_date` | `acq_date` | Fecha de adquisición. | `YYYY-MM-DD` | — |
-| `acq_time` | `acq_time` | Hora de la pasada del satélite. | `HHMM` en **UTC**, texto con ceros a la izquierda ("0231") | Hay que leerlo como texto |
-| `satellite` | `satellite` | Satélite que hizo la detección. | MODIS: `Terra`/`Aqua` (la doc dice T/A). VIIRS: `N` = Suomi NPP, `N20` = NOAA-20, `N21` = NOAA-21 | MODIS: Terra solo hasta 2002; VIIRS: `N20` |
-| `instrument` | `instrument` | Sensor. | `MODIS` / `VIIRS` | — |
-| `confidence` | `confidence` | Calidad estimada de la detección, a partir de valores intermedios del algoritmo. | MODIS: **número 0–100** asociado a tres clases (baja, nominal, alta). VIIRS: **categoría** `l`/`n`/`h` | MODIS: mediana ~68–78; VIIRS: ~85% `n` |
-| `version` | `version` | Colección y versión del producto. Si termina en `NRT`/`RT`/`URT` es casi tiempo real; sin sufijo es standard (calidad científica). | `<colección>.<versión>` | MODIS: `6.2` (2000–2017), `6.03` (2018–2022), `61.03` (2023–2025). VIIRS: `2` en todos los años. Todo es **standard**; ver "Versiones" más abajo |
-| `bright_t31` | `bright_ti5` | Temperatura de brillo en el canal de infrarrojo térmico: canal 31 en MODIS, I-5 en VIIRS. Sirve como referencia del fondo. | Kelvin | — |
-| `frp` | `frp` | *Fire Radiative Power*: potencia radiativa del fuego integrada en el píxel, que se usa como medida de intensidad. | MW | En VIIRS el canal I-4 satura seguido, así que el FRP a 375 m solo es confiable para fuegos chicos o de baja intensidad. Desde 2015 se calcula combinando 375 m y 750 m |
-| `daynight` | `daynight` | Detección diurna o nocturna. | `D` / `N` | — |
-| `type` | `type` | Tipo inferido de foco. | `0` = presunto incendio de vegetación, `1` = volcán activo, `2` = otra fuente estática en tierra (gas flares, industria), `3` = offshore | Qatar 2020: ~85% `type=2`. Según la doc, este campo solo existe en el producto standard |
+Los registros originales se conservan como entrada; los datos generados se escriben en `data/` y no se versionan. Las tablas y archivos del pipeline preservan identificadores de origen para facilitar la trazabilidad. El resultado `data/publish/` alimenta el generador de JSON estáticos del frontend.
 
-### Detalle de `confidence`
+El procesamiento se ejecuta con Python y DuckDB; H3 proporciona la grilla espacial. Esta solución reemplaza las propuestas iniciales basadas en otras combinaciones de librerías. No se requiere consultar FIRMS en vivo para ejecutar el análisis de archivos ya descargados.
 
-En **MODIS** el valor 0–100 se agrupa en tres clases. Los cortes están en la guía del usuario C6/C6.1, tabla 11: **baja 0 ≤ C < 30, nominal 30 ≤ C < 80, alta 80 ≤ C ≤ 100**. La guía recomienda descartar los de baja confianza cuando importa evitar falsas alarmas, y quedarse con las tres clases cuando importa no perder fuegos. También advierte que algunos píxeles muy dudosos siguen quedando clasificados como nominales.
+## 5. Controles y limitaciones
 
-En **VIIRS** las clases están definidas por el algoritmo. Alta = píxel saturado, de día o de noche. Nominal = sin reflejo solar (sun glint) y con una anomalía de temperatura en I-4 mayor a 15 K. Baja (diurna) = afectada por sun glint o con una anomalía menor a 15 K. Las detecciones nocturnas de baja confianza solo aparecían en la zona de la Anomalía Magnética del Atlántico Sur (que incluye Argentina), y FIRMS las saca de sus datos NRT.
+- Los datos representan focos detectados, no perímetros de incendio ni verificación en terreno.
+- La falta de filas puede deberse a ausencia de detecciones, datos faltantes o cobertura reducida; no debe interpretarse automáticamente como ausencia de fuego.
+- La cobertura y los horarios de observación cambian por plataforma y período. Los primeros años de MODIS tienen una sola plataforma disponible y Aqua tuvo un corte en agosto de 2020.
+- La calidad de algunos atributos cambia entre colecciones y épocas algorítmicas. El pipeline conserva esa información para el control de calidad.
+- Los datos recientes NRT pueden carecer del atributo `type`; por eso la normalización incorpora una máscara de fuentes estáticas.
+- La lista de plataformas debe leerse junto con la configuración de cada corrida. La configuración principal y los lotes no usan exactamente el mismo alcance de S-NPP.
+- El conjunto de datos y la salida publicada son locales y están excluidos de Git; su generación debe realizarse antes de construir el frontend.
 
-La equivalencia entre clases MODIS y VIIRS no es directa porque los criterios son distintos. Es una de las decisiones abiertas.
+## 6. Estado y documentación relacionada
 
-### Versiones (cómo leer `version`)
+La ingesta, normalización, agregación, calibración, controles de calidad y exportación están implementados en `pipeline/`. Las pruebas del pipeline se ejecutan con `python -m pytest`; sus instrucciones detalladas están en [`pipeline/README.md`](../pipeline/README.md).
 
-El producto de localización mensual MODIS (MCD14ML) se nombra `MCD14ML.AAAAMM.<colección>.<versión>` (por ejemplo `MCD14ML.201701.006.03`). Nuestros valores se leen igual:
+- [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md) presenta el propósito y estado general.
+- [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md) documenta las reglas metodológicas y la serie armonizada.
+- [`PLAN_ANALISIS_LOTES.md`](PLAN_ANALISIS_LOTES.md) describe la organización de las corridas y la evidencia versionada.
+- [`casos de uso/`](../casos%20de%20uso/) contiene procedimientos operativos para descargar, procesar y publicar.
 
-| Valor | Interpretación | Años |
-|---|---|---|
-| `6.2` | Colección 6, versión 2 | 2000–2017 |
-| `6.03` | Colección 6, versión 3 | 2018–2022 |
-| `61.03` | Colección 6.1, versión 3 | 2023–2025 |
-| `2` (VIIRS) | Colección 2 (la versión del producto no viene en el campo) | 2018–2023 |
-
-Esta lectura es una deducción a partir de la convención de nombres de la guía, no una tabla oficial de FIRMS. Lo importante es que ninguno tiene sufijo NRT, así que todo es standard. Pero hay dos cortes de consistencia dentro de MODIS:
-
-- **2017 → 2018 (versión 2 → 3):** según la guía, la versión 3 trae una **clasificación de `type` bastante mejorada**. Antes de 2018 es más probable que fuentes estáticas (gas flares, industria) estén mal etiquetadas como `type=0`, así que el filtro por `type` limpia menos en los años viejos.
-- **2022 → 2023 (colección 6 → 6.1):** cambio de colección del algoritmo.
-
-En VIIRS, la guía documenta un bug en las versiones 1 y 2 del producto mensual: muchos focos `type=2` quedaban mal etiquetados como `type=0`. Se corrigió en mayo de 2025 y todo se reprocesó a la versión 3. Nuestros datos solo dicen colección `2`, sin la versión. La clasificación en Qatar 2020 (88% `type=2`) sugiere que tenemos datos corregidos, pero hay que confirmarlo comparando con un país petrolero más.
-
-## Advertencias de la documentación
-
-- **Series con intervalos cortos:** la guía MODIS advierte que cualquier serie temporal con intervalos menores a unos **8 días** puede tener sesgos temporales y espaciales severos. El calendario mensual está bien; un calendario diario no.
-- **Ausencia de focos ≠ ausencia de fuego:** los archivos de puntos no traen información de nubes ni de datos faltantes. Un mes sin focos puede ser un mes nublado.
-- **Antes de noviembre de 2000** Terra tenía problemas de hardware. Nuestros datos ya arrancan en 2000-11.
-- **Corte de Aqua, 16/08 al 02/09/2020:** una falla de hardware dejó dos semanas con cobertura parcial. Cae en plena temporada de quemas de Sudamérica y va a aparecer como una caída artificial en agosto y septiembre de 2020.
-- **VIIRS detecta mucho más de noche:** comparado con el producto VIIRS de 750 m, el de 375 m detecta ~3× más píxeles de día y ~17× más de noche. Los píxeles MODIS además se agrandan lejos del nadir. Esto refuerza que conviene calibrar día y noche por separado.
-- **Inicio efectivo de S-NPP:** 20 de enero de 2012.
-
-### Disponibilidad por satélite
-
-- MODIS Terra: desde noviembre de 2000. MODIS Aqua: desde julio de 2002. Antes de 2002-07 la cobertura es menor, porque hay una sola pasada diaria en lugar de dos.
-- VIIRS 375 m (S-NPP): desde el 20 de enero de 2012.
-- Horarios aproximados de pasada: Terra ~10:30 y ~22:30 hora local; Aqua, S-NPP y NOAA-20 ~13:30 y ~01:30.
-
-## Hallazgos de la exploración (14/11/2026)
-
-Se revisaron 10 CSV por sensor (Argentina en varios años, y Brasil, Australia, Qatar e Islandia en 2020).
-
-- La relación cruda VIIRS/MODIS en 2020 varía por región: Argentina ≈ 3,5x, Brasil ≈ 4,0x, Australia ≈ 5,3x. Un factor global de corrección no alcanza.
-- El filtro `type = 0` es imprescindible en zonas petroleras y volcánicas.
-- Volumen: VIIRS Brasil 2020 son 1,6 M de filas. Hace falta un formato columnar (Parquet) y herramientas que trabajen fuera de memoria (DuckDB o polars).
-
----
-
-## Sprints
-
-### Sprint 0 — Setup
-Estructura del repo, entorno (Python ≥ 3.10, `duckdb`, `polars`/`pyarrow`, `h3` v4), `.gitignore` para datos y archivos personales, archivo de configuración con rutas, sensores y parámetros abiertos.
-**Listo cuando:** el entorno se instala limpio en cualquier máquina del equipo.
-
-### Sprint 1 — Ingesta
-Leer los zips sin descomprimir, unificar el esquema (nombres comunes para los canales de brillo, `confidence` como texto, columnas `sensor` y `country`) y guardar en Parquet particionado por sensor y año. Sin filtros.
-**Listo cuando:** los conteos de filas coinciden con los CSV originales, `acq_time` conserva los ceros y correrlo dos veces da el mismo resultado.
-
-### Sprint 2 — Limpieza y normalización
-`datetime_utc`, filtro `type = 0`, clase de confianza común, marca de colección y versión según `version`, filtro por satélite, y deduplicación si aparecen focos repetidos entre países limítrofes (está por verificar si existen).
-**Listo cuando:** hay un reporte por sensor y año con cuántas filas se descartan en cada paso.
-
-### Sprint 3 — Indexación H3
-Asignar la celda H3 de forma vectorizada a una resolución base fina y derivar las más gruesas con `cell_to_parent`.
-**Listo cuando:** el 100% de los puntos tiene celda, el chequeo de una muestra contra `h3.latlng_to_cell` da bien y está medido el tiempo de procesamiento para un año de VIIRS.
-
-### Sprint 4 — Agregación
-Conteos por sensor × satélite × celda × día y su rollup mensual, con dos métricas: focos crudos y celdas/días con fuego.
-**Listo cuando:** los totales cierran contra la capa limpia y una consulta del tamaño de una provincia tarda menos de 1 s.
-
-### Sprint 5 — Harmonización
-Comparar sensores en el período de solapamiento (N20 desde 2018-04; S-NPP desde 2012 si llega), elegir la resolución H3 y la métrica, calibrar una conversión por región y construir la serie 2000–hoy.
-**Listo cuando:** hay gráficos de validación antes y después en al menos 3 regiones, una métrica de error en años no usados para calibrar y la serie no muestra un salto en el cambio de sensor.
-
-### Sprint 6 — Contrato de salida
-Tablas finales (serie harmonizada por celda y mes; mediana y percentiles históricos) y una consulta por polígono o punto con radio que devuelve el calendario, las anomalías y el CSV de focos. El contrato se documenta y se acuerda con frontend.
-**Listo cuando:** funciona un ejemplo completo para un área de Argentina y frontend aprobó el contrato.
-
----
-
-## Decisiones abiertas
-
-| # | Decisión | Cuándo se resuelve |
-|---|---|---|
-| 1 | Resolución H3 final (candidatas 5 y 6) | Sprint 5 |
-| 2 | Métrica: focos crudos vs. celdas/días con fuego | Sprint 5 |
-| 3 | Terra + Aqua, o solo Aqua (mismo horario que VIIRS) | Sprint 5 |
-| 4 | Umbral de confianza y equivalencia MODIS ↔ VIIRS (cortes MODIS ya confirmados: 30/80) | Sprint 2 |
-| 5 | Cómo tratar el salto de calidad de `type` en MODIS 2017→2018 y el cambio de colección 2022→2023 | Sprint 2 |
-| 8 | Separar día y noche en la calibración | Sprint 5 |
-| 9 | Cómo marcar en la app los períodos con cobertura reducida (2000–2002, agosto 2020) | Sprint 6 |
-| 6 | Unidad de calibración regional (celda gruesa, bioma, país) | Sprint 5 |
-| 7 | Plan B si S-NPP no llega o viene incompleto (calibrar solo con N20, 2018+) | Sprint 5 |
-
-## Riesgos
-
-- ~~S-NPP sin fecha de llegada~~ Resuelto: descargado 2012–2025; sin datos nuevos desde que Suomi NPP dejó de entregar.
-- **Volumen** de VIIRS: millones de filas por año.
-- **Cobertura 2000–2002** con un solo satélite MODIS, y **agosto-septiembre 2020** por el corte de Aqua.
-- **Calidad de `type` desigual** en MODIS antes de 2018.
+Los manuales técnicos de FIRMS y los archivos descargados deben consultarse para validar la versión y los atributos de cada producto; no se incluyen en el repositorio.
