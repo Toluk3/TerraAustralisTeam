@@ -1,0 +1,7 @@
+variant,source_platform,rel_bias,nmae,corr,ratio_pred_obs,n_region_months
+k_region_mes,noaa20,-0.0016,0.0682,0.987,0.9984,25227
+k_region_mes_dianoche,noaa20,-0.005,0.0708,0.9866,0.995,25227
+k_global,noaa20,-0.0003,0.0744,0.982,0.9997,25227
+k_region_mes_dianoche_clusters,noaa20,-0.0054,0.0779,0.9834,0.9946,25227
+k_region_mes_dianoche_clusters_r7,noaa20,-0.0057,0.0901,0.9779,0.9943,25227
+sin_correccion,noaa20,2.6846,0.4818,0.982,3.6846,25227
