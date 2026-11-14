@@ -179,7 +179,7 @@ def main(argv: list[str] | None = None) -> None:
     destino.mkdir(parents=True, exist_ok=True)
     (destino / "descarga_log.json").write_text(json.dumps(
         {"fecha": dt.datetime.now().isoformat(timespec="seconds"), "args": vars(args), **log},
-        indent=2, ensure_ascii=False))
+        indent=2, ensure_ascii=False), encoding="utf-8")
     print(f"\nListo: {len(log['descargados'])} descargados, "
           f"{len(log.get('existentes', []))} ya estaban, {len(log.get('no_publicados', []))} no publicados.")
 
