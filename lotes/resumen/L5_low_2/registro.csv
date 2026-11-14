@@ -1,0 +1,2 @@
+lote,run_at,config_hash,countries,rows_raw,rows_norm,step_seconds,disk_mb
+L5_low_2,2026-11-14 17:42:51.48928-03,f279995f99d5,Argentina,3441213,3328531,"{""ingest"": 26.9, ""normalize"": 14.4, ""support"": 0.8, ""aggregate"": 2.6, ""calibrate"": 30.3, ""rollup"": 4.1, ""validate"": 5.5, ""qc"": 1.7, ""zone"": 1.0}",418.2
