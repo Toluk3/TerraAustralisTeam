@@ -13,7 +13,7 @@ Imitan lo que va a devolver la API (propuesta en frontend/map/README.md). Todo e
 Partir por mes y por tesela es lo que permite zonas grandes (varios países): el mapa baja solo los
 meses del período y las teselas que se ven en pantalla.
 
-Uso (con el venv del pipeline, que necesita numpy):
+Uso (con el venv del pipeline; numpy está en requirements.txt):
   python frontend/map/scripts/build_mocks.py                                   # data/publish
   python frontend/map/scripts/build_mocks.py --publish data/lotes/S1/publish --out frontend/map/public/mock-s1
 """
@@ -75,7 +75,10 @@ def main() -> None:
         shutil.rmtree(out)
     t0 = time.time()
     con = duckdb.connect()
-    con.execute("INSTALL h3 FROM community; LOAD h3")
+    try:
+        con.execute("INSTALL h3 FROM community; LOAD h3")
+    except duckdb.Error as e:
+        raise SystemExit(f"No se pudo cargar la extensión h3 de DuckDB ({e}). Hace falta red la primera vez.")
 
     raw = (pub / "meta" / "version.json").read_bytes()
     try:
@@ -166,7 +169,7 @@ def main() -> None:
     })
     size = sum(f.stat().st_size for f in out.rglob("*") if f.is_file())
     print(f"Listo en {time.time() - t0:.0f} s: {out} ({size / 1e6:.0f} MB, {n_pts:,} focos en {n_files:,} teselas; "
-          f"mes más pesado {max_month:,} focos → zoom mínimo de focos {POINTS_MIN_ZOOM_HEAVY if heavy else 0})")
+          f"mes más pesado {max_month:,} focos; zoom mínimo de focos {POINTS_MIN_ZOOM_HEAVY if heavy else 0})")
 
 
 if __name__ == "__main__":

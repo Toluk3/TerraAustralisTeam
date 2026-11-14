@@ -4,11 +4,16 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import logging
+import os
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
 import yaml
+
+log = logging.getLogger(__name__)
 
 CONF_ORDER = ["low", "nominal", "high"]
 METRICS = ("n_fires", "n_clusters", "n_clusters_r7")
@@ -20,7 +25,10 @@ HASHED_KEYS = [
     "mask_min_months", "h3", "metric", "reference", "modis_stable_until", "switch_date",
     "terra_fit_to", "viirs_priority", "k_fallback_platform", "month_window",
     "min_source_count", "calibration_levels", "platform_periods",
+    # El calendario define qué meses tienen cobertura completa, y eso decide con qué meses se ajusta k.
+    "calendar_start", "calendar_end", "calibration_from",
 ]
+LEVEL_RE = re.compile(r"^(global|r\d{1,2})$")
 
 
 def to_date(v: Any) -> dt.date | None:
@@ -50,6 +58,20 @@ class Config:
             raise ValueError(f"metric inválida: {self.raw['metric']} (opciones: {METRICS})")
         if self.raw["reference"] not in REFERENCES:
             raise ValueError(f"reference inválida: {self.raw['reference']}")
+        # La carpeta de entrada depende de cada máquina: se puede fijar sin tocar los YAML.
+        if os.environ.get("TERRA_INPUT_DIR"):
+            self.input_dir = Path(os.environ["TERRA_INPUT_DIR"]).resolve()
+        bad = [lv for lv in self.raw["calibration_levels"] if not LEVEL_RE.match(str(lv))]
+        if bad:
+            raise ValueError(f"calibration_levels inválidos: {bad} (se espera r<resolución H3> o global)")
+        if self.raw["min_conf_class"] == "high":
+            # De noche VIIRS casi no marca 'high' (≈1,6 %) y MODIS sí (≈49 %): las clases no son
+            # equivalentes entre sensores y el k deja de ser estable (lotes L5_high_*).
+            log.warning("min_conf_class = high: las clases de confianza de MODIS y VIIRS no son equivalentes "
+                        "en ese corte; el k nocturno queda inestable. Usar solo para pruebas de sensibilidad.")
+        by = self.raw.get("baseline_years")
+        if by is not None and not (isinstance(by, list) and len(by) == 2 and by[0] <= by[1]):
+            raise ValueError(f"baseline_years inválido: {by} (se espera [desde, hasta] o null)")
 
     def __getitem__(self, key: str) -> Any:
         return self.raw[key]
@@ -83,6 +105,36 @@ class Config:
                 return to_date(p["valid_from"])
         raise ValueError("platform_periods no define la operación de aqua")
 
+    def level_res(self, level: str) -> int | None:
+        """Resolución H3 de un nivel de calibración (None para global)."""
+        return None if level == "global" else int(level[1:])
+
+    def level_region_sql(self, level: str, alias: str = "f") -> str:
+        """Expresión SQL de la región de `level` para una fila de fires_daily."""
+        res = self.level_res(level)
+        if res is None:
+            return "0::UBIGINT"
+        if res == self.raw["h3"]["region_res"]:
+            return f"{alias}.region_r3"
+        if res == self.raw["h3"]["fallback_res"]:
+            return f"{alias}.region_r2"
+        return f"h3_parent({alias}.cell, {res})"
+
+    @property
+    def baseline_years(self) -> tuple[int, int] | None:
+        by = self.raw.get("baseline_years")
+        return (int(by[0]), int(by[1])) if by else None
+
+    def baseline_sql(self, col: str = "year") -> str:
+        """Condición SQL: el año pertenece al período base de la mediana."""
+        by = self.baseline_years
+        return f"{col} BETWEEN {by[0]} AND {by[1]}" if by else "true"
+
+    @property
+    def calibration_from(self) -> list[Path]:
+        """Bases de otros lotes cuyos fires_daily se suman al ajustar k (calibración común a varios lotes)."""
+        return [(self.base_dir / p).resolve() for p in (self.raw.get("calibration_from") or [])]
+
     @property
     def min_conf_rank(self) -> int:
         return CONF_ORDER.index(self.raw["min_conf_class"])
@@ -96,11 +148,26 @@ class Config:
 
 def load_config(path: str | Path = "config.yaml", overrides: dict | None = None) -> Config:
     path = Path(path).resolve()
-    with open(path, encoding="utf-8") as f:
-        raw = yaml.safe_load(f)
+    raw = _load_yaml(path)
     if overrides:
         raw = _merge(raw, overrides)
     return Config(raw=raw, base_dir=path.parent)
+
+
+def _load_yaml(path: Path, depth: int = 0) -> dict:
+    """Lee un YAML. Con `extends: <otro.yaml>` parte de ese archivo y le aplica encima lo propio.
+
+    Las rutas (`paths`, `zone.outline`, `calibration_from`) siempre son relativas a la carpeta del
+    archivo que se pasó a load_config, no a la del archivo base: el que extiende tiene que declararlas.
+    """
+    if depth > 5:
+        raise ValueError(f"extends anidado demasiadas veces en {path}")
+    with open(path, encoding="utf-8") as f:
+        raw = yaml.safe_load(f) or {}
+    base = raw.pop("extends", None)
+    if base:
+        raw = _merge(_load_yaml((path.parent / base).resolve(), depth + 1), raw)
+    return raw
 
 
 def _merge(a: dict, b: dict) -> dict:

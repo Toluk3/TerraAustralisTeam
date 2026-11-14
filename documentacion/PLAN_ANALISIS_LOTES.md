@@ -73,6 +73,16 @@ Los resúmenes presentes incluyen tablas de calibración, ablación, factores po
 
 Las bases locales y los datos originales no se versionan. Si no existen en la máquina, hay que descargar o procesar los datos antes de volver a ejecutar o consolidar los resultados.
 
+### Calibración común a todos los lotes
+
+Por defecto cada lote ajusta `k` solo con sus países, de modo que el nivel `global` es "global del lote" y una región H3 que cruza dos lotes recibe dos `k` distintos. Para evitarlo:
+
+1. Correr todos los lotes hasta `aggregate`: `python lotes/correr_lote.py <L> --pasos ingest normalize support aggregate`.
+2. Declarar en cada YAML (o en uno común del que extiendan) `calibration_from` con las carpetas de datos de todos los lotes que no repiten países (L1–L4 y L6; no las variantes L5).
+3. Correr el resto: `python lotes/correr_lote.py <L> --pasos calibrate rollup validate qc`.
+
+Queda como decisión del equipo activarlo: triplica el tiempo de `calibrate` y obliga a tener todas las bases en la misma máquina.
+
 ## 6. Pendientes para cerrar el análisis
 
 - Volver a correr los lotes con el pipeline corregido y revisar sus resúmenes con sus configuraciones y extraer conclusiones explícitas sobre la métrica y la calibración.

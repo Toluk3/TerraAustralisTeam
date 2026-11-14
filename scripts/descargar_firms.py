@@ -40,13 +40,22 @@ SENSORES = {
     "modis": (2000, "MODIS Terra + Aqua"),
     "viirs-snpp": (2012, "VIIRS Suomi NPP"),
     "viirs-jpss1": (2018, "VIIRS NOAA-20"),
+    "viirs-jpss2": (2024, "VIIRS NOAA-21"),   # si FIRMS todavía no lo publica por país, da 404 y se sigue
 }
 # Fuentes NRT de la API
 NRT_SOURCES = ["MODIS_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"]
 # Código ISO 3166-1 alfa-3 que pide la API por país. Antes se usaba una caja (API de área), que
 # traía también focos de Chile, Uruguay, Paraguay y Brasil etiquetados como Argentina.
+# Para otros países: --iso3 "United States=USA" Australia=AUS (o agregarlos acá).
 ISO3 = {"Argentina": "ARG", "Chile": "CHL", "Uruguay": "URY", "Paraguay": "PRY", "Bolivia": "BOL",
         "Brasil": "BRA", "Brazil": "BRA"}
+
+
+def iso3_de(pais: str, extra: dict[str, str]) -> str:
+    code = extra.get(pais) or ISO3.get(pais)
+    if not code:
+        sys.exit(f"No hay código ISO 3166-1 alfa-3 para {pais!r}. Pasarlo con --iso3 \"{pais}=XXX\".")
+    return code
 
 
 def parse_years(spec: str) -> list[int]:
@@ -124,19 +133,18 @@ def descargar_archivo(destino: Path, sensores: list[str], anios: list[int] | Non
 
 
 def descargar_nrt(destino: Path, paises: list[str], desde: dt.date, hasta: dt.date,
-                  fuentes: list[str]) -> dict:
+                  fuentes: list[str], iso3: dict[str, str] | None = None) -> dict:
     key = os.environ.get("FIRMS_MAP_KEY")
     if not key:
         sys.exit("Falta FIRMS_MAP_KEY. Se pide gratis en https://firms.modaps.eosdis.nasa.gov/api/map_key/")
     log = {"descargados": []}
+    codes = {pais: iso3_de(pais, iso3 or {}) for pais in paises}   # se valida todo antes de bajar nada
     for pais in paises:
-        if pais not in ISO3:
-            sys.exit(f"No hay código ISO3 para {pais}; agregalo en ISO3")
         for fuente in fuentes:
             d = desde
             while d <= hasta:
                 days = min(5, (hasta - d).days + 1)  # la API devuelve como máximo 5 días por pedido
-                url = f"{API}/{key}/{fuente}/{ISO3[pais]}/{days}/{d.isoformat()}"
+                url = f"{API}/{key}/{fuente}/{codes[pais]}/{days}/{d.isoformat()}"
                 # <prefijo>_<año>_<País>.csv, como el archivo anual: la ingesta toma el país del nombre.
                 prefix = f"{fuente.lower().replace('_', '-')}-{d:%Y%m%d}-{days}d"
                 dest = destino / "nrt" / fuente / f"{prefix}_{d.year}_{pais.replace(' ', '_')}.csv"
@@ -165,6 +173,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("--desde", help="NRT: primera fecha (YYYY-MM-DD)")
     ap.add_argument("--hasta", help="NRT: última fecha (por defecto, hoy)")
     ap.add_argument("--fuentes-nrt", nargs="+", default=NRT_SOURCES)
+    ap.add_argument("--iso3", nargs="+", default=[], metavar="PAÍS=COD",
+                    help="NRT: código ISO 3166-1 alfa-3 de países que no están en la tabla (ej. Australia=AUS)")
     args = ap.parse_args(argv)
 
     destino = Path(args.destino)
@@ -172,7 +182,11 @@ def main(argv: list[str] | None = None) -> None:
         if not args.desde:
             ap.error("--nrt necesita --desde")
         hasta = dt.date.fromisoformat(args.hasta) if args.hasta else dt.date.today()
-        log = descargar_nrt(destino, args.paises, dt.date.fromisoformat(args.desde), hasta, args.fuentes_nrt)
+        bad = [x for x in args.iso3 if "=" not in x]
+        if bad:
+            ap.error(f"--iso3 espera PAÍS=COD: {bad}")
+        iso3 = {k.strip(): v.strip().upper() for k, v in (x.split("=", 1) for x in args.iso3)}
+        log = descargar_nrt(destino, args.paises, dt.date.fromisoformat(args.desde), hasta, args.fuentes_nrt, iso3)
     else:
         anios = parse_years(args.anios) if args.anios else None
         log = descargar_archivo(destino, args.sensores, anios, args.paises, args.forzar)

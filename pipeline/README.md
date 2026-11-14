@@ -21,6 +21,17 @@ python -m pipeline all
 
 Se puede usar `--config` para apuntar a una configuración específica, por ejemplo a una corrida por lotes. La configuración principal está en `config.yaml`; las opciones de normalización y calibración están explicadas en [`documentacion/PLAN_NORMALIZACION.md`](../documentacion/PLAN_NORMALIZACION.md).
 
+## Configuración
+
+- **`extends`:** un YAML puede partir de otro y declarar solo lo que cambia (así están los de `lotes/`). Las rutas siempre son relativas al archivo que se pasa en `--config`.
+- **`TERRA_INPUT_DIR`:** variable de entorno que reemplaza `paths.input_dir`, para no tocar los YAML en cada máquina.
+- **`calibration_levels`:** `r<resolución H3>` de más fina a más gruesa y `global` al final.
+- **`calibration_from`:** bases de otros lotes que se suman al ajustar `k`. Con la misma lista en todos los lotes, el `k` de las regiones de frontera y el nivel global coinciden. Requiere dos pasadas: todos los lotes hasta `aggregate`, y después `calibrate` en adelante.
+- **`baseline_years`:** período base de la mediana y la anomalía.
+- **Extensión `h3` de DuckDB:** es obligatoria y se instala sola la primera vez (hace falta red). `PIPELINE_H3_PYTHON=1` habilita un respaldo lento con h3 de Python, sin el paso `zone`, solo para pruebas chicas.
+
+Las vistas `fires_raw`, `fires_norm` y `fires_excluded` son temporales: existen en las conexiones abiertas con `pipeline.db.connect`, no dentro del `.duckdb`.
+
 ## Productos
 
 - `data/prehack.duckdb`: tablas de análisis y validación de la corrida.

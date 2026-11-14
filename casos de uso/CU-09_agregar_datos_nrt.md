@@ -22,7 +22,7 @@
 
 ## Qué hace el pipeline con los datos NRT
 
-- La ingesta los reconoce por las columnas y toma el país del nombre del archivo (`default_country` queda solo para CSV con otro nombre).
+- La ingesta los reconoce por las columnas y toma el país del nombre del archivo (`default_country` es `null`: un CSV con otro nombre no se ingiere y la ingesta lo avisa). Para países fuera de la tabla del script: `--iso3 "United States=USA"`.
 - `is_nrt = true` (la versión termina en `NRT`), así que la app puede marcarlos.
 - Los NRT no traen `type`: los gas flares de Vaca Muerta los saca la **máscara estática**, construida con VIIRS standard (§3, paso 3).
 - NOAA-21 empieza a aparecer y usa el `k` de NOAA-20 (`k_fallback_platform`), porque no tiene solape con el MODIS estable.

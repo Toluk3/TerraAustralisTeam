@@ -60,6 +60,22 @@ CREATE TABLE IF NOT EXISTS calendar (
     month_start     DATE
 );
 
+-- Años publicados por plataforma según los archivos de la carpeta de entrada, de cualquier país (paso 1).
+-- complete = archivo anual del archivo histórico; false = descarga NRT, que cubre solo unos días.
+CREATE TABLE IF NOT EXISTS data_years (
+    platform  VARCHAR,
+    year      INTEGER,
+    complete  BOOLEAN
+);
+
+-- Huella de los datos con los que se ajustó k: si se reingesta otra cosa, el k deja de valer (§5.3)
+CREATE TABLE IF NOT EXISTS calibration_meta (
+    config_hash       VARCHAR,
+    data_fingerprint  VARCHAR,
+    sources           VARCHAR,
+    fitted_at         TIMESTAMPTZ
+);
+
 -- Inicio, fin y cortes de cada plataforma (§4.5)
 CREATE TABLE IF NOT EXISTS platform_periods (
     platform    VARCHAR,
@@ -122,7 +138,7 @@ CREATE TABLE IF NOT EXISTS calibration (
     source_platform VARCHAR,
     reference       VARCHAR,
     metric          VARCHAR,
-    level           VARCHAR,    -- r3 | r2 | global
+    level           VARCHAR,    -- r<resolución H3> | global (calibration_levels)
     region          UBIGINT,    -- celda H3 del nivel; 0 en global
     month           INTEGER,
     is_day          BOOLEAN,

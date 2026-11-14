@@ -209,7 +209,7 @@ def test_serie_sin_escalon_en_switch_date(pipeline_run):
 def test_k_por_region_usa_respaldo(pipeline_run):
     _, con = pipeline_run
     levels = {r[0] for r in con.execute("SELECT DISTINCT level FROM calibration").fetchall()}
-    assert levels == {"r3", "r2", "global"}
+    assert levels == {"r3", "r2", "r1", "global"}
 
 
 def test_banda_bootstrap_contiene_el_valor(pipeline_run):
@@ -245,3 +245,125 @@ def test_zona_multipoligono(tmp_path):
     lats = [h3.cell_to_latlng(c)[0] for c in cells]
     assert n > 0
     assert any(lat < -38 for lat in lats) and any(lat > -32 for lat in lats)
+
+
+# --- Cobertura: ausencia de archivo = 0 focos; un sensor que termina antes no tiene cobertura después ---
+def _hasta_support(tmp_path, preparar):
+    from pipeline import ingest, normalize, support
+    from pipeline.db import connect
+    from .conftest import synthetic
+
+    synthetic(tmp_path / "Datos")
+    preparar(tmp_path / "Datos")
+    cfg = make_config(tmp_path)
+    con = connect(cfg)
+    for step in (ingest, normalize, support):
+        step.run(cfg, con)
+    return cfg, con
+
+
+def _cov(con, platform, year):
+    return con.execute("""SELECT min(coverage_frac), max(coverage_frac) FROM coverage
+                          WHERE period_kind = 'month' AND platform = ? AND year = ?""", [platform, year]).fetchone()
+
+
+def test_anio_sin_archivo_entre_dos_con_datos_es_cero(tmp_path):
+    """Si el país no tuvo detecciones un año, FIRMS no publica su archivo: es 0, no "sin datos"."""
+    from pipeline import aggregate, calibrate, rollup, zone
+
+    cfg, con = _hasta_support(tmp_path, lambda d: (d / "modis/2021/modis_2021_Argentina.csv").unlink())
+    assert _cov(con, "terra", 2021) == (1.0, 1.0)
+    for step in (aggregate, calibrate, rollup, zone):
+        step.run(cfg, con)
+    v, st = con.execute("""SELECT n_equiv, status FROM zone_series
+                           WHERE period_kind = 'month' AND year = 2021 AND period = 3""").fetchone()
+    assert (v, st) == (0, "ok")
+    con.close()
+
+
+def test_sensor_que_termina_antes_no_tiene_cobertura_despues(tmp_path):
+    """MODIS llega hasta 2021 y VIIRS hasta 2022: 2022 no puede figurar con cobertura de MODIS."""
+    cfg, con = _hasta_support(tmp_path, lambda d: (d / "modis/2022/modis_2022_Argentina.csv").unlink())
+    assert _cov(con, "terra", 2022) == (0.0, 0.0)
+    assert _cov(con, "noaa20", 2022) == (1.0, 1.0)
+    con.close()
+
+
+def test_archivo_de_otro_pais_prueba_que_el_anio_esta_publicado(tmp_path):
+    """El inventario mira todos los archivos de la carpeta, no solo los de los países pedidos."""
+    def preparar(d):
+        f = d / "modis/2022/modis_2022_Argentina.csv"
+        f.rename(f.with_name("modis_2022_Chile.csv"))
+    cfg, con = _hasta_support(tmp_path, preparar)
+    assert _cov(con, "terra", 2022) == (1.0, 1.0)
+    assert con.execute("SELECT count(*) FROM fires_norm WHERE sensor = 'MODIS' AND year = 2022").fetchone()[0] == 0
+    con.close()
+
+
+def test_extends_aplica_solo_las_diferencias(tmp_path):
+    from pipeline.config import load_config
+
+    base = make_config(tmp_path)
+    (tmp_path / "lote").mkdir()
+    (tmp_path / "lote" / "x.yaml").write_text(
+        "extends: ../config.yaml\npaths: {input_dir: ../Datos, data_dir: ../data/x, publish_dir: ../data/x/publish}\n"
+        "countries: [Chile]\nh3: {cell_res: 6}\n", encoding="utf-8")
+    cfg = load_config(tmp_path / "lote" / "x.yaml")
+    assert cfg["countries"] == ["Chile"] and cfg["h3"] == {**base["h3"], "cell_res": 6}
+    assert cfg["metric"] == base["metric"] and cfg.data_dir == (tmp_path / "data" / "x").resolve()
+    assert cfg.config_hash != base.config_hash
+
+
+def test_datos_distintos_a_los_de_la_calibracion_fallan(pipeline_run):
+    cfg, con = pipeline_run
+    real = con.execute("SELECT data_fingerprint FROM calibration_meta").fetchone()[0]
+    assert real
+    con.execute("UPDATE calibration_meta SET data_fingerprint = 'otra descarga'")
+    try:
+        with pytest.raises(ConfigHashMismatch):
+            rollup.run(cfg, con)
+    finally:
+        con.execute("UPDATE calibration_meta SET data_fingerprint = ?", [real])
+
+
+def test_mes_parcial_no_tiene_anomalia_y_la_base_respeta_baseline_years(pipeline_run):
+    from pipeline.zone import anomaly_sql
+
+    cfg, con = pipeline_run
+    rows = {(y, p): (st, a) for y, p, st, a in con.execute(
+        f"SELECT year, period, status, anomaly_pct FROM ({anomaly_sql(cfg, 'month')})").fetchall()}
+    assert rows[(2020, 8)] == ("parcial", None)
+    assert rows[(2022, 6)][0] == "ok"
+    # baseline_years = [2003, 2021] y los datos son 2019–2022: la mediana usa a lo sumo 2019–2021
+    assert con.execute("SELECT max(n_years) FROM zone_baseline WHERE period_kind = 'month'").fetchone()[0] == 3
+
+
+def test_calibracion_comun_a_varios_lotes(tmp_path):
+    """Con calibration_from las sumas del ajuste incluyen los fires_daily de la otra base."""
+    from pipeline import aggregate, calibrate, ingest, normalize, support
+    from pipeline.db import connect
+    from .conftest import synthetic
+
+    q = """SELECT sum(sum_source) FROM calibration WHERE level = 'global'
+           AND metric = 'n_fires' AND source_platform = 'noaa20'"""
+
+    def lote(name, seed, **over):
+        d = tmp_path / name
+        d.mkdir()
+        synthetic(d / "Datos", seed=seed)
+        cfg = make_config(d, **over)
+        con = connect(cfg)
+        for step in (ingest, normalize, support, aggregate, calibrate):
+            step.run(cfg, con)
+        return cfg, con
+
+    cfg_a, con_a = lote("a", 7)
+    solo_a = con_a.execute(q).fetchone()[0]
+    con_a.close()                      # en una corrida real es el .duckdb de otro lote, que no está abierto
+    cfg_b, con_b = lote("b", 11)
+    solo_b = con_b.execute(q).fetchone()[0]
+    comun = make_config(tmp_path / "b", calibration_from=["../a/data", "data"])   # la propia se saltea
+    assert comun.config_hash != cfg_b.config_hash
+    calibrate.run(comun, con_b)
+    assert con_b.execute(q).fetchone()[0] == pytest.approx(solo_a + solo_b)
+    con_b.close()

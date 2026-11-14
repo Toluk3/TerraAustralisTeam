@@ -34,7 +34,7 @@ Tarda unos 3 segundos. Resultado esperado: `33 passed`.
 | — | Duplicados solo dentro de la misma plataforma | `test_duplicados_solo_dentro_de_la_plataforma` |
 | — | Corte de Aqua de 2020 → `coverage_frac` 15/31 y mes `parcial` | `test_corte_de_aqua_es_cobertura_parcial` |
 | — | La calibración recupera el cociente con que se generaron los datos | `test_calibracion_recupera_el_cociente` |
-| — | Sin escalón en `switch_date`; respaldo r3 → r2 → global; banda p05–p95 contiene el valor | `test_serie_sin_escalon_en_switch_date`, `test_k_por_region_usa_respaldo`, `test_banda_bootstrap_contiene_el_valor` |
+| — | Sin escalón en `switch_date`; respaldo r3 → r2 → r1 → global; banda p05–p95 contiene el valor | `test_serie_sin_escalon_en_switch_date`, `test_k_por_region_usa_respaldo`, `test_banda_bootstrap_contiene_el_valor` |
 
 Las pruebas están en [`tests/test_pipeline.py`](../tests/test_pipeline.py) y los datos sintéticos en [`tests/conftest.py`](../tests/conftest.py).
 

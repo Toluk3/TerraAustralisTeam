@@ -103,19 +103,22 @@ def consolidate(lote: str, cfg, times: dict[str, float]) -> dict:
     con.execute("INSERT INTO registro VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
                 [lote, dt.datetime.now(dt.timezone.utc), cfg.config_hash, ", ".join(cfg["countries"]),
                  raw, norm, json.dumps(times), round(disk, 1)])
-    write_summary(con, lote)
+    write_summary(con, lote, cfg)
     con.execute("DETACH l")
     con.close()
     return {"rows_raw": raw, "rows_norm": norm, "disk_mb": round(disk, 1), "tablas": counts}
 
 
-def write_summary(con, lote: str) -> None:
+def write_summary(con, lote: str, cfg) -> None:
     """CSV chicos para versionar: k global, ablación, descartes y registro del lote."""
+    # Cada año-mes entra en la ventana de 2·month_window + 1 meses calibrados: sumando los 12 meses,
+    # sum_ref y sum_source quedan multiplicados por ese número. Se divide para informar la suma real.
+    win = 2 * int(cfg["month_window"]) + 1
     out = ROOT / "lotes" / "resumen" / lote
     out.mkdir(parents=True, exist_ok=True)
     queries = {
         "k_global.csv": f"""SELECT source_platform, metric, is_day, round(sum(sum_ref) / sum(sum_source), 4) AS k,
-                                   sum(sum_ref) AS sum_ref, sum(sum_source) AS sum_source
+                                   sum(sum_ref) / {win} AS sum_ref, sum(sum_source) / {win} AS sum_source
                             FROM calibration WHERE lote = '{lote}' AND level = 'global' GROUP BY ALL ORDER BY ALL""",
         "ablacion.csv": f"""SELECT variant, source_platform, round(rel_bias, 4) rel_bias, round(nmae, 4) nmae,
                                    round(corr, 4) corr, round(ratio_pred_obs, 4) ratio_pred_obs, n_region_months

@@ -34,22 +34,37 @@ def run(cfg: Config, con) -> dict:
         FROM range(DATE '{start}', DATE '{end}' + INTERVAL 1 DAY, INTERVAL 1 DAY) r(d)
     """)
 
-    # Lo documentado (config.yaml) + lo que efectivamente hay en Datos/ (kind = datos):
-    # un bloque por plataforma × año con focos; el último año termina en el último foco.
+    # Lo documentado (config.yaml) + lo que efectivamente hay en Datos/ (kind = datos): un solo bloque
+    # por plataforma, del primer al último año publicado.
+    #  - Año publicado = hay un archivo de ese año para la plataforma (data_years, de cualquier país) o
+    #    hay focos. El archivo de FIRMS es anual y continuo: un año intermedio sin archivo para los
+    #    países pedidos significa 0 focos, no falta de datos.
+    #  - El bloque termina el 31/12 si el último año viene de un archivo anual completo; si viene de
+    #    descargas NRT o de archivos sin nombre reconocible, termina en el último foco del archivo
+    #    (Terra y Aqua comparten archivo). Así un sensor que llega hasta 2023 no figura con cobertura
+    #    en 2024 solo porque otro sensor sí tiene datos.
     con.execute("DELETE FROM platform_periods")
     for p in cfg["platform_periods"]:
         con.execute("INSERT INTO platform_periods VALUES (?, ?, ?, ?)",
                     [p["platform"], p["valid_from"], p.get("valid_to"), p["kind"]])
     con.execute(f"""
         INSERT INTO platform_periods
-        WITH py AS (SELECT platform, year(local_date) AS y, max(local_date) AS last_d
+        WITH fy AS (SELECT platform, year(local_date) AS y, max(local_date) AS last_d
                     FROM fires_norm GROUP BY ALL),
-             lastyear AS (SELECT platform, max(y) AS y FROM py GROUP BY 1)
-        SELECT py.platform, make_date(py.y, 1, 1),
-               CASE WHEN py.y = l.y THEN least(make_date(py.y, 12, 31), DATE '{end}')
-                    ELSE make_date(py.y, 12, 31) END,
+             grp AS (SELECT CASE WHEN platform IN ('terra', 'aqua') THEN 'modis' ELSE platform END AS g,
+                            max(last_d) AS last_d FROM fy GROUP BY 1),
+             yrs AS (SELECT platform, y, false AS complete FROM fy
+                     UNION ALL SELECT platform, year, complete FROM data_years),
+             rng AS (SELECT platform, min(y) AS y0, max(y) AS y1 FROM yrs GROUP BY 1),
+             fin AS (SELECT r.platform, r.y0, r.y1, bool_or(y.complete) AS complete
+                     FROM rng r JOIN yrs y ON y.platform = r.platform AND y.y = r.y1 GROUP BY ALL)
+        SELECT f.platform, make_date(f.y0, 1, 1),
+               least(CASE WHEN f.complete THEN make_date(f.y1, 12, 31)
+                          ELSE coalesce(g.last_d, make_date(f.y1, 12, 31)) END, DATE '{end}'),
                'datos'
-        FROM py JOIN lastyear l ON l.platform = py.platform
+        FROM fin f
+        LEFT JOIN grp g ON g.g = CASE WHEN f.platform IN ('terra', 'aqua') THEN 'modis' ELSE f.platform END
+        WHERE make_date(f.y0, 1, 1) <= DATE '{end}'
     """)
 
     con.execute("DELETE FROM platform_days")

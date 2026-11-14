@@ -42,7 +42,7 @@ La ingesta conserva los registros fuente y agrega información de procedencia. L
 
 El pipeline valida tipos y rangos, deriva el tiempo solar local y mantiene un registro de filas excluidas. Aplica la clasificación de tipo disponible, el umbral común de confianza configurado y una máscara estática para reducir fuentes persistentes que no corresponden a incendios de vegetación. La máscara es relevante porque algunos datos NRT no contienen `type` y la clasificación de productos históricos puede diferir.
 
-La calibración es válida para los filtros y opciones con que se generó. Los artefactos conservan `config_hash`; una modificación de configuración requiere regenerar las etapas dependientes y no reutilizar factores incompatibles.
+La calibración es válida para los filtros, el calendario y los datos con que se generó. Los artefactos conservan `config_hash` y `calibration_meta` guarda una huella de los archivos ingeridos: si cambia cualquiera de los dos, `rollup` se niega a usar ese `k`. `min_conf_class: high` queda solo para pruebas de sensibilidad, porque las clases de confianza de MODIS y VIIRS no son equivalentes en ese corte. Los artefactos conservan `config_hash`; una modificación de configuración requiere regenerar las etapas dependientes y no reutilizar factores incompatibles.
 
 ## 3. Grilla espacial y métricas
 
@@ -81,7 +81,9 @@ La configuración actual establece:
 | `metric` | `n_clusters` | Métrica base de la ejecución principal |
 | `modis_stable_until` | `2021-12-31` | Fin del intervalo MODIS considerado estable para el ajuste |
 | `switch_date` | `2022-01-01` | Inicio de la serie estimada con VIIRS |
-| `calibration_levels` | `r3`, `r2`, `global` | Respaldo jerárquico para estratos con pocas observaciones |
+| `calibration_levels` | `r3`, `r2`, `r1`, `global` | Respaldo jerárquico para estratos con pocas observaciones; `r1` evita caer en `global`, que mezcla todo lo que haya en la corrida |
+| `calibration_from` | vacío | Bases de otros lotes que se suman al ajuste, para que `k` no dependa de cómo se partieron los lotes |
+| `baseline_years` | `[2003, 2021]` | Período base de la mediana y la anomalía (MODIS Terra + Aqua observado) |
 | `month_window` | `1` | Ventana de ajuste alrededor del mes de referencia |
 
 Hasta la fecha de cambio, la configuración toma la referencia MODIS observada; a partir de ella usa una plataforma VIIRS priorizada y su factor `k`. Los factores se aplican a agregados diarios antes de formar períodos mensuales o de ocho días, de modo que un período que atraviesa dos meses pueda usar los factores correspondientes.
@@ -93,6 +95,13 @@ Los agregados se complementan con un calendario y períodos operativos por plata
 La agregación principal es mensual. El producto de ocho días ofrece una ventana temporal más detallada, pero no representa una medición diaria independiente. La guía de MODIS advierte que los intervalos menores a aproximadamente ocho días pueden presentar sesgos.
 
 La incertidumbre de la suma de un área debe calcularse sobre las réplicas de calibración para dicha área. No corresponde sumar bandas de error celda por celda como si las observaciones fueran independientes.
+
+### Cómo se decide la cobertura
+
+- **Año publicado:** una plataforma tiene datos entre el primer y el último año para los que hay un archivo suyo en la carpeta de entrada (de cualquier país) o focos. FIRMS no publica el archivo de un país en un año sin detecciones, así que un año intermedio sin archivo cuenta como cubierto con 0 focos.
+- **Fin de los datos:** se calcula por plataforma. Si el último año viene de un archivo anual, llega al 31/12; si viene de descargas NRT, llega al último foco. Un sensor cuyos archivos terminan antes que los de otro no figura con cobertura después.
+- **Límite conocido:** el primer y el último año no se pueden distinguir de "sin datos" si no hay ningún archivo de esa plataforma para ese año en la carpeta.
+- **Anomalía:** solo se informa en períodos de cobertura completa y se mide contra la mediana de `baseline_years`.
 
 ## 6. Validación y control de calidad
 

@@ -25,7 +25,7 @@
 
 ```
 gs://<bucket>/
-├── series/res=7/part-0.parquet          9,6 MB   serie mensual por celda (toda Argentina)
+├── series/res=<cell_res>/part-0.parquet         9,6 MB   serie mensual por celda (toda Argentina)
 ├── calibration/k.parquet, boot.parquet   29 MB   k por estrato y réplicas bootstrap
 ├── map/res=5|6|7/part-0.parquet         180 KB   valor armonizado y anomalía por celda de la zona
 ├── points/year=*/h3_r3=*/               7,2 MB   165.107 focos limpios de la zona

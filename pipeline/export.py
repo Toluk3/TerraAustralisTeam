@@ -1,7 +1,7 @@
 """Publicación: exporta las tablas finales con la estructura del bucket (ARQUITECTURA.md §4.2).
 
 data/publish/
-├── series/res=7/part-0.parquet       serie mensual por celda (toda la región procesada)
+├── series/res=<cell_res>/part-0.parquet  serie mensual por celda (toda la región procesada)
 ├── calibration/k.parquet, boot.parquet
 ├── map/res=<r>/part-0.parquet        valor armonizado por celda de la zona, por zoom
 ├── points/year=<YYYY>/h3_r3=<c>/     focos limpios de la zona
@@ -39,12 +39,13 @@ def _csv(con, sql: str, dest) -> None:
 def run(cfg: Config, con) -> dict:
     out = cfg.publish_dir
     reset_dir(out)
-    for d in ("series/res=7", "calibration", "zone", "reportes", "meta"):
+    series_dir = f"series/res={cfg['h3']['cell_res']}"
+    for d in (series_dir, "calibration", "zone", "reportes", "meta"):
         (out / d).mkdir(parents=True, exist_ok=True)
 
     _copy(con, """SELECT cell, region_r3, year, month, platform, is_day, n_fires, n_equiv, n_equiv_series,
                          coverage_frac, config_hash FROM fires_monthly ORDER BY cell, year, month""",
-          out / "series/res=7/part-0.parquet")
+          out / series_dir / "part-0.parquet")
     _copy(con, f"SELECT * FROM calibration WHERE metric = '{cfg['metric']}' ORDER BY ALL",
           out / "calibration/k.parquet")
     _copy(con, "SELECT source_platform, level, region, month, is_day, k, rep AS replica FROM calibration_boot",
@@ -58,16 +59,21 @@ def run(cfg: Config, con) -> dict:
                 SELECT h3_parent(f.cell, {res}) AS cell, f.year, f.month, sum(f.n_equiv_series) AS n_equiv
                 FROM fires_monthly f WHERE f.cell IN (SELECT cell FROM zone_cells)
                 GROUP BY ALL HAVING sum(f.n_equiv_series) > 0),
-            ok_months AS (SELECT year, period AS month FROM series_coverage
-                          WHERE period_kind = 'month' AND coverage_frac = 1),
+            ok_all AS (SELECT year, period AS month FROM series_coverage
+                       WHERE period_kind = 'month' AND coverage_frac = 1),
+            -- la mediana se toma solo con los meses completos del período base (baseline_years)
+            ok_months AS (SELECT * FROM ok_all WHERE {cfg.baseline_sql()}),
             cells AS (SELECT DISTINCT cell FROM m),
             full_grid AS (SELECT c.cell, o.year, o.month, coalesce(m.n_equiv, 0) AS v
                           FROM cells c CROSS JOIN ok_months o
                           LEFT JOIN m ON m.cell = c.cell AND m.year = o.year AND m.month = o.month),
             med AS (SELECT cell, month, median(v) AS median FROM full_grid GROUP BY ALL)
             SELECT m.cell, m.year, m.month, m.n_equiv,
-                   CASE WHEN med.median > 0 THEN (m.n_equiv - med.median) / med.median END AS anomaly_pct
+                   -- sin anomalía en meses de cobertura parcial: el valor está subestimado
+                   CASE WHEN ok.year IS NOT NULL AND med.median > 0
+                        THEN (m.n_equiv - med.median) / med.median END AS anomaly_pct
             FROM m LEFT JOIN med USING (cell, month)
+            LEFT JOIN ok_all ok ON ok.year = m.year AND ok.month = m.month
             ORDER BY m.year, m.month, m.cell""", out / f"map/res={res}/part-0.parquet")
 
     # points/: focos limpios de la zona, por año y celda r3
@@ -82,12 +88,12 @@ def run(cfg: Config, con) -> dict:
     shutil.copy(cfg.zone_outline, out / "zone/outline.geojson")
     _copy(con, f"""SELECT year, period AS month, n_equiv, p05, p95, coverage_frac, status,
                           median, p10, p25, p75, p90, anomaly_abs, anomaly_pct, pct_rank
-                   FROM ({anomaly_sql('month')})""", out / "zone/calendar.parquet")
+                   FROM ({anomaly_sql(cfg, 'month')})""", out / "zone/calendar.parquet")
     _copy(con, """SELECT period AS month, median, p10, p25, p75, p90, n_years FROM zone_baseline
                   WHERE period_kind = 'month' ORDER BY period""", out / "zone/baseline.parquet")
     _copy(con, f"""SELECT year, period AS period_8d, period_start, n_equiv, p05, p95, coverage_frac, status,
                           median, anomaly_abs, anomaly_pct, pct_rank
-                   FROM ({anomaly_sql('8d')})""", out / "zone/timeline_8d.parquet")
+                   FROM ({anomaly_sql(cfg, '8d')})""", out / "zone/timeline_8d.parquet")
 
     # reportes/ (CSV legibles, para validar y para la presentación)
     _csv(con, "SELECT * FROM zone_before_after", out / "reportes/zona_antes_despues.csv")
@@ -115,6 +121,9 @@ def run(cfg: Config, con) -> dict:
         "metric": cfg["metric"],
         "reference": cfg["reference"],
         "switch_date": str(cfg.date("switch_date")),
+        "cell_res": cfg["h3"]["cell_res"],
+        "baseline_years": list(cfg.baseline_years) if cfg.baseline_years else None,
+        "calibration_levels": cfg["calibration_levels"],
         "modis_stable_until": str(cfg.date("modis_stable_until")),
         "coverage": {"from": str(cal[0]), "to": str(cal[1])},
         "platform_periods": [{"platform": p, "valid_from": str(a), "valid_to": b and str(b), "kind": k}
