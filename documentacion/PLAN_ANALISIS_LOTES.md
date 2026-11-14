@@ -40,8 +40,8 @@ Las ~230 M de filas no entran juntas en la máquina (16 GB de RAM, 12 hilos, 100
 | **L2 · Cono Sur** | `Chile`, `Uruguay`, `Paraguay`, `Bolivia` | 47,9 MB | Vecinos con otros regímenes (Chaco, Andes); P3 contra L1 | ~4 min |
 | **L3 · Brasil** | `Brazil` | 133,7 MB | El volumen más grande de Sudamérica; cociente crudo ≈ 4,0× | ~12 min |
 | **L4 · Contrastes** | `Australia`, `United_States`, `Canada`, `Qatar`, `Iceland` | ~128 MB | Cociente ≈ 5,3× en Australia, bosque boreal, gas flares (Qatar) y volcanes (Islandia) | ~12 min |
-| **L5 · Sensibilidad** | `Argentina`, 6 configuraciones | — | P6: `min_conf_class` low/nominal/high × `mask_min_months` 2/3/6 | ~6 × 3 min |
-| L6 · Global (opcional) | El resto, por continente | — | Mapa mundial de `k`; solo si sobra tiempo | horas |
+| **L5 · Sensibilidad** | `Argentina`, 8 configuraciones (`nominal_3` es L1) | — | P6: `min_conf_class` low/nominal/high × `mask_min_months` 2/3/6 | ~8 × 3 min |
+| L6 · Global | Los otros 221 países, en 13 lotes por continente (`lotes/L6_*.yaml`) | ~7,2 GB en total | Mapa mundial de `k` | ~2 h |
 
 \*\* Escalando los ~2 minutos de Argentina por volumen. Se mide en L1 y se corrige el resto.
 
@@ -56,6 +56,23 @@ Los lotes van en orden de prioridad. **L1 es P0**, porque sin él no se puede co
    ```
 3. **S-NPP descartado.** `DL_FIRE_SV-C2_846591.zip` pasó a `../Datos_descartado/` para que `ingest` no lo levante. Tiene otro formato (nombres de columna de MODIS, `satellite = SNPP`, sin país en el nombre, NRT sin `type`) y el pipeline lo habría tomado como MODIS.
 4. **Configuraciones** en `lotes/`: `L1`–`L4` y las 8 variantes de `L5_<min_conf_class>_<mask_min_months>` (la combinación `nominal_3` es L1). Son copias de `config.yaml` que cambian `paths`, `countries` y `default_country: null`. Los nombres de país son los del CSV en inglés; la ingesta cambia `_` por espacio (`United States`).
+5. **L6:** los 232 países de los zips globales, menos los 11 de L1–L4, agrupados por continente. Ningún lote pasa de ~1,2 GB de VIIRS: África va en 5 lotes, y Angola y Zambia en uno aparte. Los zips globales de NOAA-20 llegan hasta 2023 y no se bajaron los archivos por país de 2024–2025, así que L6 usa `calendar_end: 2023-12-31`. La calibración no cambia (el solape es 2018-04 → 2021), y la serie llega hasta 2023.
+
+   | Lote | Países | VIIRS 2018–2023 |
+   |---|---|---|
+   | `L6_europa` | 47 | 114 MB |
+   | `L6_oceania` (incluye Antártida) | 23 | 21 MB |
+   | `L6_sudamerica` (el resto de Sudamérica) | 8 | 223 MB |
+   | `L6_norte_centroamerica` (México, Centroamérica, Caribe, Groenlandia) | 37 | 229 MB |
+   | `L6_medio_oriente` (con Afganistán y Pakistán) | 19 | 238 MB |
+   | `L6_asia_sur` | 7 | 440 MB |
+   | `L6_asia_este_sudeste` | 16 | 578 MB |
+   | `L6_rusia_asia_central` | 7 | 685 MB |
+   | `L6_africa_norte_oeste_este` | 31 | 1199 MB |
+   | `L6_africa_congo` | 5 | 900 MB |
+   | `L6_africa_centro` (RCA, Chad, Sudán del Sur, Camerún) | 4 | 749 MB |
+   | `L6_africa_angola_zambia` | 2 | 1021 MB |
+   | `L6_africa_sur` | 15 | 807 MB |
 
 ## 5. Ejecución y base consolidada
 
@@ -107,8 +124,9 @@ Un script por pregunta en `analisis/scripts/`, que abre `data/lotes/lotes.duckdb
 ## 8. Orden de trabajo
 
 1. [x] Preparación (§4)
-2. [ ] L1 Argentina; comparar contra la primera corrida (`k` global con `n_clusters`: 0,455 de día / 0,211 de noche)
-3. [ ] L2 Cono Sur → P1 y P3 con dos lotes
-4. [ ] L3 Brasil y L4 Contrastes → P1, P2, P4 y P5 completos
-5. [ ] L5 sensibilidad, si el Área 2 lo pide
-6. [ ] Resultados al Área 2 y pedidos de cambio de parámetros al Área 1
+2. [x] L1 Argentina: `k` global NOAA-20 con `n_clusters` de 0,454 de día y 0,209 de noche, contra 0,455 y 0,211 de la primera corrida (que incluía S-NPP)
+3. [x] L2 Cono Sur → P1 y P3 con dos lotes
+4. [x] L3 Brasil y L4 Contrastes → P1, P2, P4 y P5 completos
+5. [ ] L5 sensibilidad (8 variantes)
+6. [ ] L6 global (13 lotes)
+7. [ ] Resultados al Área 2 y pedidos de cambio de parámetros al Área 1
