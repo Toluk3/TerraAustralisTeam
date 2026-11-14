@@ -1,0 +1,15 @@
+# Datos (no se versionan)
+Datos/
+data/
+Documentacion/
+*.zip
+*.parquet
+*.duckdb
+*.duckdb.wal
+
+# Entorno y secretos
+.venv/
+.env
+credentials*.json
+__pycache__/
+.pytest_cache/
