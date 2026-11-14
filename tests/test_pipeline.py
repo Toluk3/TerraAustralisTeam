@@ -217,3 +217,31 @@ def test_banda_bootstrap_contiene_el_valor(pipeline_run):
     bad = con.execute("""SELECT count(*) FROM zone_series WHERE year >= 2022 AND status = 'ok' AND n_equiv > 0
                          AND NOT (p05 <= n_equiv * 1.0001 AND n_equiv <= p95 * 1.0001)""").fetchone()[0]
     assert bad == 0
+
+
+def test_zona_multipoligono(tmp_path):
+    """Una zona de varios polígonos separados (islas, varios países) cubre celdas en todos ellos.
+
+    h3_polygon_wkt_to_cells devuelve una lista vacía para un MULTIPOLYGON; antes la zona quedaba
+    con 0 celdas sin ningún error.
+    """
+    import json
+
+    import h3
+
+    from pipeline import zone
+    from pipeline.db import connect
+
+    rect = lambda w, s, e, n: [[[w, s], [e, s], [e, n], [w, n], [w, s]]]  # noqa: E731
+    gj = {"type": "FeatureCollection", "features": [
+        {"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": rect(-70, -41, -68, -39)}},
+        {"type": "Feature", "properties": {}, "geometry": {"type": "Polygon", "coordinates": rect(-60, -31, -58, -29)}},
+    ]}
+    cfg = make_config(tmp_path, zone={"outline": "zona/multi.geojson", "map_resolutions": [7]})
+    (tmp_path / "zona" / "multi.geojson").write_text(json.dumps(gj))
+    con = connect(cfg)
+    n = zone.build_cells(cfg, con)
+    cells = [h3.int_to_str(c) for (c,) in con.execute("SELECT cell FROM zone_cells").fetchall()]
+    lats = [h3.cell_to_latlng(c)[0] for c in cells]
+    assert n > 0
+    assert any(lat < -38 for lat in lats) and any(lat > -32 for lat in lats)

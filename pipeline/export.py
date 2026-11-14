@@ -127,7 +127,8 @@ def run(cfg: Config, con) -> dict:
                                            "month_window", "min_source_count", "calibration_levels",
                                            "viirs_priority")},
     }
-    (out / "meta/version.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False, default=str))
+    (out / "meta/version.json").write_text(json.dumps(meta, indent=2, ensure_ascii=False, default=str),
+                                         encoding="utf-8")
     size = sum(f.stat().st_size for f in out.rglob("*") if f.is_file())
     log.info("export: %s (%.1f MB)", out, size / 1e6)
     return {"dir": str(out), "mb": round(size / 1e6, 1)}

@@ -27,12 +27,17 @@ def build_cells(cfg: Config, con) -> int:
         raise FileNotFoundError(f"No está el contorno de la zona ({outline}): python scripts/descargar_zona.py")
     load_spatial(con)
     con.execute("DELETE FROM zone_cells")
+    # h3_polygon_wkt_to_cells solo acepta POLYGON: con un MULTIPOLYGON (islas, varios países) devuelve
+    # una lista vacía sin error. Por eso la unión se separa en polígonos con ST_Dump.
     con.execute(f"""
         INSERT INTO zone_cells
-        SELECT DISTINCT unnest(h3_polygon_wkt_to_cells(ST_AsText(ST_Union_Agg(geom)), {cfg['h3']['cell_res']}))
-        FROM ST_Read('{sql_str(outline)}')
+        SELECT DISTINCT unnest(h3_polygon_wkt_to_cells(ST_AsText(p.geom), {cfg['h3']['cell_res']}))
+        FROM (SELECT unnest(ST_Dump(ST_Union_Agg(geom))) AS p FROM ST_Read('{sql_str(outline)}'))
     """)
-    return con.execute("SELECT count(*) FROM zone_cells").fetchone()[0]
+    n = con.execute("SELECT count(*) FROM zone_cells").fetchone()[0]
+    if n == 0:
+        raise ValueError(f"La zona {outline} no cubre ninguna celda H3 r{cfg['h3']['cell_res']}: revisar el contorno")
+    return n
 
 
 def run(cfg: Config, con) -> dict:
