@@ -1,134 +1,136 @@
-# Auditoría de coherencia documental y estado de implementación
+# Auditoría de cambios entre propuesta e implementación
 
 **Repositorio:** `Toluk3/TerraAustralisTeam`  
-**Revisión:** rama `main`, commit `671ed29e7aeb49ed012c089ce777ace7db31b242`  
-**Objetivo:** consolidar qué propuesta quedó vigente, detectar contradicciones entre documentos y contrastarlas con el código que sí está en el repositorio.
+**Rama revisada:** `main`  
+**Base de revisión:** `0f35648cc5845fcae887ff4b0291edd284255b52`  
+**Propósito:** comparar las propuestas del proyecto con las decisiones que realmente se implementaron en el código y los artefactos versionados. No se toma la mera ausencia de un componente no desplegado como una “incoherencia”: se distingue entre cambios de rumbo, entregables incompletos y despliegues que no pueden verificarse desde este repositorio.
 
-## Resumen ejecutivo
+## Resumen
 
-La documentación mezcla al menos tres etapas del proyecto: el plan inicial para una app Streamlit con un método de armonización todavía hipotético; una arquitectura posterior acordada alrededor de Django, Google Cloud, DuckDB y H3; y una implementación de pipeline mucho más avanzada que el backend/frontend, que siguen siendo principalmente carpetas con README y tareas pendientes.
+El producto actual tomó un rumbo diferente al stack de despliegue que proponía `documentacion/ARQUITECTURA.md`: el frontend del mapa es una SPA de **Vite + MapLibre + deck.gl**, consume JSON estáticos generados desde la publicación del pipeline y tiene un adaptador opcional preparado para una API. En el repositorio no aparece implementación de Django, API, Docker/Cloud Run ni configuración de despliegue. Por eso, la arquitectura Django/Cloud Run no describe el camino que el código del frontend está siguiendo hoy.
 
-**La referencia más consistente para la implementación de datos actual es `config.yaml` + `pipeline/` + `documentacion/PLAN_NORMALIZACION.md` + los casos de uso CU-01 a CU-10**, contrastados contra el código. `documentacion/ARQUITECTURA.md` sirve como intención de producto/plataforma, pero no como prueba de que la app ya exista. `documentacion/PLAN.md` y partes de `PLAN_MODULO_DATOS.md` son propuestas antiguas que deben marcarse como supersedidas o actualizarse.
+En armonización, la propuesta inicial de `documentacion/PLAN.md` menciona LightGBM como mejora y propone una estrategia preliminar diferente. La implementación versionada usa **DuckDB + H3 y factores de calibración `k` con cociente de sumas**, además de bootstrap; LightGBM no está implementado ni figura en las dependencias. Esto no es simplemente un archivo “faltante”: `PLAN_NORMALIZACION.md` lo posterga expresamente a P2 por el solape insuficiente de NOAA-20. La decisión es razonable, pero el estado final debe quedar explícito y no mezclarse con la propuesta inicial como si ambas fueran simultáneas.
 
-**Conclusión de PM:** hay una implementación de pipeline local para datos históricos y una zona fija, pero el repositorio no acredita todavía un producto web end-to-end desplegado. Además, el flujo de cobertura tiene una discrepancia de lógica que conviene resolver antes de presentar la serie histórica como final.
+El core del pipeline sí está implementado. También existe una demo frontend real, pero el código versionado la configura por defecto para usar mocks/JSON estáticos; no hay evidencia en el repositorio que permita afirmar que una aplicación pública esté desplegada. Tampoco se versionan los datos publicados que la demo necesita para generarlos.
 
-## Qué se revisó y límites
+## 1. Cambios reales de rumbo: propuesta frente a implementación
 
-Se revisaron los documentos Markdown del repositorio (README de raíz y carpetas, arquitectura, planes, áreas y CU-01 a CU-10) y se contrastaron las afirmaciones relevantes con `config.yaml`, `pipeline/`, `requirements.txt` y `scripts/ejecutar_todo.sh`.
+| Tema | Propuesta documentada | Implementación versionada en `main` | Lectura correcta |
+|---|---|---|---|
+| **Backend y despliegue** | `ARQUITECTURA.md` propone Django + DuckDB en Cloud Run, Parquet en Cloud Storage y frontend servido por Django o Firebase Hosting. | No hay código Django, `manage.py`, Dockerfile, configuración de Cloud Run ni workflow/config de deploy. `frontend/map` incluye `createStaticSource()` para JSON y `createApiSource()` como adaptador. | El backend Django/Cloud Run es una arquitectura propuesta, no una parte implementada que se pueda auditar como desplegada. El flujo que sí está codificado en el mapa es compatible con publicación estática; la API es solo una opción de integración futura. |
+| **Frontend y mapa** | `PLAN.md` describe Streamlit + Folium/Plotly; `ARQUITECTURA.md` propone Google Maps + deck.gl y deja framework del front abierto. | `frontend/map/package.json` usa Vite, MapLibre GL, deck.gl y `h3-js`; el README declara mapas base OpenFreeMap/OSM y Esri. No se usa Google Maps. | Hay dos propuestas sucesivas y una implementación tercera. La decisión efectiva es MapLibre + deck.gl; actualizar `ARQUITECTURA.md` para no presentar Google Maps como stack acordado/actual. |
+| **Transporte de datos al front** | `ARQUITECTURA.md` plantea endpoints `/api/meta`, `/api/calendar`, `/api/timeline`, `/api/map`, `/api/points`; Cloud Storage guarda Parquet y Django los consulta. | `frontend/map/scripts/build_mocks.py` transforma un `publish/` del pipeline en JSON columnar estático por mes/tesela. `.env.example` tiene `VITE_DATA_SOURCE=mock` como valor inicial; la página de demo usa esa fuente por defecto. | La ruta funcional prevista por el frontend es generar artefactos JSON y servirlos como estáticos. No hay un backend en el repo que implemente los endpoints de arquitectura. |
+| **Armonización / LightGBM** | `PLAN.md` incluye ratio base y menciona LightGBM como mejora para usar FRP, densidad y estación. | `pipeline/calibrate.py` ajusta factores `k` por estratos con cociente de sumas; usa bootstrap. `requirements.txt` no incluye LightGBM ni scikit-learn. | LightGBM no se implementó. `PLAN_NORMALIZACION.md` lo posterga a P2, y `PLAN_ANALISIS_LOTES.md` dice que se descarta S-NPP y se calibra solo con NOAA-20 por la longitud del solape. Es un cambio metodológico documentado, pero falta alinear el plan general y la narrativa final con la decisión. |
+| **Métrica y espacio** | `PLAN.md` propone celdas aproximadas de 1 km y calibración por celdas de 0,5°; `PLAN_MODULO_DATOS.md` inicialmente deja resolución y métrica abiertas. | Se implementan H3 r8/r7/r3/r2 y métricas `n_fires`, `n_clusters`, `n_clusters_r7`; la configuración de los lotes usa `n_clusters`. | El diseño H3 y la comparación de métricas reemplazan la propuesta inicial; `PLAN_NORMALIZACION.md` documenta el cambio. Falta que la elección final de `n_clusters` quede aprobada una sola vez y reflejada en el estado de todos los documentos. |
+| **Sensores usados para calibrar** | `PLAN.md` pone énfasis en MODIS + VIIRS, particularmente S-NPP desde 2012; `PLAN_MODULO_DATOS.md` registra S-NPP como descargado. | `PLAN_ANALISIS_LOTES.md` toma la decisión de descartar S-NPP para el análisis por lotes y usar NOAA-20 (2018–2021). Las configuraciones versionadas mantienen S-NPP en `platform_periods`/`viirs_priority`; la documentación de descargas también lo incluye. | La decisión sobre S-NPP no está propagada de forma inequívoca a todas las configuraciones y documentos. Aclarar si se excluye solo el ZIP de formato problemático o toda plataforma S-NPP de la calibración y de la serie final. |
+| **Cobertura geográfica** | `PLAN.md` menciona como sugerencias AOI dibujada o coordenadas; propone Argentina completa como base de calibración y zona fija para el mínimo. | La demo principal usa Río Negro y Neuquén. El frontend/documentación de lotes incluye además una muestra S1 de seis países. | El alcance de la demo fija es coherente con la arquitectura final. S1 es una prueba de escala/alcance experimental, no prueba de que la aplicación principal permita elegir cualquier AOI. |
 
-`documentacion/Documentacion_Proyecto.pdf` está listado como resumen, pero no se pudo inspeccionar su contenido en esta revisión de archivos de texto. Debe compararse con este informe antes de tratarlo como actualizado. Los CSV/parquet locales de `data/` y los datos de `Datos/` no están versionados, por lo que las cifras de corridas se tomaron como afirmaciones documentales, no se reprodujeron aquí.
+## 2. Qué está implementado y qué estado puede afirmarse
 
-## Incoherencias y decisiones por cerrar
+### Implementado según código y artefactos versionados
 
-### 1. Producto y arquitectura: plan inicial versus arquitectura posterior
+- Pipeline Python con pasos ingestión, normalización, soporte/calendario, agregación, calibración, rollups, validación, QC, zona y export (`pipeline/__main__.py`).
+- Normalización, H3, tres métricas, calibración `k`, bootstrap, cambio de referencia a VIIRS en `switch_date`, series mensual/8 días y export de Parquet (`pipeline/`, `config.yaml`).
+- Pruebas automáticas del pipeline; el README actualizado declara 33 pruebas.
+- Frontend de mapa y barra temporal en `frontend/map`: MapLibre + deck.gl, capas H3/puntos, selector de período, modo mensual/diario, reproducción y controles de capas.
+- Generador de JSON estáticos desde la publicación del pipeline (`frontend/map/scripts/build_mocks.py`).
+- Evidencia versionada de ejecuciones de lotes L1, L2 y L3 en `lotes/resumen/`; no demuestra por sí sola que todos los análisis previstos o un despliegue estén terminados.
 
-- `documentacion/PLAN.md:67-82` propone `pandas`, `geopandas/shapely`, Streamlit, Folium, Plotly, archivos `data/harmonized.parquet` y un modelo LightGBM como mejora. No coincide con `documentacion/ARQUITECTURA.md:20-31, 42-64`, que define DuckDB/H3, Parquet en Cloud Storage, API Django en Cloud Run y Google Maps; ni con el pipeline actual (`pipeline/__main__.py:8-32`).
-- `PLAN.md:55-63` plantea agrupamiento VIIRS en celdas aproximadas de 1 km y calibración inicial sobre celdas de 0,5°, con posible promedio MODIS/VIIRS durante el solape. El diseño vigente está en `documentacion/PLAN_NORMALIZACION.md:133-164, 176-217`: H3 r8/r7/r3/r2, factores por región/mes/día-noche y aplicación diaria; una plataforma VIIRS por fecha.
-- `PLAN.md:29-37` pone el calendario 2001–2026 como entregable; `README.md:21-29` describe una serie 2000–2025. El pipeline define inicio 2000-11 y fin dinámico según calendario/datos (`config.yaml:61-63`, `pipeline/support.py:15-20`). No hay evidencia en el repositorio de datos anuales 2026 ni de una app con cobertura “hasta hoy”.
-- La propuesta inicial deja abierto dibujar una región/ingresar coordenadas (`PLAN.md:21-25`), mientras la arquitectura vigente y los README de backend/frontend especifican zona fija Río Negro–Neuquén y endpoints sin geometrías (`documentacion/ARQUITECTURA.md:26-29, 110-120, 143-157`; `backend/README.md:32-35`).
+### No verificable como desplegado desde el repositorio
 
-**Resolución:** declarar `PLAN.md` como histórico/propuesta inicial o reescribirlo para reflejar la arquitectura y alcance vigente. No dejar ambos planes con el mismo estatus.
+No se encontró URL pública, configuración de hosting/build de producción, pipeline de deploy, backend desplegable ni artefactos `public/mock-api`/datos de producción versionados. La configuración de front parte de `mock`, pero la carpeta generada de mocks y los datos están fuera del árbol versionado/ignorados. Por eso, lo preciso es decir **“el repo contiene una demo frontend ejecutable localmente si se generan los datos/mocks”**. No puedo confirmar ni negar un deploy externo que no esté referenciado aquí.
 
-### 2. Qué está implementado de verdad: pipeline sí, producto web no acreditado
+## 3. Alcance inicial del producto que todavía no está cubierto por la demo del mapa
 
-- `pipeline/README.md:27-37` marca como terminado el procesamiento, la validación, QC, exportación y pruebas. CU-03 también describe una corrida y un `data/publish/` generado (`casos de uso/CU-03_ejecutar_pipeline.md:31-63`).
-- En cambio, `backend/README.md:20-45` y `frontend/README.md:19-58` describen estructuras **sugeridas** y mantienen sus tareas P0 sin completar. En el árbol del repositorio solo figuran esos README; no están `manage.py`, proyecto Django, código frontend, Dockerfile, contrato API, ni `documentacion/CONTRATO_DATOS.md` o `CONTRATO_API.md`.
-- `documentacion/ARQUITECTURA.md:5` dice “acordado por el equipo”, pero en `:29` el framework frontend está abierto y en `:143-155` el contrato de API sigue siendo borrador. `documentacion/README.md:13-15` confirma que ambos contratos y los textos de app están por escribir.
-- `pipeline/README.md:42-45` deja contrato de datos, formato de puntos, NRT y subida al bucket pendientes. Por lo tanto, “exporta estructura de bucket local” no equivale a “API desplegada / app lista”.
+`PLAN.md` pide calendario año × mes, anomalías, indicadores, series temporales y descargas CSV/PNG además del mapa. En el frontend versionado se observan el mapa y la barra temporal con lectura de valor/anomalía; no se ve una pantalla completa con todos esos entregables. En particular, no aparecen implementados en `frontend/map`:
 
-**Resolución:** separar el estado en tres etiquetas verificables: `pipeline local`, `integración API/frontend`, `deploy/demo`. No presentar arquitectura planeada como funcionalidad entregada hasta que existan código, pruebas de integración y URL.
+- heatmap/calendario anual por mes como componente independiente;
+- tablero de indicadores de total, mes pico y año récord;
+- gráficos de totales anuales y ciclo estacional con percentiles;
+- descarga de focos/calendario en CSV y calendario PNG;
+- interfaz bilingüe.
 
-### 3. Serie temporal y sensores: reglas antiguas que ya fueron reemplazadas
+La comparación/anomalía por celda está contemplada en la capa del mapa. La descarga PNG e idioma ya aparecían como extras en la propuesta, no deben confundirse con requisitos centrales si el equipo recortó alcance.
 
-- `PLAN.md:61` dice que la serie usa MODIS hasta su fin y VIIRS después; en el solape se podría promediar. El criterio vigente es `modis_stable_until: 2021-12-31`, `switch_date: 2022-01-01` y referencia `terra_aqua` (`config.yaml:34-42`; `documentacion/PLAN_NORMALIZACION.md:178-197`). Desde el cambio se toma una plataforma VIIRS priorizada, convertida a equivalente Terra+Aqua; no se promedian detecciones de dos sensores.
-- `PLAN.md:56-59` recomienda LightGBM y bootstrap como partes del método inicial. El plan de normalización posterga LightGBM a P2 por falta de solape suficiente con NOAA-20 (`documentacion/PLAN_NORMALIZACION.md:313-318`). El pipeline implementa factores `k` y bootstrap, no LightGBM (`pipeline/calibrate.py:1-8, 134-172`).
-- Los documentos presentan una decisión de métrica todavía ambigua. `config.yaml:35` ya fija `n_clusters`; CU-06 dice que `n_clusters` tiene el menor sesgo y mayor correlación, pero que `n_fires` tiene el NMAE más bajo (`casos de uso/CU-06_validar_armonizacion.md:27-46`). A la vez `pipeline/README.md:47-50` mantiene pendiente aplicar la recomendación de Área 2 y `documentacion/AREAS.md:64-69` dice que Área 1 decide con recomendación de Área 2.
+La barra tiene controles de teclado documentados y existe un modo de 8 días, alineados con parte de la intención de accesibilidad y resolución temporal. El paso “diario” visualiza una ventana de 8 días, no observaciones diarias comparables; la interfaz debe mantener esa explicación.
 
-**Resolución:** registrar una decisión con fecha/autor/evidencia: métrica elegida, criterio que prioriza (NMAE, sesgo o correlación) y si `n_clusters` es decisión final o solo el valor actual de configuración. Actualizar config, CU-06 y checklist de Área 1 en conjunto.
+## 4. Falencias de coherencia/ejecución que sí conviene resolver
 
-### 4. Datos recientes y promesa “hasta hoy”
+### 4.1 Documentación de stack desactualizada
 
-- `README.md:21-29` limita el resultado descrito a 2000–2025. CU-01 registra 48 archivos históricos hasta 2025 y dice que 2026 no está publicado (`casos de uso/CU-01_descargar_datos_firms.md:30-40`).
-- CU-09 define cómo pedir NRT de 2026, pero `pipeline/README.md:41-45` lo marca pendiente y dice que requiere MAP_KEY; tampoco consta que se haya ejecutado ni publicado. La descarga anual estándar y la ingestión NRT son flujos distintos.
-- `casos de uso/CU-01_descargar_datos_firms.md:61` indica que NOAA-21 no está en el archivo anual y solo llega por NRT; CU-09 especifica que NOAA-21 reutiliza el `k` de NOAA-20 (`:17-29`). Debe advertirse en la interfaz/metadata que los meses NRT son preliminares y qué plataforma/fallback se usó.
+- `PLAN.md` aún contiene propuestas Streamlit/Folium y stack inicial, aunque ahora advierte que su sección de arquitectura está desactualizada.
+- `ARQUITECTURA.md` sigue marcando Django, Cloud Run, Cloud Storage y Google Maps como decisiones acordadas, aunque el código de front cambió a MapLibre/JSON estático y no hay implementación del backend.
+- La sección 5 de arquitectura se describe como borrador; `backend/README.md` y `documentacion/README.md` todavía anuncian contratos por escribir.
 
-**Resolución:** describir la entrega actual como serie histórica disponible hasta el último dato estándar efectivamente procesado; marcar NRT como pendiente/no publicado hasta que exista una corrida verificable y una versión en el bucket.
+**Acción:** actualizar `ARQUITECTURA.md` con dos diagramas/estados explícitos: flujo implementado actual (pipeline → export → generador JSON → hosting estático) y arquitectura API/Django solo si realmente se decide construirla.
 
-### 5. Cobertura: contrato documental no coincide con cómo se construyen los días cubiertos
+### 4.2 Método y datos de S-NPP con fuentes de verdad en conflicto
 
-La documentación promete que un archivo anual ausente equivale a cero focos (`casos de uso/CU-01_descargar_datos_firms.md:53-56`) y que el calendario distingue cero real de “sin datos” (`documentacion/PLAN_NORMALIZACION.md:169-174`). Sin embargo, `pipeline/support.py:43-52` construye rangos `kind='datos'` solo a partir de años presentes en `fires_norm`; para años intermedios marca del 1 de enero al 31 de diciembre si la plataforma tuvo alguna fila ese año, y para el último año termina en la última fecha con foco (`:55-68`).
+`PLAN_ANALISIS_LOTES.md` decide que la calibración de esos lotes usa NOAA-20 y que S-NPP se descarta; `PLAN_MODULO_DATOS.md`, `PLAN.md`, CU-01 y algunas configuraciones aún cuentan con S-NPP disponible o lo incluyen en la prioridad de plataformas. Esto puede cambiar qué sensores se usan en la serie y en la validación.
 
-Esto puede hacer que un año sin archivo/detecciones quede como falta de cobertura en vez de cero observado, y que el final del último año se trate como cubierto solo hasta el último foco. Un dataset de detecciones no permite inferir por sí solo el rango real de completitud del archivo. Esa diferencia afecta `coverage_frac`, meses incluidos en la calibración/baseline y estados `ok/parcial/sin_datos`.
+**Acción:** establecer en `config.yaml`/configs de lote una selección explícita de plataformas habilitadas; documentar qué archivos S-NPP se excluyen y por qué; regenerar los resultados después de fijar esa decisión. No afirmar que la calibración usa “MODIS + todos los VIIRS” si las corridas finales se restringen a NOAA-20.
 
-**Resolución P0:** definir la fuente de verdad de cobertura (rango de disponibilidad del producto/archivo, no primera y última detección), y distinguir explícitamente `archivo completo sin focos` de `archivo ausente/no descargado`. Agregar pruebas para año operativo completo sin focos y año con datos incompletos; recalcular reportes/publicación tras corregirlo.
+### 4.3 Requisitos de la propuesta inicial fuera de la demo actual
 
-### 6. Dependencias y stack declarado
+El alcance de app descrito por `PLAN.md` es mayor que los componentes visibles en `frontend/map`. El mapa y la barra no equivalen al tablero/calendario completo ni a las descargas prometidas.
 
-- `PLAN.md:80` lista pandas, geopandas/shapely, scikit-learn y LightGBM; `PLAN_MODULO_DATOS.md:103-105` menciona Python ≥3.10, polars/pyarrow y H3; la arquitectura menciona Python con DuckDB/polars (`ARQUITECTURA.md:20`).
-- Las dependencias instaladas por el flujo real son solo DuckDB, h3, PyYAML, pytest y pytz (`requirements.txt:1-5`). No figuran Streamlit, Django, Google Maps/deck.gl, pandas, polars, pyarrow ni LightGBM.
+**Acción:** cerrar un checklist de aceptación producto por producto: implementado en la demo, postergado por decisión o faltante. Actualizar pitch/README para no vender pantallas o exportaciones que no estén disponibles.
 
-**Resolución:** distinguir dependencias del pipeline de las que requerirán backend/frontend/experimentos. Actualizar los stacks de cada documento cuando el framework de app se decida; no describir paquetes como parte de la implementación si no están instalados ni usados.
+### 4.4 Cobertura inferida a partir de detecciones
 
-### 7. Publicación a Cloud Storage: instrucciones incompatibles y una operación destructiva
+El plan de datos promete distinguir cero de falta de datos. En `pipeline/support.py`, los rangos de datos disponibles se derivan de años/fechas que aparecen en `fires_norm`; un año sin filas puede quedar sin rango de datos y el fin del último período queda ligado a la última detección. La ausencia de focos no necesariamente prueba ausencia de cobertura.
 
-- `pipeline/export.py:1-13` recomienda `gcloud storage cp -r`.
-- El índice de CU indica `gcloud storage cp` (`casos de uso/README.md:16`), mientras CU-08 usa `gcloud storage rsync -r --delete-unmatched-destination-objects` (`casos de uso/CU-08_publicar_cloud_storage.md:18-22`).
-- CU-08 advierte que `rsync --delete` borra objetos que no estén en la carpeta local y luego propone excluir reportes (`:37`). La elección cambia si el bucket puede contener otros objetos y qué archivos se publican.
+**Acción:** usar metadatos de disponibilidad/completitud de archivos por plataforma y período, y distinguir archivo completo con cero detecciones de archivo ausente/incompleto. Añadir pruebas para esos tres casos antes de tratar la cobertura como definitiva.
 
-**Resolución:** acordar un único comando y un prefijo exclusivo del dataset. Documentar explícitamente si se publica `reportes/`, hacer primero una prueba/dry-run y evitar borrar contenido fuera del prefijo de publicación.
+### 4.5 Contrato de JSON/API no cerrado
 
-### 8. Roles y coordinación: organización propuesta, no asignada
+El frontend ya necesita un esquema concreto de JSON columnar y una estructura por mes/tesela (`frontend/map/README.md`), mientras `CONTRATO_API.md` no existe y el contrato API de arquitectura propone rutas/parámetros distintos. El generador de mocks es hoy una interfaz de hecho, pero no está declarado como contrato versionado.
 
-`documentacion/AREAS.md:10-18` define cinco áreas, pero los responsables de las áreas 2–5 están vacíos y el propio texto deja al Área 1 como “natural” para Toluk3. Lo mismo ocurre en `analisis/README.md`, `backend/README.md`, `frontend/README.md` y `pitch/README.md` (responsable sin completar). Esto contrasta con `AREAS.md:22-29` y sus hitos (`:50-60`), que presuponen dueños, ramas y aprobaciones asignados.
+**Acción:** elegir una sola interfaz para el despliegue actual: archivos JSON estáticos o API. Documentar campos, formatos H3, particionado, 404/vacío, versionado y compatibilidad; probar mocks y fuente API contra el mismo conjunto de fixtures.
 
-**Resolución:** completar responsable titular y suplente, confirmarlo en el README de cada área y retirar hitos/roles que ya no correspondan al evento o al estado real.
+### 4.6 No hay tests de integración frontend ni deploy reproducible
 
-### 9. Documentos declarados como contrato pero todavía ausentes
+`frontend/map/package.json` ofrece `dev`, `build`, `preview` y `mocks`, sin script de pruebas. El repositorio tampoco muestra un workflow o instrucciones de hosting de producción verificables.
 
-`documentacion/README.md:13-15` lista `CONTRATO_DATOS.md`, `CONTRATO_API.md` y `TEXTOS_APP.md` como “a escribir”. Aun así, los README de pipeline/backend/frontend y varios CU dicen que sus salidas se consumen “según” esos contratos. Esto deja ambiguos el esquema de `points/`, las respuestas API, errores, filtros temporales, formato de descarga y metadatos.
+**Acción:** agregar al menos build/test automatizado y un despliegue repetible que genere mocks a partir del `publish/` identificado por versión/hash; registrar URL y commit desplegado.
 
-**Resolución P0 para integrar áreas:** crear primero los contratos mínimos desde el export real y validarlos con fixtures. Hasta entonces, referirse a “esquema actual de `pipeline/export.py`”, no a un contrato aprobado.
+## 5. Qué debería decir hoy la fuente de verdad
 
-### 10. Cifras de salida: coherentes entre sí, pero no reproducidas en esta revisión
+Hasta una decisión técnica posterior, describir el estado así:
 
-CU-01 reporta 48 archivos/488 MB; CU-03 reporta 6.330.305 filas, 5.621.086 limpias y 709.219 descartadas; el índice de casos de uso repite esas cifras y CU-06 aporta resultados de validación. Aritméticamente los conteos de filas cierran, y 26 años MODIS + 14 S-NPP + 8 NOAA-20 explican 48 archivos. No obstante, las cifras son snapshots de corrida y no se acompañan de artefactos versionados en el repo.
+> El pipeline de datos MODIS/VIIRS está implementado en Python + DuckDB + H3 y genera productos Parquet. La demo frontend del mapa está implementada como SPA Vite con MapLibre/deck.gl y puede consumir JSON estáticos generados desde esos productos; también tiene un adaptador de cliente para una API futura. No hay backend Django/Cloud Run implementado en este repositorio. La calibración en uso es el método de factores `k` y bootstrap; LightGBM quedó postergado, no forma parte del método entregado. El repositorio no contiene evidencia suficiente para confirmar una URL de producción.
 
-**Resolución:** agregar a `meta/version.json`/reporte el commit, hash de configuración, fechas de datos y resumen reproducible. Fechar explícitamente resultados del README/CU y no presentarlos como garantía de la corrida actual.
+## 6. Si se despliega la versión implementada hoy
 
-## Línea base recomendada para la implementación final
+La línea de menor cambio es **hosting estático**, no desplegar Django que todavía no existe:
 
-Usar esta definición como fuente única hasta que el equipo apruebe un cambio:
+1. Ejecutar pipeline con la configuración aprobada y guardar `data/publish/meta/version.json` como referencia de versión.
+2. Generar los mocks del front desde ese `publish/` hacia `frontend/map/public/mock-api` con `frontend/map/scripts/build_mocks.py`.
+3. Ejecutar `npm ci` y `npm run build` en `frontend/map`; publicar el contenido generado de `dist/` en un hosting estático (Firebase Hosting es compatible con la opción ya mencionada en la arquitectura, o equivalente).
+4. Configurar fallback SPA solo si se agregan rutas; comprobar que `mock-api/` se sirve como assets estáticos y que funciona el mapa base externo.
+5. Registrar la URL, el commit y el `config_hash` del dataset publicado. Probar una ruta de cada tipo: meta, calendario, celdas y teselas de focos.
 
-1. **Producto:** calendario/visualización para una zona fija, Río Negro y Neuquén; no dibujo de AOI en la primera entrega.
-2. **Datos en repositorio:** pipeline Python + DuckDB + H3; entrada FIRMS en `Datos/`; outputs locales Parquet/DuckDB; publicación estructurada en `data/publish/`.
-3. **Serie armonizada:** referencia equivalente Terra+Aqua; MODIS hasta `2021-12-31`; desde `2022-01-01`, una plataforma VIIRS priorizada convertida por `k`. La configuración actual elige `n_clusters`, pendiente de ratificación formal.
-4. **Cobertura temporal:** no afirmar 2026/hasta hoy en producción hasta completar y verificar CU-09 y publicar el resultado. Publicar fechas efectivas, cobertura parcial y procedencia.
-5. **App/API/deploy:** arquitectura deseada, pero estado no verificado/pendiente en este checkout. Backend y frontend requieren implementación, contratos, pruebas integradas y URL pública antes de considerarse entregados.
-6. **Mejoras fuera del mínimo actual:** LightGBM, AOI libre, comparador de zonas, y otros sensores/modelos; mantenerlas como futuras salvo evidencia de implementación.
+Esto despliega la demo MapLibre basada en JSON; **no** satisface el plan API Django/Cloud Run. Para seguir ese otro plan se debe construir primero Django/endpoints, acordar el contrato, dar acceso del servicio a los datos del bucket y conectar `VITE_DATA_SOURCE=api` con la URL correcta (CORS o mismo dominio/proxy), después desplegar API y front y correr una prueba end-to-end.
 
-## Plan de saneamiento documental
+## 7. Propuestas encontradas en el repositorio
 
-### P0 — antes de comunicar alcance o publicar datos
+La auditoría consideró todas las propuestas identificadas en el árbol de `main`, no solo los archivos con nombre `PLAN`:
 
-- Resolver y probar el cálculo de cobertura de `pipeline/support.py` (hallazgo 5).
-- Declarar `PLAN.md` y secciones antiguas de `PLAN_MODULO_DATOS.md` como obsoletas o alinearlas al método vigente.
-- Cerrar por escrito la métrica final y su criterio de selección.
-- Corregir el resumen del producto para no afirmar que existe app desplegada ni cobertura 2026 si no hay evidencia.
-- Crear contratos mínimos de datos y API, o retirar referencias a contratos todavía inexistentes.
-- Elegir un solo procedimiento seguro de publicación a bucket.
+- `documentacion/PLAN.md`: producto, experiencia y enfoque inicial, incluidos Streamlit/LightGBM.
+- `documentacion/ARQUITECTURA.md`: propuesta de arquitectura y despliegue Django/Cloud Run/Google Maps/GCS.
+- `documentacion/PLAN_MODULO_DATOS.md`: sprints/decisiones tempranas de ingesta, limpieza, H3, agregación y armonización.
+- `documentacion/PLAN_NORMALIZACION.md`: metodología refinada y prioridades; pospone LightGBM.
+- `documentacion/PLAN_ANALISIS_LOTES.md`: análisis regional por lotes y decisión de no usar S-NPP para esa campaña de análisis.
+- `frontend/README.md`, `frontend/map/README.md`: especificación funcional concreta del mapa, la barra y el formato de datos estático/API.
+- `backend/README.md`, `analisis/README.md`, `pipeline/README.md`, `pitch/README.md`, `documentacion/AREAS.md` y casos de uso: entregables por área, flujos y tareas; varios siguen siendo checklist/propuesta, no evidencia de despliegue.
 
-### P1 — para dejar una fuente clara de verdad
+El PDF `documentacion/Documentacion_Proyecto.pdf` también está en el árbol, pero no se comparó visualmente en esta auditoría. Debe actualizarse contra la fuente de verdad anterior si contiene diagramas o stack antiguos.
 
-- Actualizar el PDF a partir de los documentos vigentes y marcar versión/fecha.
-- Completar responsables, estado real, dependencias y checklist de deploy.
-- Registrar resultados de validación junto con commit, `config_hash`, fechas de entrada y archivos fuente.
-- Añadir pruebas que cubran archivos anuales ausentes, cero focos con cobertura completa y fin de cobertura distinto de última detección.
+## Acciones recomendadas, en orden
 
-## Inventario documental considerado
-
-- Raíz: `README.md`.
-- Planes y arquitectura: `documentacion/README.md`, `AREAS.md`, `ARQUITECTURA.md`, `PLAN.md`, `PLAN_MODULO_DATOS.md`, `PLAN_NORMALIZACION.md`.
-- Áreas: `analisis/README.md`, `backend/README.md`, `frontend/README.md`, `pipeline/README.md`, `pitch/README.md`.
-- Casos de uso: `casos de uso/README.md` y CU-01 a CU-10.
-- Código contrastado: `config.yaml`, `requirements.txt`, `pipeline/` y `scripts/ejecutar_todo.sh`.
-- Pendiente de contraste: `documentacion/Documentacion_Proyecto.pdf` y los datos/artefactos locales no versionados.
+1. **Hoy:** corregir `ARQUITECTURA.md` para que describa el camino real MapLibre + JSON estático y marque Django/API como no implementados o futuro.
+2. **Hoy:** resolver S-NPP para el pipeline principal y los lotes, y congelar `metric`/referencia de la corrida que se presentará.
+3. **Antes de publicar:** arreglar/validar el cálculo de cobertura con fuentes de completitud, no solo presencia de focos.
+4. **Antes de decir “deployado”:** generar mocks de la versión elegida, construir y publicar el frontend; registrar URL, commit y `config_hash`.
+5. **Para cerrar el alcance inicial:** implementar las vistas/descargas del plan que se mantengan en alcance, o declararlas explícitamente postergadas y ajustar la presentación.
+6. **Después:** construir la API Django/Cloud Run solo si el equipo todavía la necesita; no es requisito para publicar una demo estática que use el flujo actual.
