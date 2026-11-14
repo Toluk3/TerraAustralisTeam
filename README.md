@@ -6,6 +6,18 @@ testv1
 
 Calendario de actividad de quemas armonizado MODIS + VIIRS: NASA Space Apps Challenge 2026, challenge *Harmonization of MODIS and VIIRS Hot Spots*.
 
+## Áreas del proyecto
+
+El trabajo está dividido en 5 áreas, cada una con sus carpetas y un único responsable. Reglas, hitos y contratos entre áreas: [`documentacion/AREAS.md`](documentacion/AREAS.md).
+
+| Área | Carpetas | README con las tareas |
+|---|---|---|
+| 1 · Pipeline de datos | `pipeline/`, `scripts/`, `tests/`, `zona/`, `casos de uso/`, `config.yaml` | [`pipeline/README.md`](pipeline/README.md) |
+| 2 · Análisis y validación | `analisis/` | [`analisis/README.md`](analisis/README.md) |
+| 3 · Backend e infraestructura | `backend/` | [`backend/README.md`](backend/README.md) |
+| 4 · Frontend y visualización | `frontend/` | [`frontend/README.md`](frontend/README.md) |
+| 5 · Producto, integración y pitch | `pitch/`, `documentacion/` | [`pitch/README.md`](pitch/README.md) |
+
 ## Módulo de datos
 
 Descarga los focos de FIRMS, los normaliza a un esquema común, los calibra entre sensores y deja una sola serie 2000–2025 para la zona de la demo (Río Negro y Neuquén).
