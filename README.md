@@ -25,8 +25,10 @@ Descarga los focos de FIRMS, los normaliza a un esquema común, los calibra entr
 ```bash
 python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 scripts/ejecutar_todo.sh          # descarga (~500 MB) + pipeline completo (~2 min)
-.venv/bin/python -m pytest        # 32 pruebas
+.venv/bin/python -m pytest        # 33 pruebas
 ```
+
+En Windows el entorno queda en `.venv\Scripts\` en lugar de `.venv/bin/` (por ejemplo `.venv\Scripts\python -m pytest`); `scripts/ejecutar_todo.sh` corre en Git Bash y detecta cuál de los dos hay.
 
 | Carpeta | Contenido |
 |---|---|

@@ -90,7 +90,7 @@ Detalles que evitan errores:
 | `local_date` | DATE | Fecha de `datetime_utc + longitude/15 h`. **Es la fecha que usan todos los agregados**, para que la pasada de la tarde y la de la madrugada no se partan según el huso |
 | `year`, `month`, `period_8d` | INTEGER | Derivados de `local_date`. `period_8d = (día_del_año − 1) // 8 + 1` |
 | `is_day` | BOOLEAN | De `daynight`. Es el dato del producto, no se recalcula: los algoritmos cambian de pruebas según ese flag |
-| `overpass_bucket` | BIGINT | `floor(epoch(datetime_utc) / 3000)`. Ventanas de 50 min: dos pasadas consecutivas (~101 min) nunca comparten ventana |
+| `overpass_bucket` | BIGINT | Epoch (s) del primer foco de la pasada. Una pasada = focos de la misma plataforma y región H3 r2 sin huecos de más de 30 min entre sí. Dos órbitas consecutivas (~101 min) nunca se juntan, y una pasada no se parte en dos como pasaba con las ventanas fijas de 50 min (`floor(epoch / 3000)`) |
 | `t_mir_k`, `t_tir_k`, `frp_mw` | DOUBLE | Kelvin y MW, sin modificar |
 | `scan_km`, `track_km`, `pixel_area_km2` | DOUBLE | Tamaño real del píxel |
 | `confidence_raw`, `conf_class` | VARCHAR | Original y clase común |

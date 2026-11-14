@@ -4,11 +4,14 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+PYTHON=$(command -v python3 || command -v python)
 if [ ! -d .venv ]; then
-  python3 -m venv .venv
-  .venv/bin/pip install -q -r requirements.txt
+  "$PYTHON" -m venv .venv
+  NEW_VENV=1
 fi
-PY=.venv/bin/python
+# En Windows (Git Bash) el venv usa Scripts/ en lugar de bin/
+if [ -x .venv/Scripts/python.exe ]; then PY=.venv/Scripts/python.exe; else PY=.venv/bin/python; fi
+[ -z "${NEW_VENV:-}" ] || $PY -m pip install -q -r requirements.txt
 
 $PY scripts/descargar_firms.py "$@"
 [ -f zona/rio_negro_neuquen.geojson ] || $PY scripts/descargar_zona.py

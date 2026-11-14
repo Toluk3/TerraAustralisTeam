@@ -9,7 +9,7 @@ from __future__ import annotations
 import logging
 
 from .config import CONF_ORDER, Config
-from .db import has_parquet, read_parquet_sql, refresh_views, reset_dir
+from .db import has_parquet, read_parquet_sql, refresh_views, reset_dir, sql_str
 from .qc import clear_step, write_qc
 
 log = logging.getLogger(__name__)
@@ -30,6 +30,10 @@ NORM_COLUMNS = [
     "h3_r8", "h3_r7", "raw_year",
 ]
 NRT_RE = "(NRT|URT|RT)$"
+# Una pasada = focos de la misma plataforma y región r2 sin huecos de más de 30 min entre sí.
+# Dos órbitas consecutivas están a ~101 min, así que nunca se juntan; y a diferencia de las
+# ventanas fijas de 50 min, una pasada que cruza el borde de la ventana no se cuenta dos veces.
+OVERPASS_GAP_S = 1800
 
 
 def _case_map(expr: str, mapping: dict[str, str]) -> str:
@@ -91,7 +95,7 @@ def normalize_sql(cfg: Config, con, sensor: str) -> str:
     cols = _raw_columns(con, cfg, sensor)
     mir, tir = CHANNELS[sensor]
     type_expr = "TRY_CAST(type AS TINYINT)" if "type" in cols else "CAST(NULL AS TINYINT)"
-    r8, r7 = cfg["h3"]["cluster_res"], cfg["h3"]["cell_res"]
+    r8, r7, r2 = cfg["h3"]["cluster_res"], cfg["h3"]["cell_res"], cfg["h3"]["fallback_res"]
     tmin, tmax = cfg["t_mir_range_k"]
     lo, hi = cfg["modis_conf_cuts"]
     if sensor == "MODIS":
@@ -141,7 +145,6 @@ def normalize_sql(cfg: Config, con, sensor: str) -> str:
                -- fecha solar local: UTC + longitude/15 h (longitude × 240 s)
                CAST(ts + to_seconds(CAST(round(longitude * 240) AS BIGINT)) AS DATE) AS local_date,
                (((hour(ts) + minute(ts) / 60.0 + longitude / 15.0) % 24) + 24) % 24 AS local_solar_hour,
-               floor(epoch(ts) / 3000)::BIGINT AS overpass_bucket,
                scan_km * track_km AS pixel_area_km2,
                ({conf_rank})::INTEGER AS conf_rank
         FROM t
@@ -149,6 +152,21 @@ def normalize_sql(cfg: Config, con, sensor: str) -> str:
     h AS (
         SELECT d.*, CASE WHEN coord_ok THEN h3_cell(latitude, longitude, {r8}) END AS h3_r8
         FROM d
+    ),
+    g AS (
+        SELECT h.*,
+               coalesce(epoch(ts) - lag(epoch(ts)) OVER w > {OVERPASS_GAP_S}, true) AS new_pass
+        FROM (SELECT h.*, h3_parent(h3_r8, {r2}) AS pass_region FROM h) h
+        WINDOW w AS (PARTITION BY platform, pass_region ORDER BY ts)
+    ),
+    o AS (
+        -- overpass_bucket = epoch (s) del primer foco de la pasada
+        SELECT g.*,
+               CASE WHEN ts IS NOT NULL AND pass_region IS NOT NULL THEN
+                   max(CASE WHEN new_pass THEN epoch(ts) END) OVER (
+                       PARTITION BY platform, pass_region ORDER BY ts ROWS UNBOUNDED PRECEDING)::BIGINT
+               END AS overpass_bucket
+        FROM g
     ),
     e AS (
         SELECT h.*,
@@ -164,7 +182,7 @@ def normalize_sql(cfg: Config, con, sensor: str) -> str:
                    {mask_clause}
                    WHEN conf_rank < {cfg.min_conf_rank} THEN 'low_conf'
                END AS pre_reason
-        FROM h LEFT JOIN static_mask m ON m.h3_r8 = h.h3_r8
+        FROM o h LEFT JOIN static_mask m ON m.h3_r8 = h.h3_r8
     ),
     f AS (
         -- Paso 7: deduplicación solo dentro de la misma plataforma, entre filas que pasaron los filtros
@@ -204,10 +222,10 @@ def run(cfg: Config, con) -> dict:
         check_platforms(con, cfg, sensor)
         con.execute(f"CREATE OR REPLACE TEMP TABLE _norm AS {normalize_sql(cfg, con, sensor)}")
         con.execute(f"""COPY (SELECT {cols} FROM _norm WHERE drop_reason IS NULL ORDER BY h3_r7, local_date)
-                        TO '{cfg.parquet_dir('norm')}' (FORMAT parquet, PARTITION_BY (sensor, year),
+                        TO '{sql_str(cfg.parquet_dir('norm'))}' (FORMAT parquet, PARTITION_BY (sensor, year),
                         OVERWRITE_OR_IGNORE)""")
         con.execute(f"""COPY (SELECT {cols}, drop_reason FROM _norm WHERE drop_reason IS NOT NULL)
-                        TO '{cfg.parquet_dir('excluded')}' (FORMAT parquet, PARTITION_BY (sensor, year),
+                        TO '{sql_str(cfg.parquet_dir('excluded'))}' (FORMAT parquet, PARTITION_BY (sensor, year),
                         OVERWRITE_OR_IGNORE)""")
         agg: dict[int, dict] = {}
         for y, reason, n, dmin, dmax in con.execute("""

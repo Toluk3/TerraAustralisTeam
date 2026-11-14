@@ -93,6 +93,10 @@ def special_rows(datos: Path) -> None:
         viirs_row(-38.7, -68.3, "2019-06-03", "0400", typ="2"),              # type_2
         viirs_row(25.0, 150.0, "2019-06-03", "0330"),                        # local_date: 2019-06-03 13:30
         viirs_row(-38.7, -68.4, "2019-06-03", "0400", version="2.0NRT"),     # is_nrt
+        # Una pasada que cruza las 00:00 UTC (borde de las viejas ventanas de 50 min) y otra 2 h después
+        viirs_row(-39.5, -67.5, "2019-06-02", "2359", dn="N"),
+        viirs_row(-39.5001, -67.5001, "2019-06-03", "0001", dn="N"),
+        viirs_row(-39.5002, -67.5002, "2019-06-03", "0201", dn="N"),
     ]
     write_csv(datos / "especiales" / "modis_2019_Argentina.csv", MODIS_COLS, m)
     write_csv(datos / "especiales" / "viirs-jpss1_2019_Argentina.csv", VIIRS_COLS, v)

@@ -19,7 +19,7 @@ import logging
 import shutil
 
 from .config import Config
-from .db import reset_dir
+from .db import reset_dir, sql_str
 from .zone import anomaly_sql
 
 log = logging.getLogger(__name__)
@@ -29,11 +29,11 @@ def _copy(con, sql: str, dest, partition: str | None = None) -> None:
     opts = "FORMAT parquet, COMPRESSION zstd"
     if partition:
         opts += f", PARTITION_BY ({partition}), OVERWRITE_OR_IGNORE"
-    con.execute(f"COPY ({sql}) TO '{dest}' ({opts})")
+    con.execute(f"COPY ({sql}) TO '{sql_str(dest)}' ({opts})")
 
 
 def _csv(con, sql: str, dest) -> None:
-    con.execute(f"COPY ({sql}) TO '{dest}' (HEADER, DELIMITER ',')")
+    con.execute(f"COPY ({sql}) TO '{sql_str(dest)}' (HEADER, DELIMITER ',')")
 
 
 def run(cfg: Config, con) -> dict:

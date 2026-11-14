@@ -193,7 +193,7 @@ Estas afectan lo que la app puede afirmar y conviene mostrarlas en la interfaz o
 - **Períodos con cobertura reducida:** de noviembre de 2000 a julio de 2002 solo estaba Terra, y del 16/08 al 02/09/2020 hubo un corte de Aqua. Habría que marcarlos visualmente en el calendario.
 - **Calidad de `type` desigual:** la clasificación de fuentes estáticas mejora en MODIS a partir de 2018.
 - **Harmonización regional:** la relación VIIRS/MODIS varía por región, así que la serie harmonizada es una estimación y hay que comunicarla como tal.
-- **VIIRS S-NPP:** pedido a FIRMS y todavía sin llegar. Sin él, la calibración depende solo de NOAA-20 desde abril de 2018.
+- **VIIRS S-NPP:** ya descargado (archivo anual por país 2012–2025, CU-01). La calibración usa S-NPP (2012–2021) y NOAA-20 (2018-04 → 2021).
 - **Gas flares en Neuquén:** Vaca Muerta tiene muchas fuentes de calor que no son incendios. El filtro `type` y la máscara estática las sacan, pero los pozos que empezaron a quemar gas en los últimos meses vienen en datos NRT sin `type` y pueden no estar todavía en la máscara. Hay que revisar la zona petrolera a mano antes de la demo.
 - **Pocos focos:** el norte de la Patagonia tiene mucho menos fuego que el Chaco o el Delta. Muchos meses van a tener mediana 0, así que la anomalía no puede ser solo un porcentaje (dividir por 0); conviene mostrar también la diferencia absoluta o el percentil histórico del mes.
 - **Atribución:** FIRMS pide citar los datos y enlazar su disclaimer si los redistribuimos (ver `AttributesReadme.txt` en los zips). Hay que incluirlo en la app.

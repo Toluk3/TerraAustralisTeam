@@ -66,6 +66,8 @@ La **serie armonizada** usa el conteo de MODIS hasta su fin y, después, el de V
 
 ## 5. Arquitectura
 
+> **Desactualizado.** El stack de esta sección (pandas, Streamlit, folium, LightGBM) se reemplazó por el de `ARQUITECTURA.md`: pipeline en DuckDB + H3, backend Django en Cloud Run y frontend con Google Maps + deck.gl. Se deja como registro del plan inicial.
+
 ```
 FIRMS CSV ──▶ pipeline/ (pandas) ──▶ data/harmonized.parquet
                                           │

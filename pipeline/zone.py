@@ -15,7 +15,7 @@ import logging
 
 from .calibrate import k_lookup_sql
 from .config import Config
-from .db import load_spatial
+from .db import load_spatial, sql_str
 
 log = logging.getLogger(__name__)
 PERIODS = {"month": ("month", "month_start"), "8d": ("period_8d", "period_8d_start")}
@@ -30,7 +30,7 @@ def build_cells(cfg: Config, con) -> int:
     con.execute(f"""
         INSERT INTO zone_cells
         SELECT DISTINCT unnest(h3_polygon_wkt_to_cells(ST_AsText(ST_Union_Agg(geom)), {cfg['h3']['cell_res']}))
-        FROM ST_Read('{outline}')
+        FROM ST_Read('{sql_str(outline)}')
     """)
     return con.execute("SELECT count(*) FROM zone_cells").fetchone()[0]
 

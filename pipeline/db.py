@@ -74,7 +74,7 @@ def has_parquet(cfg: Config, table: str, sensor: str | None = None) -> bool:
 def read_parquet_sql(cfg: Config, table: str, sensor: str | None = None) -> str:
     base = cfg.parquet_dir(table)
     glob = base / f"sensor={sensor}" / "**" / "*.parquet" if sensor else base / "**" / "*.parquet"
-    return (f"read_parquet('{glob}', hive_partitioning = true, union_by_name = true, "
+    return (f"read_parquet('{sql_str(glob)}', hive_partitioning = true, union_by_name = true, "
             f"hive_types = {{'year': INTEGER, 'sensor': VARCHAR}})")
 
 
@@ -100,4 +100,9 @@ def reset_dir(path: Path) -> None:
 
 
 def sql_in(values) -> str:
-    return ", ".join(f"'{v}'" for v in values)
+    return ", ".join(f"'{sql_str(v)}'" for v in values)
+
+
+def sql_str(value) -> str:
+    """Texto o ruta para meter entre comillas simples en SQL (una ' en la ruta rompía la consulta)."""
+    return str(value).replace("'", "''")

@@ -10,8 +10,8 @@ Los archivos quedan en Datos/<sensor>/<año>/, con la misma estructura que los z
 Si un país no tuvo detecciones ese año, o el año todavía no está publicado, FIRMS devuelve 404:
 se registra y se sigue (para el pipeline, la ausencia equivale a 0 focos).
 
-Para los meses que todavía no están en el archivo anual (datos NRT), ver --nrt: usa la API de
-área de FIRMS, que pide una MAP_KEY gratuita en la variable de entorno FIRMS_MAP_KEY.
+Para los meses que todavía no están en el archivo anual (datos NRT), ver --nrt: usa la API por
+país de FIRMS, que pide una MAP_KEY gratuita en la variable de entorno FIRMS_MAP_KEY.
 
 Ejemplos:
   python scripts/descargar_firms.py                                   # Argentina, todo
@@ -32,7 +32,7 @@ import urllib.request
 from pathlib import Path
 
 BASE = "https://firms.modaps.eosdis.nasa.gov/data/country"
-API = "https://firms.modaps.eosdis.nasa.gov/api/area/csv"
+API = "https://firms.modaps.eosdis.nasa.gov/api/country/csv"
 USER_AGENT = "terraaustralis-pipeline/1.0"
 
 # sensor del archivo → (primer año, nombre en el pipeline)
@@ -41,10 +41,12 @@ SENSORES = {
     "viirs-snpp": (2012, "VIIRS Suomi NPP"),
     "viirs-jpss1": (2018, "VIIRS NOAA-20"),
 }
-# Fuentes NRT de la API de área
+# Fuentes NRT de la API
 NRT_SOURCES = ["MODIS_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"]
-# Caja de Argentina (oeste, sur, este, norte) para la API de área
-BBOX = {"Argentina": (-73.6, -55.1, -53.6, -21.7)}
+# Código ISO 3166-1 alfa-3 que pide la API por país. Antes se usaba una caja (API de área), que
+# traía también focos de Chile, Uruguay, Paraguay y Brasil etiquetados como Argentina.
+ISO3 = {"Argentina": "ARG", "Chile": "CHL", "Uruguay": "URY", "Paraguay": "PRY", "Bolivia": "BOL",
+        "Brasil": "BRA", "Brazil": "BRA"}
 
 
 def parse_years(spec: str) -> list[int]:
@@ -128,16 +130,16 @@ def descargar_nrt(destino: Path, paises: list[str], desde: dt.date, hasta: dt.da
         sys.exit("Falta FIRMS_MAP_KEY. Se pide gratis en https://firms.modaps.eosdis.nasa.gov/api/map_key/")
     log = {"descargados": []}
     for pais in paises:
-        if pais not in BBOX:
-            sys.exit(f"No hay caja definida para {pais}; agregala en BBOX")
-        w, s, e, n = BBOX[pais]
+        if pais not in ISO3:
+            sys.exit(f"No hay código ISO3 para {pais}; agregalo en ISO3")
         for fuente in fuentes:
             d = desde
             while d <= hasta:
                 days = min(5, (hasta - d).days + 1)  # la API devuelve como máximo 5 días por pedido
-                url = f"{API}/{key}/{fuente}/{w},{s},{e},{n}/{days}/{d.isoformat()}"
-                # El nombre no sigue <sensor>_<año>_<País>.csv: el pipeline le asigna default_country.
-                dest = destino / "nrt" / fuente / f"{fuente}_{d.isoformat()}_{days}d.csv"
+                url = f"{API}/{key}/{fuente}/{ISO3[pais]}/{days}/{d.isoformat()}"
+                # <prefijo>_<año>_<País>.csv, como el archivo anual: la ingesta toma el país del nombre.
+                prefix = f"{fuente.lower().replace('_', '-')}-{d:%Y%m%d}-{days}d"
+                dest = destino / "nrt" / fuente / f"{prefix}_{d.year}_{pais.replace(' ', '_')}.csv"
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 with _request(url) as r:
                     body = r.read()
