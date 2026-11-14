@@ -1,0 +1,2 @@
+lote,run_at,config_hash,countries,rows_raw,rows_norm,step_seconds,disk_mb
+L4,2026-11-14 16:28:42.332428-03,6c4caab3f4bd,"Australia, United States, Canada, Qatar, Iceland",29588747,26136025,"{""ingest"": 145.2, ""normalize"": 1031.2, ""support"": 3.4, ""aggregate"": 22.8, ""calibrate"": 101.3, ""rollup"": 22.4, ""validate"": 14.9, ""qc"": 15.8}",2902.6
