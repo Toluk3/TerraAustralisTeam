@@ -13,7 +13,7 @@
    ```bash
    .venv/bin/python -m pipeline calibrate rollup validate
    ```
-2. Para cada plataforma VIIRS con solape estable (S-NPP 2012–2021, NOAA-20 2018-04 → 2021), el paso:
+2. Para cada plataforma VIIRS con solape estable (hoy solo NOAA-20, 2018-04 → 2021; S-NPP quedó fuera de la serie), el paso:
    - deja afuera un año, ajusta `k` con los demás y predice el año excluido como `Σ VIIRS × k`;
    - compara contra Terra + Aqua observado, en región r3 × mes;
    - repite con las 6 variantes de la tabla de ablación.
@@ -37,7 +37,7 @@
 
 \* Error absoluto mediano dividido por la media observada, para poder comparar métricas distintas.
 
-Con S-NPP el orden es parecido (sesgo entre +0,1 % y +1,0 %, correlación de 0,949 a 0,977).
+En una corrida anterior que incluía S-NPP el orden era parecido (sesgo entre +0,1 % y +1,0 %, correlación de 0,949 a 0,977).
 
 **Lectura:**
 - La corrección es imprescindible: sin `k`, VIIRS triplica a MODIS.

@@ -4,7 +4,7 @@
 
 Este documento describe cómo se utilizan los datos de focos activos de NASA FIRMS en Terra Australis y cómo el pipeline los prepara para el análisis y la demostración del mapa. El pipeline procesa productos MODIS y VIIRS en un flujo común; las decisiones efectivamente implementadas se detallan en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md).
 
-La disponibilidad de un producto o de un archivo descargado no significa que todas las corridas finales lo incluyan. En particular, el uso de S-NPP difiere entre la configuración principal y el análisis por lotes, y debe acordarse antes de congelar el conjunto que se publicará.
+La disponibilidad de un producto o de un archivo descargado no significa que las corridas lo incluyan. S-NPP está disponible en FIRMS pero no integra la serie ([`DECISIONES.md`](DECISIONES.md)).
 
 ## 1. Fuentes y cobertura
 
@@ -14,7 +14,7 @@ Los productos de entrada provienen de NASA FIRMS. La configuración actual y los
 |---|---|---|---|
 | MODIS | Terra | Desde noviembre de 2000 | Parte inicial de la serie histórica |
 | MODIS | Aqua | Desde julio de 2002 | Complementa la referencia MODIS |
-| VIIRS | Suomi NPP (S-NPP) | Desde enero de 2012 | Incluido en la prioridad de `config.yaml`; excluido de la campaña de lotes descrita en `PLAN_ANALISIS_LOTES.md` |
+| VIIRS | Suomi NPP (S-NPP) | Desde enero de 2012 | Fuera de la serie y de la descarga por defecto; ver `DECISIONES.md` |
 | VIIRS | NOAA-20 | Desde abril de 2018 | Usado en las corridas por lote documentadas |
 | VIIRS | NOAA-21 | Desde enero de 2024 | Configurado como plataforma posible; su participación en la publicación debe confirmarse |
 
@@ -63,7 +63,7 @@ El procesamiento se ejecuta con Python y DuckDB; H3 proporciona la grilla espaci
 - La cobertura y los horarios de observación cambian por plataforma y período. Los primeros años de MODIS tienen una sola plataforma disponible y Aqua tuvo un corte en agosto de 2020.
 - La calidad de algunos atributos cambia entre colecciones y épocas algorítmicas. El pipeline conserva esa información para el control de calidad.
 - Los datos recientes NRT pueden carecer del atributo `type`; por eso la normalización incorpora una máscara de fuentes estáticas.
-- La lista de plataformas debe leerse junto con la configuración de cada corrida. La configuración principal y los lotes no usan exactamente el mismo alcance de S-NPP.
+- La lista de plataformas de una corrida es la de `viirs_priority` y `platform_periods` en su configuración. La principal y los lotes usan las mismas.
 - El conjunto de datos y la salida publicada son locales y están excluidos de Git; su generación debe realizarse antes de construir el frontend.
 
 ## 6. Estado y documentación relacionada

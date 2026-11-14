@@ -14,7 +14,7 @@
    export FIRMS_MAP_KEY=<tu clave>
    python3 scripts/descargar_firms.py --nrt --desde 2026-01-01
    ```
-   El script recorre el rango de a 5 días (el máximo de la API) para `MODIS_NRT`, `VIIRS_NOAA20_NRT`, `VIIRS_NOAA21_NRT` y `VIIRS_SNPP_NRT`, con la API por país (código ISO3, `ARG`), y guarda los CSV en `Datos/nrt/<fuente>/` con nombres `<fuente>-<fecha>-<días>d_<año>_<País>.csv`, así la ingesta toma el país del nombre. Antes se usaba una caja, que traía focos de los países vecinos etiquetados como Argentina.
+   El script recorre el rango de a 5 días (el máximo de la API) para `MODIS_NRT`, `VIIRS_NOAA20_NRT` y `VIIRS_NOAA21_NRT`, con la API por país (código ISO3, `ARG`), y guarda los CSV en `Datos/nrt/<fuente>/` con nombres `<fuente>-<fecha>-<días>d_<año>_<País>.csv`, así la ingesta toma el país del nombre. Antes se usaba una caja, que traía focos de los países vecinos etiquetados como Argentina.
 2. Reprocesar todo, porque cambian los datos de entrada:
    ```bash
    .venv/bin/python -m pipeline all

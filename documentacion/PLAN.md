@@ -40,7 +40,7 @@ La entrada proviene de NASA FIRMS e incluye focos MODIS y VIIRS. El pipeline uni
 
 La configuración principal usa la métrica `n_clusters`, toma Terra + Aqua como referencia y pasa a una serie estimada con VIIRS desde el 1 de enero de 2022. Los valores armonizados no son observaciones adicionales. Los conteos de detecciones originales no deben compararse directamente como si ambos sensores fueran equivalentes.
 
-La política de S-NPP aún requiere resolución: `config.yaml` lo incluye entre las plataformas VIIRS prioritarias, mientras el análisis documentado por lotes lo excluye de esa campaña. Hasta acordar una configuración final, el producto no debe anunciar una única política para todas las corridas.
+S-NPP no integra la serie: la configuración principal y los lotes usan Terra, Aqua, NOAA-20 y NOAA-21. Las decisiones tomadas y las que siguen abiertas están en [`DECISIONES.md`](DECISIONES.md).
 
 ## 5. Componentes y responsabilidades
 

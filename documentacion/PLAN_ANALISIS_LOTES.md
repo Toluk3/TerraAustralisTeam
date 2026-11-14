@@ -43,9 +43,9 @@ El directorio `lotes/resumen/` contiene subdirectorios para L1–L4 y las ocho v
 
 ## 4. Selección de plataformas en esta campaña
 
-Las corridas por lote descritas aquí excluyen Suomi NPP y utilizan NOAA-20 para la comparación de solape de esa campaña. La decisión responde al alcance y formato de los archivos que se prepararon para los lotes; no debe interpretarse automáticamente como la política definitiva del pipeline general.
+Las corridas por lote no usan Suomi NPP: la comparación de solape se hace con NOAA-20 (abril de 2018 a diciembre de 2021).
 
-`config.yaml` incluye S-NPP en la prioridad de plataformas VIIRS. Por tanto, cualquier publicación debe identificar la configuración exacta y confirmar qué plataformas se usaron. El resumen ejecutivo documenta esta diferencia en [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md).
+Desde la rama `fixes-juana`, `config.yaml` tampoco lo incluye, así que la configuración principal y los lotes coinciden. El motivo y cómo revertirlo están en [`DECISIONES.md`](DECISIONES.md).
 
 ## 5. Ejecución y resultados versionados
 
@@ -89,7 +89,7 @@ Queda como decisión del equipo activarlo: triplica el tiempo de `calibrate` y o
 - Determinar si L4 y las variantes de sensibilidad L5 son necesarias para sostener las conclusiones de la entrega.
 - Implementar scripts reproducibles de análisis en `analisis/scripts/` y guardar resultados interpretados en `analisis/resultados/`.
 - Entregar al pipeline cualquier cambio recomendado de métrica, fechas de transición, parámetros o celdas que deban enmascararse, con la evidencia correspondiente.
-- Confirmar qué plataformas participan en la serie que se publicará; no mezclar los resultados de esta campaña, restringida a NOAA-20, con la configuración general que contempla S-NPP.
+- Decidir si se activa la calibración común (`calibration_from`) antes de la corrida final; ver [`DECISIONES.md`](DECISIONES.md).
 - Publicar o ejecutar de nuevo los análisis sobre la configuración final si la selección de métrica o plataforma cambia.
 
 Los valores de duración y tamaño que aparecían en estimaciones previas son dependientes del equipo y de los datos disponibles; no se consideran criterios de cierre.

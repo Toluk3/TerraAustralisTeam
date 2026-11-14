@@ -68,7 +68,7 @@ Esta secuencia describe el camino propuesto para completar la demostración; el 
 - H3 organiza los datos espaciales en niveles de resolución adecuados para el mapa y la comparación regional.
 - El mapa presenta valores armonizados y no utiliza conteos crudos por sensor como sustituto de la serie.
 - El cambio configurado a VIIRS comienza el 1 de enero de 2022; los valores posteriores son estimaciones derivadas de la calibración.
-- La configuración principal contempla S-NPP, mientras que los lotes de análisis documentan una campaña basada en NOAA-20. La publicación debe identificar su configuración y resolver esta diferencia.
+- La serie usa MODIS (Terra y Aqua) y VIIRS NOAA-20 y NOAA-21. S-NPP quedó fuera de la configuración principal y de los lotes ([`DECISIONES.md`](DECISIONES.md)).
 
 Para una explicación ejecutiva del producto y sus límites, consultar [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md).
 

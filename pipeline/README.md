@@ -47,7 +47,7 @@ Las etapas del pipeline y las pruebas automáticas están implementadas. Los dat
 Antes de una publicación final hay que identificar la configuración exacta y verificar:
 
 - La métrica elegida para la serie, con la evidencia de validación.
-- Las plataformas activas, en particular la diferencia entre la prioridad de S-NPP en `config.yaml` y su exclusión en el plan de análisis por lotes.
+- Las plataformas activas: Terra, Aqua, NOAA-20 y NOAA-21. S-NPP quedó fuera ([`DECISIONES.md`](../documentacion/DECISIONES.md)).
 - Los datos y el intervalo temporal efectivamente incluidos.
 - El `config_hash` de los productos generados.
 

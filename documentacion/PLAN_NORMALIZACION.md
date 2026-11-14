@@ -4,7 +4,7 @@
 
 Este documento describe el método implementado por el pipeline para transformar las observaciones de NASA FIRMS en productos comparables. Los datos se unifican en un esquema común, se filtran y agregan con una grilla H3, y se armonizan mediante factores de calibración ajustados durante períodos de observación simultánea.
 
-La configuración principal es la fuente de verdad para una ejecución: actualmente especifica la métrica `n_clusters`, la referencia Terra + Aqua, el uso de MODIS hasta el 31 de diciembre de 2021 y el cambio a VIIRS desde el 1 de enero de 2022. El análisis por lotes restringe algunas plataformas de forma diferente; esa divergencia, especialmente para S-NPP, debe quedar resuelta antes de declarar una corrida final.
+La configuración principal es la fuente de verdad para una ejecución: actualmente especifica la métrica `n_clusters`, la referencia Terra + Aqua, el uso de MODIS hasta el 31 de diciembre de 2021 y el cambio a VIIRS desde el 1 de enero de 2022. La serie usa Terra, Aqua, NOAA-20 y NOAA-21; S-NPP quedó fuera. Las decisiones tomadas y las abiertas están en [`DECISIONES.md`](DECISIONES.md).
 
 ## 1. Flujo de datos
 
@@ -119,7 +119,7 @@ Los lotes L1–L3 cuentan con resúmenes versionados en `lotes/resumen/`. La car
 ## 7. Decisiones y límites vigentes
 
 1. **Métrica recomendada:** `n_clusters` es la métrica configurada, pero la recomendación debe basarse en la comparación final de las ablaciones y en la validación disponible.
-2. **Uso de S-NPP:** la configuración general lo incluye como plataforma elegible; el plan de lotes lo excluye de esa campaña. Se debe fijar explícitamente el alcance de la ejecución que se publicará.
+2. **S-NPP:** fuera de la serie, tanto en la configuración principal como en los lotes. El solape VIIRS–MODIS queda en 3,75 años (NOAA-20, 2018-04 → 2021-12) y `calibrate` lo avisa.
 3. **Datos de 2026:** la incorporación de NRT está pendiente y exige una corrida con su configuración y controles correspondientes.
 4. **Transferibilidad:** resúmenes de Argentina y otros lotes no implican que un factor calibrado en una región sea válido para todas las demás.
 5. **Interpretación:** el producto describe detecciones satelitales armonizadas; no identifica perímetros, causas ni confirma incendios.

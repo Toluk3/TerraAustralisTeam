@@ -142,7 +142,7 @@ def run(cfg: Config, con) -> dict:
                         "no aporta a la serie ni al ajuste (¿faltan sus archivos en la carpeta de entrada?)", p)
     for src, (a, b) in windows.items():
         if src in VIIRS_PLATFORMS and (b - a).days < 5 * 365:
-            log.warning("calibración: el solape de %s con MODIS es de %.1f años (%s → %s); con S-NPP serían ~10",
+            log.warning("calibración: el solape de %s con MODIS es de solo %.1f años (%s → %s): k tiene poca muestra",
                         src, (b - a).days / 365.25, a, b)
     build_month_sums(cfg, con, windows, cfg["calibration_levels"])
     w, minc, h = int(cfg["month_window"]), cfg["min_source_count"], cfg.config_hash

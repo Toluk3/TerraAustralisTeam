@@ -43,7 +43,9 @@ SENSORES = {
     "viirs-jpss2": (2024, "VIIRS NOAA-21"),   # si FIRMS todavía no lo publica por país, da 404 y se sigue
 }
 # Fuentes NRT de la API
-NRT_SOURCES = ["MODIS_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT", "VIIRS_SNPP_NRT"]
+NRT_SOURCES = ["MODIS_NRT", "VIIRS_NOAA20_NRT", "VIIRS_NOAA21_NRT"]
+# S-NPP no integra la serie (documentacion/DECISIONES.md): se puede bajar pidiéndolo, pero no por defecto.
+SENSORES_DEFAULT = [s for s in SENSORES if s != "viirs-snpp"]
 # Código ISO 3166-1 alfa-3 que pide la API por país. Antes se usaba una caja (API de área), que
 # traía también focos de Chile, Uruguay, Paraguay y Brasil etiquetados como Argentina.
 # Para otros países: --iso3 "United States=USA" Australia=AUS (o agregarlos acá).
@@ -166,7 +168,7 @@ def main(argv: list[str] | None = None) -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--destino", default="Datos", help="carpeta de salida (por defecto Datos/)")
     ap.add_argument("--paises", nargs="+", default=["Argentina"])
-    ap.add_argument("--sensores", nargs="+", default=list(SENSORES), choices=list(SENSORES))
+    ap.add_argument("--sensores", nargs="+", default=SENSORES_DEFAULT, choices=list(SENSORES))
     ap.add_argument("--anios", help="ej. 2018-2021 o 2010,2015,2020 (por defecto, todos los publicados)")
     ap.add_argument("--forzar", action="store_true", help="volver a bajar aunque el archivo ya esté")
     ap.add_argument("--nrt", action="store_true", help="bajar datos NRT recientes con la API (FIRMS_MAP_KEY)")
