@@ -1,52 +1,36 @@
-# `analisis/` — Área 2 · Análisis y validación
+# Análisis y validación
 
-**Responsable:** _(completar)_
+## Propósito
 
-## Qué hace
+Esta área contrasta la calibración y los productos del pipeline con resultados reproducibles. Su función es aportar evidencia sobre la métrica, las fechas de transición, las plataformas y los límites de interpretación; no modifica directamente el pipeline ni convierte detecciones satelitales en confirmaciones de incendios.
 
-Revisa con los datos reales que la armonización funciona y lo convierte en evidencia: recomienda la métrica, confirma las fechas de deriva, detecta fuentes de calor que no son incendios y produce los gráficos y tablas del pitch. **No modifica el pipeline**: lo que haya que cambiar se lo pide al Área 1 con la evidencia.
+El estado general y las decisiones pendientes se resumen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md).
 
-## Qué entrega y qué recibe
+## Estado actual
 
-| | Qué | A / de quién |
-|---|---|---|
-| Recibe | `data/prehack.duckdb` (abrir con `read_only=True`) y `data/publish/reportes/` | Área 1 |
-| Entrega | Métrica recomendada, celdas a enmascarar, confirmación de `switch_date` | Área 1 |
-| Entrega | Gráficos y tablas para el pitch, lista de picos de fuego de la zona | Área 5 |
+Los resúmenes versionados de los lotes L1 (Argentina), L2 (Cono Sur) y L3 (Brasil) se encuentran en `lotes/resumen/`. En este directorio solo está versionado este README: no se encontraron scripts de análisis propios ni resultados finales interpretados en `analisis/scripts/` o `analisis/resultados/`.
 
-## Estructura sugerida
+Por lo tanto, los resúmenes de los lotes constituyen evidencia de ejecuciones, pero no significan que todas las preguntas del análisis estén contestadas ni que la recomendación de métrica y plataformas para la publicación haya quedado cerrada.
 
-```
-analisis/
-├── README.md
-├── notebooks/       exploración (Jupyter); limpiar las salidas antes de commitear
-├── scripts/         scripts que generan los resultados finales, reproducibles
-├── config/          configuraciones propias para pruebas de sensibilidad
-└── resultados/      PNG y CSV chicos que se versionan (los usa el Área 5)
-```
+## Tareas de cierre
 
-Para probar otros parámetros sin tocar los datos del Área 1, copiar `config.yaml` a `analisis/config/`, cambiar `data_dir` y `publish_dir` a una carpeta propia (por ejemplo `data/analisis/`) y correr `python -m pipeline all --config analisis/config/<archivo>.yaml`.
+1. Revisar los resultados por lote junto con la configuración que los produjo.
+2. Elaborar scripts reproducibles para comparar métricas, sesgos y estabilidad de la calibración.
+3. Registrar conclusiones y visualizaciones en `analisis/resultados/`.
+4. Recomendar la métrica y plataforma para la corrida a publicar, documentando la evidencia.
+5. Solicitar cambios al Área de datos y volver a procesar cuando una conclusión requiera modificar parámetros.
 
-## Tareas
+No presentar conclusiones regionales generales si el análisis disponible no cubre esas regiones ni esos sensores.
 
-**P0**
-- [ ] Armar la carpeta y un script que lea la base en solo lectura
-- [ ] Gráfico antes/después de la zona con datos reales (`reportes/zona_antes_despues.csv`)
-- [ ] Tabla de ablación legible (`reportes/ablacion.csv`) y **recomendación de métrica** al Área 1
-- [ ] Gráfico de deriva: hora solar mediana por plataforma y año, y `k` por año (`reportes/hora_solar_por_plataforma.csv`, `reportes/k_por_anio.csv`). Confirmar o corregir `switch_date`
+## Reglas de trabajo
 
-**P1**
-- [ ] Vaca Muerta: listar celdas r8 con focos persistentes recientes que no estén en la máscara y pasarlas al Área 1
-- [ ] Lista de los picos de fuego de la zona posteriores a 2022, con fecha y lugar, para que el Área 5 elija el caso de la demo
-- [ ] Revisar la serie de la zona: meses con mediana 0, meses con cobertura parcial y si la anomalía tiene sentido
-- [ ] Sensibilidad del resultado a `min_conf_class` y `mask_min_months`
+- Abrir `data/prehack.duckdb` y demás bases del pipeline en modo de solo lectura.
+- Registrar la configuración y `config_hash` asociados a cada resultado.
+- Mantener los resultados regenerables desde scripts versionados; separar las exploraciones temporales de los entregables finales.
+- Distinguir resultados sintéticos de los obtenidos con datos FIRMS.
 
-**P2**
-- [ ] Validar que `k` cambia por región con un país vecino (pedir la ingesta al Área 1)
-- [ ] Mapa de la incertidumbre (ancho de la banda p05–p95) por zona del mapa
+## Referencias
 
-## Reglas
-
-- Abrir siempre la base del Área 1 en solo lectura; si el pipeline está corriendo, esperar a que termine.
-- Los gráficos usan la paleta del proyecto (Okabe-Ito para categorías, viridis y PuOr para rampas) y aclaran cuando los datos son sintéticos.
-- Cada resultado en `resultados/` tiene que poder regenerarse con un script de `scripts/`.
+- [`documentacion/PLAN_ANALISIS_LOTES.md`](../documentacion/PLAN_ANALISIS_LOTES.md): alcance de la campaña por lotes y su estado.
+- [`documentacion/PLAN_NORMALIZACION.md`](../documentacion/PLAN_NORMALIZACION.md): método de normalización y validación.
+- [`pipeline/README.md`](../pipeline/README.md): ejecución y productos del pipeline.

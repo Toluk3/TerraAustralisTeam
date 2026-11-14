@@ -1,59 +1,17 @@
-# `backend/` — Área 3 · Backend e infraestructura
+# Backend e infraestructura
 
-**Responsable:** _(completar)_
+## Estado actual
 
-## Qué hace
+Este directorio no contiene una implementación de backend. El diseño Django, API y Cloud Run que se había propuesto anteriormente no se construyó en el repositorio y no forma parte del cierre inmediato acordado.
 
-Sirve la API de la app con Django, consultando con DuckDB los Parquet que publica el pipeline. También se encarga de la infraestructura en Google Cloud: el bucket, el deploy en Cloud Run, la clave de Google Maps y el dominio. Todo lo que tenga que ver con el deploy (Dockerfile, configuración de Cloud Run) vive dentro de esta carpeta.
+La demostración actual no requiere backend: el pipeline genera productos Parquet en `data/publish/`, el frontend los convierte en JSON estáticos y la aplicación los sirve junto con sus archivos web. El estado, las decisiones pendientes y la ruta para completar esa publicación se describen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md).
 
-## Qué entrega y qué recibe
+## Posible evolución
 
-| | Qué | A / de quién |
-|---|---|---|
-| Recibe | `data/publish/` según `CONTRATO_DATOS.md` (en local, y en el bucket) | Área 1 |
-| Entrega | API según `CONTRATO_API.md` | Área 4 |
-| Entrega | Clave de Google Maps restringida, como variable de entorno | Área 4 |
-| Entrega | URL del deploy | Áreas 4 y 5 |
+Si una etapa posterior requiere consultas dinámicas, se deberá acordar e implementar un contrato entre el frontend y el servicio antes de seleccionar infraestructura. El frontend tiene un adaptador para una fuente API; esto no implica que existan endpoints ni que se haya realizado un despliegue.
 
-## Estructura sugerida
+La propuesta histórica consideraba endpoints de metadatos, calendario, serie temporal, celdas del mapa y focos. El esquema esperado por el cliente puede consultarse en [`frontend/map/README.md`](../frontend/map/README.md). Cualquier implementación futura deberá incluir pruebas y documentar el servicio y su publicación.
 
-```
-backend/
-├── README.md
-├── manage.py
-├── prehack/         proyecto Django (settings, urls)
-├── api/             vistas y consultas DuckDB
-├── fixtures/        Parquet chicos para pruebas, armados según CONTRATO_DATOS.md
-├── tests/
-├── requirements.txt
-└── Dockerfile
-```
+## Seguridad
 
-## Endpoints (ARQUITECTURA.md §5)
-
-`GET /api/meta`, `GET /api/calendar`, `GET /api/timeline`, `GET /api/map`, `GET /api/points`. Ninguno recibe geometrías: la zona es fija. Todos los números son de la serie armonizada.
-
-## Tareas
-
-**P0**
-- [ ] Escribir `documentacion/CONTRATO_API.md` y acordarlo con el Área 4
-- [ ] Revisar las Global Offers de Space Apps: créditos de Google Cloud, si piden tarjeta y cuotas de la Maps API
-- [ ] Proyecto Django y fixtures armados según `CONTRATO_DATOS.md`
-- [ ] Endpoints `meta`, `calendar`, `timeline`, `map` y `points` con DuckDB en solo lectura, primero contra una copia local de `data/publish/`
-- [ ] Bucket de Cloud Storage y cuenta de servicio; avisar al Área 1 para que suba los datos
-- [ ] Clave de Google Maps restringida por dominio (HTTP referrer), limitada a la Maps JavaScript API y con tope de cuota
-- [ ] Dockerfile y primer deploy en Cloud Run
-
-**P1**
-- [ ] Copiar los Parquet chicos al contenedor al arrancar (evita demoras en los arranques en frío)
-- [ ] Anomalía cuando la mediana es 0: diferencia absoluta y percentil, no porcentaje
-- [ ] CORS, dominio de GoDaddy apuntado al servicio y pruebas de los endpoints
-
-**P2**
-- [ ] Alternativa con archivos estáticos en Cloud Storage si el backend se complica
-
-## Reglas
-
-- La base y los Parquet se abren solo en lectura; el backend nunca escribe datos.
-- Ningún secreto en el repo: `SECRET_KEY`, credenciales y la clave de Maps van en variables de entorno o Secret Manager.
-- Si un endpoint necesita un dato que no está en `data/publish/`, se le pide al Área 1; no se calcula por fuera del pipeline.
+Las credenciales y claves de servicios no deben guardarse en el repositorio. Si se implementa una API o infraestructura en la nube, sus secretos, permisos, configuración y restricciones de acceso deberán diseñarse y verificarse como parte de ese trabajo.
