@@ -1,0 +1,249 @@
+# Auditoría de coherencia documental y estado de implementación
+
+## Resumen ejecutivo
+
+La auditoría no debe comparar lo que se propuso inicialmente con lo que no existe en producción, ni asumir que una idea sin despliegue es una incoherencia técnica. La comparación correcta es esta:
+
+- Qué fue propuesto en la documentación inicial.
+- Qué quedó implementado y versionado en el repositorio.
+- Qué está realmente desplegado o puede verificarse en la práctica.
+- Qué fue un cambio de rumbo y qué quedó pendiente.
+
+Con ese criterio, el proyecto hoy está en una etapa de implementación parcial y clara, pero no en un estado “final” de arquitectura productiva:
+
+- El pipeline de datos está implementado y es funcional.
+- La demo frontend del mapa está implementada y se ejecuta localmente.
+- El backend Django/Cloud Run que se proponía en la arquitectura no está implementado en el repositorio ni hay evidencia de despliegue real.
+- La solución actual ya no se corresponde con el stack de despliegue que se proponía originalmente en `ARQUITECTURA.md`.
+- El cambio de enfoque es real y debe explicitarse, no ocultarse como “incoherencia”.
+
+## Qué está implementado realmente
+
+### 1) Pipeline de datos
+Sí está implementado.
+
+Se observa una línea funcional de procesamiento:
+- ingestión de datos FIRMS
+- normalización
+- validación y QC
+- calibración con factores `k`
+- rollups
+- export a Parquet
+- publicación en `data/publish`
+- generación de resultados por lote
+
+Esto está respaldado por:
+- `pipeline/`
+- `config.yaml`
+- `scripts/`
+- `lotes/`
+- `tests/`
+
+El proyecto realmente avanzó en la parte de análisis y armonización de series de fuego, con datos y resultados versionados.
+
+### 2) Frontend de demo
+También está implementado.
+
+Se observa una demo funcional del mapa en:
+- `frontend/map`
+- `frontend/map/package.json`
+- `frontend/map/index.html`
+- `frontend/map/src/demo.js`
+- `frontend/map/src/timebar/index.js`
+
+La implementación usa:
+- Vite
+- MapLibre
+- deck.gl
+- H3
+- JSON estáticos generados desde `data/publish`
+
+No hay evidencia de que esto sea una app productiva final, pero sí es una implementación real y ejecutable.
+
+### 3) Backend Django / API / Cloud Run
+No aparece implementado en el repositorio revisado.
+
+No encontramos evidencia de:
+- `manage.py`
+- configuración Django
+- endpoints reales
+- Dockerfile de backend
+- despliegue en Cloud Run
+- servicio prod activo
+- contrato de API formalizado
+
+Esto significa que la propuesta inicial de backend no está en el estado que la documentación de arquitectura sugería.
+
+### 4) Despliegue real
+No puede afirmarse que el proyecto esté desplegado en producción.
+
+No hay evidencia verificable en este repositorio de:
+- URL pública
+- hosting final
+- backend arriba
+- frontend productivo publicado
+- URL vinculada al proyecto
+- deployment config real
+
+Por lo tanto, el estado correcto es:
+- hay una demo local/ejecutable
+- hay una solución basada en datos + frontend
+- no hay despliegue final verificado
+
+## Qué cambió respecto a la propuesta inicial
+
+### Cambio de arquitectura real
+La propuesta inicial hablaba principalmente de:
+- Django
+- API
+- Cloud Storage
+- Cloud Run
+- Google Maps
+- backend como pieza central
+
+La implementación actual no refleja esa arquitectura.
+
+La solución que sí quedó implementada es más bien:
+- pipeline de datos offline
+- export a Parquet
+- generación de JSON para mapa
+- frontend estático con MapLibre + deck.gl
+- no backend productivo
+
+Esto no es una “incoherencia accidental”: es un cambio de rumbo real y documentado por la evolución del repo.
+
+### Cambio de stack del frontend
+La documentación original no estaba cerrada respecto al frontend, pero la implementación actual se decantó en:
+- Vite
+- MapLibre
+- deck.gl
+- H3
+- OpenStreetMap / OpenFreeMap / Esri como base cartográfica
+
+Esto reemplaza la idea de “Google Maps como stack principal” que aparecía en la arquitectura.
+
+### Cambio metodológico de armonización
+La propuesta inicial menciona mejoras del tipo LightGBM y enfoques más “ML-driven”.
+
+La implementación revisada, en cambio, usa:
+- calibración por factores `k`
+- comparaciones por plataforma/sensor
+- bootstrap
+- validación por regiones y métricas
+
+Esto es una decisión metodológica real, y no una falta “de implementación” si el equipo decidió priorizar un método más simple y más transparente.
+
+Lo importante es que este cambio no debe presentarse como si “faltó usar LightGBM”, sino como:
+- se decidió mantener un método basado en normalización + calibración por `k`
+- LightGBM quedó fuera del alcance implementado
+
+## Incoherencias que sí conviene señalar
+
+No todas las diferencias son errores ni incoherencias; algunas son decisiones de alcance. Pero sí hay varios puntos donde la documentación debe ajustarse para que la versión final quede clara.
+
+### 1) Documentación de arquitectura desalineada
+`ARQUITECTURA.md` propone explícitamente Django + Cloud Run + API + Google Maps, pero el código del frontend actual no está apuntando a ese stack.
+
+Esto no significa que la arquitectura anterior estuviera “mal” en el momento, sino que hoy la implementación quedó en otra línea.
+
+Solución recomendada:
+- dejar explícito que la arquitectura actual es “pipeline + frontend estático”
+- separar “arquitectura propuesta” de “arquitectura implementada”
+- indicar claramente que Django/API es un camino futuro o no implementado
+
+### 2) Backend documentado como central, pero no presente
+Los README de `backend/` y de arquitectura siguen describiendo un backend y contrato API esperado, pero no hay backend real en el repo.
+
+Eso genera una tensión documental:
+- el proyecto parece estar en un estado “backend esperado”
+- pero el código realmente visible está centrado en pipeline + frontend
+
+La solución correcta es no tratarlo como un “fallo”, sino como un alcance no completado o un camino alternativo que se tomó.
+
+### 3) S-NPP y sensores
+Hay mezcla entre:
+- documentación que menciona S-NPP y otros sensores
+- análisis por lotes que descartan S-NPP
+- configuraciones que aún siguen incluyendo `snpp` en la prioridad o en la lógica de plataformas
+
+Esto exige una decisión final y explícita:
+- ¿S-NPP se descarta para todo el proyecto?
+- ¿solo para determinados lotes?
+- ¿se mantiene en la serie final o no?
+
+Mientras eso no esté unificado, la documentación no es completamente coherente.
+
+### 4) Alcance del producto no cerrado
+El plan inicial planteaba una app con varios elementos más amplios, pero la demo implementada actual se centra en:
+- mapa
+- valor armonizado
+- barra temporal
+- celdas y puntos
+- comparaciones visuales
+
+Eso está bien como demo, pero no debe venderse ni documentarse como si fuera toda la propuesta inicial.
+
+## Lo que falta como implementación final
+
+### Debe quedar claro si quieren seguir con la estrategia actual
+La ruta actual es viable para una demo en:
+- frontend estático
+- datos publicados
+- JSON generados a partir del pipeline
+- hosting estático
+
+Esto es una línea real de despliegue que sí encaja con el repo actual.
+
+### Debe quedar claro si quieren volver a la estrategia original
+Si el objetivo final es la propuesta de Django + API + Cloud Run + front conectado a backend, entonces falta:
+- implementar backend Django
+- acordar contrato de API
+- conectar frontend a API
+- desplegar servicio real
+- configurar hosting y dominio
+- dejar la documentación alineada con ese stack
+
+Hasta ahí, la arquitectura original no puede sostenerse como “implementada”.
+
+## Estado real del proyecto
+
+El proyecto se encuentra en un estado intermedio y racional:
+
+- Sí está avanzado en el core científico y técnico.
+- Sí hay un frontend funcional.
+- No hay backend productivo ni app publicada.
+- No existe un despliegue verificado.
+- Hay un cambio de arquitectura respecto a la propuesta original.
+- La incoherencia no es “faltó lo que se propuso”; la incoherencia es que la documentación no está explicitando qué ruta quedó vigente.
+
+## Línea base recomendada
+
+La línea base correcta para cerrar la auditoría es esta:
+
+1. El pipeline es la pieza central y funcional.
+2. La demo del mapa es una implementación real y válida.
+3. El backend/prod no está implementado ni desplegado.
+4. La arquitectura original quedó como propuesta de diseño, no como estado actual.
+5. El cambio de flujo debe reconocerse explícitamente y documentarse.
+6. Esta no es una inconsistencia técnica, sino una decisión de alcance y estrategia.
+
+## Conclusión
+
+El proyecto no “falló” en la implementación de la propuesta original; simplemente tomó un camino distinto y la documentación no lo está reflejando con claridad.
+
+La realidad del estado actual es:
+
+- hay una base técnica sólida de datos y análisis
+- hay una demo visual funcional
+- no hay backend productivo ni despliegue final verificado
+- la propuesta original queda como referencia de arquitectura inicial, no como solución actual
+
+En consecuencia, la auditoría debe dejar claro que:
+- no se comparan ideas no desplegadas con implementaciones reales
+- no se exige que el proyecto siga la propuesta original si ya tomó otro rumbo
+- los cambios de arquitectura deben documentarse y justificarse
+- la próxima etapa debe definir si el objetivo final es:
+  - demo estática funcional
+  - o backend/API productivo completo
+
+Sin esa decisión, el repo seguirá mezclando dos estados distintos bajo la misma narrativa.
