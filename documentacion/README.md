@@ -1,15 +1,30 @@
-# `documentacion/`
+# Documentación de Terra Australis
 
-**Dueño:** Área 5, salvo los contratos (ver abajo).
+## Fuente ejecutiva
 
-| Documento | Qué tiene | Dueño |
-|---|---|---|
-| [`AREAS.md`](AREAS.md) | División del trabajo en 5 áreas, reglas para no pisarse, hitos y decisiones que cruzan áreas | Área 5 |
-| [`PLAN.md`](PLAN.md) | Plan general del hackatón: qué pide el desafío y qué producto se entrega | Área 5 |
-| [`ARQUITECTURA.md`](ARQUITECTURA.md) | Stack, almacenamiento, API, flujo de una consulta, despliegue y seguridad | Área 5 (los cambios de API, con el Área 3) |
-| [`PLAN_MODULO_DATOS.md`](PLAN_MODULO_DATOS.md) | Diccionario de campos de FIRMS y advertencias de la documentación técnica | Área 1 |
-| [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md) | Reglas de normalización, calibración y validación que implementa el pipeline | Área 1 |
-| [`Documentacion_Proyecto.pdf`](Documentacion_Proyecto.pdf) | Resumen de todo lo anterior, con figuras | Área 5 |
-| `CONTRATO_DATOS.md` _(a escribir)_ | Estructura y columnas de `data/publish/` | Área 1, lo revisa el Área 3 |
-| `CONTRATO_API.md` _(a escribir)_ | Endpoints y JSON de la API | Área 3, lo revisa el Área 4 |
-| `TEXTOS_APP.md` _(a escribir)_ | Aclaraciones, atribución de FIRMS y textos de ayuda de la app | Área 5 |
+Comenzar por [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md). Resume el objetivo, los componentes que están implementados, las limitaciones y el rumbo inmediato. Es la referencia para entender el estado presente sin confundirlo con propuestas anteriores.
+
+## Guías técnicas vigentes
+
+| Documento | Contenido |
+|---|---|
+| [`PLAN.md`](PLAN.md) | Propósito del producto, alcance que acredita el código y criterios para cerrar la demostración |
+| [`PLAN_MODULO_DATOS.md`](PLAN_MODULO_DATOS.md) | Fuentes FIRMS, atributos y preparación de los datos |
+| [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md) | Método vigente de normalización, agregación, calibración y validación |
+| [`PLAN_ANALISIS_LOTES.md`](PLAN_ANALISIS_LOTES.md) | Diseño de la campaña por lotes y evidencia disponible |
+| [`ARQUITECTURA.md`](ARQUITECTURA.md) | Flujo implementado y alternativas de integración aún no comprometidas |
+| [`AREAS.md`](AREAS.md) | Responsabilidades y coordinación de trabajo entre áreas |
+
+Estos documentos describen el sistema actual y las tareas que todavía están abiertas. Las propuestas técnicas previas solo se conservan cuando ayudan a explicar una decisión o una limitación.
+
+## Registros de auditoría y antecedentes
+
+- [`AUDITORIA_2`](AUDITORIA_2) y [`AUDITORIA_COHERENCIA.md`](AUDITORIA_COHERENCIA.md) documentan la comparación entre las propuestas iniciales y la implementación observada.
+- [`Documentacion_Proyecto.pdf`](Documentacion_Proyecto.pdf) es un resumen previo. Consultar este índice y `FUNDAMENTOS_DEL_PROYECTO.md` para el estado actualizado.
+
+## Repositorios de implementación
+
+- [`pipeline/`](../pipeline/): etapas de procesamiento y su guía operativa.
+- [`analisis/`](../analisis/): análisis y validación.
+- [`frontend/map/`](../frontend/map/): mapa, barra de tiempo y datos estáticos.
+- [`lotes/`](../lotes/): configuraciones de procesamiento por lotes y resúmenes versionados.

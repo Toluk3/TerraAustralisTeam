@@ -1,45 +1,51 @@
-# TerraAustralisTeam
+# Terra Australis
 
-Inicio de hackaton
+Terra Australis es una demostración de exploración temporal de focos de calor detectados por MODIS y VIIRS en el norte de la Patagonia argentina. Un pipeline armoniza los datos y un frontend permite explorar los productos en un mapa y una barra de tiempo.
 
-testv1
+**Para conocer qué está implementado, qué queda pendiente y cuál es el rumbo de cierre, consultar [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](documentacion/FUNDAMENTOS_DEL_PROYECTO.md).**
 
-Calendario de actividad de quemas armonizado MODIS + VIIRS: NASA Space Apps Challenge 2026, challenge *Harmonization of MODIS and VIIRS Hot Spots*.
+## Estado actual
 
-## Áreas del proyecto
+- **Datos:** pipeline en Python, DuckDB y H3 para ingesta, normalización, calibración, control de calidad y exportación.
+- **Visualización:** demostración Vite con MapLibre y deck.gl; consume JSON generados a partir de `data/publish/`.
+- **Ejecución:** los datos fuente y procesados se generan localmente y no se versionan.
+- **Backend y despliegue:** no hay backend Django/API ni publicación web verificable en este repositorio. La prioridad inmediata es completar el flujo estático.
+- **Decisiones pendientes:** confirmar la métrica final y unificar el alcance de plataformas, en particular S-NPP, para la publicación.
 
-El trabajo está dividido en 5 áreas, cada una con sus carpetas y un único responsable. Reglas, hitos y contratos entre áreas: [`documentacion/AREAS.md`](documentacion/AREAS.md).
+## Comenzar
 
-| Área | Carpetas | README con las tareas |
-|---|---|---|
-| 1 · Pipeline de datos | `pipeline/`, `scripts/`, `tests/`, `zona/`, `casos de uso/`, `config.yaml` | [`pipeline/README.md`](pipeline/README.md) |
-| 2 · Análisis y validación | `analisis/` | [`analisis/README.md`](analisis/README.md) |
-| 3 · Backend e infraestructura | `backend/` | [`backend/README.md`](backend/README.md) |
-| 4 · Frontend y visualización | `frontend/` | [`frontend/README.md`](frontend/README.md) |
-| 5 · Producto, integración y pitch | `pitch/`, `documentacion/` | [`pitch/README.md`](pitch/README.md) |
-
-## Módulo de datos
-
-Descarga los focos de FIRMS, los normaliza a un esquema común, los calibra entre sensores y deja una sola serie 2000–2025 para la zona de la demo (Río Negro y Neuquén).
+Para crear un entorno e instalar las dependencias de Python:
 
 ```bash
-python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
-scripts/ejecutar_todo.sh          # descarga (~500 MB) + pipeline completo (~2 min)
-.venv/bin/python -m pytest        # 33 pruebas
+python3 -m venv .venv
 ```
 
-En Windows el entorno queda en `.venv\Scripts\` en lugar de `.venv/bin/` (por ejemplo `.venv\Scripts\python -m pytest`); `scripts/ejecutar_todo.sh` corre en Git Bash y detecta cuál de los dos hay.
+En Linux o macOS:
 
-| Carpeta | Contenido |
+```bash
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m pytest
+```
+
+En Windows:
+
+```powershell
+.venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python -m pytest
+```
+
+La ejecución completa de descarga y pipeline se describe en [`pipeline/README.md`](pipeline/README.md) y en los casos de uso. Para iniciar el mapa se requiere primero una publicación del pipeline y después generar los JSON según [`frontend/map/README.md`](frontend/map/README.md).
+
+## Componentes
+
+| Carpeta | Función |
 |---|---|
-| [`documentacion/`](documentacion) | Plan general, arquitectura, plan del módulo de datos y plan de normalización |
-| [`casos de uso/`](casos%20de%20uso) | Cómo descargar, procesar, auditar, validar, consultar y publicar (CU-01 a CU-10) |
-| [`scripts/`](scripts) | `descargar_firms.py` (MODIS, VIIRS S-NPP y NOAA-20; NRT con la API), `descargar_zona.py`, `ejecutar_todo.sh` |
-| [`pipeline/`](pipeline) | Pipeline en Python + DuckDB + H3. Esquema de la base en [`pipeline/schema.sql`](pipeline/schema.sql) |
-| [`config.yaml`](config.yaml) | Parámetros: filtros, grilla H3, calibración, fechas de deriva, plataformas |
-| [`zona/`](zona) | Contorno de Río Negro y Neuquén (geoBoundaries, CC BY 2.5) |
-| [`tests/`](tests) | Pruebas de §8 de `PLAN_NORMALIZACION.md` con datos sintéticos |
+| [`documentacion/`](documentacion/) | Estado ejecutivo, método, arquitectura y decisiones abiertas |
+| [`pipeline/`](pipeline/) | Procesamiento y publicación de los datos |
+| [`analisis/`](analisis/) | Análisis de validación y resultados |
+| [`frontend/map/`](frontend/map/) | Demostración del mapa y navegación temporal |
+| [`lotes/`](lotes/) | Configuraciones y resúmenes de ejecuciones por lote |
+| [`scripts/`](scripts/) | Descarga y utilidades de preparación |
+| [`tests/`](tests/) | Pruebas automáticas del pipeline |
 
-`Datos/` (CSV de FIRMS) y `data/` (base DuckDB, Parquet y `data/publish/`) se generan localmente y no se versionan.
-
-Datos: NASA FIRMS, MODIS C6.1 y VIIRS C2 375 m.
+`Datos/` y `data/` contienen entradas y productos generados localmente y están excluidos de Git.
