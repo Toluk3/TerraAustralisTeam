@@ -1,0 +1,2 @@
+lote,run_at,config_hash,countries,rows_raw,rows_norm,step_seconds,disk_mb
+L2,2026-11-14 15:54:28.733883-03,50f14a0cdf57,"Chile, Uruguay, Paraguay, Bolivia",7343280,6805605,"{""ingest"": 54.2, ""normalize"": 41.4, ""support"": 2.9, ""aggregate"": 4.2, ""calibrate"": 27.8, ""rollup"": 6.1, ""validate"": 4.9, ""qc"": 2.6}",709.1

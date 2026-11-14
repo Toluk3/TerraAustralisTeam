@@ -1,0 +1,13 @@
+source_platform,metric,is_day,k,sum_ref,sum_source
+noaa20,n_clusters,false,0.3041,315438.0,1037142.0
+noaa20,n_clusters,true,0.4496,948417.0,2109579.0
+noaa20,n_clusters_r7,false,0.378,236472.0,625557.0
+noaa20,n_clusters_r7,true,0.4998,741006.0,1482633.0
+noaa20,n_fires,false,0.1908,319608.0,1675515.0
+noaa20,n_fires,true,0.3247,962598.0,2964558.0
+terra,n_clusters,false,1.5075,1168257.0,774951.0
+terra,n_clusters,true,3.4679,4845222.0,1397172.0
+terra,n_clusters_r7,false,1.5138,887874.0,586506.0
+terra,n_clusters_r7,true,3.4178,3829035.0,1120314.0
+terra,n_fires,false,1.5071,1184691.0,786060.0
+terra,n_fires,true,3.4718,4914675.0,1415592.0
