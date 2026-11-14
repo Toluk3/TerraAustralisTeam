@@ -1,0 +1,10 @@
+# Lote L6_europa (global, por continente): ver documentacion/PLAN_ANALISIS_LOTES.md §3.
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
+
+paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L6_europa, publish_dir: ../data/lotes/L6_europa/publish}
+countries: [Aland Islands, Albania, Austria, Belarus, Belgium, Bosnia and Herzegovina, Bulgaria, Croatia, Cyprus, Czech Republic, Denmark, Estonia, Finland, France, Germany, Greece, Guernsey, Hungary, Ireland,
+  Isle of Man, Italy, Jersey, Kosovo, Latvia, Liechtenstein, Lithuania, Luxembourg, Macedonia Former Yugoslav Republic of, Malta, Moldova, Monaco, Montenegro, Netherlands, Norway, Poland, Portugal, Romania,
+  San Marino, Serbia, Slovakia, Slovenia, Spain, Svalbard and Jan Mayen, Sweden, Switzerland, Ukraine, United Kingdom]
+zone: {outline: ../zona/rio_negro_neuquen.geojson}
+calendar_end: 2023-12-31

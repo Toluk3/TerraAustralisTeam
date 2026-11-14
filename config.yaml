@@ -8,8 +8,9 @@ paths:
 
 # Países a ingerir, según el nombre del CSV (<sensor>_<año>_<País>.csv). Lista vacía = todos.
 countries: [Argentina]
-# País para los CSV que no siguen ese patrón (descargas NRT de la API de FIRMS).
-default_country: Argentina
+# País para los CSV que no siguen ese patrón. null = esos archivos no se ingieren cuando `countries`
+# filtra (se avisa en el log). No poner un país acá salvo que TODO lo que hay en input_dir sea de ese país.
+default_country: null
 
 # --- Zona de la demo (ARQUITECTURA.md §2) ---
 zone:
@@ -18,7 +19,9 @@ zone:
   map_resolutions: [5, 6, 7]                # resoluciones de map/ según el zoom
 
 # --- Normalización (§3) ---
-min_conf_class: nominal       # low | nominal | high: se descarta lo que esté por debajo
+# low | nominal | high: se descarta lo que esté por debajo. `high` es solo para pruebas de sensibilidad:
+# de noche VIIRS casi no marca high y MODIS sí, así que las clases no son equivalentes en ese corte.
+min_conf_class: nominal
 modis_conf_cuts: [30, 80]     # low < 30 <= nominal < 80 <= high
 t_mir_range_k: [250, 550]
 use_static_mask: true
@@ -27,7 +30,7 @@ mask_min_months: 3
 # --- Grilla H3 (§4.1) ---
 h3:
   cluster_res: 8    # foco equivalente de ~1 km y máscara estática
-  cell_res: 7       # celda de los agregados
+  cell_res: 7       # celda de los agregados (las columnas h3_r7/h3_r8 conservan el nombre aunque cambie)
   region_res: 3     # región de calibración
   fallback_res: 2   # región de respaldo
 
@@ -37,15 +40,28 @@ reference: terra_aqua         # terra_aqua | aqua
 modis_stable_until: 2021-12-31
 switch_date: 2022-01-01
 terra_fit_to: 2019-12-31      # k Terra → referencia: se ajusta entre el inicio de Aqua y esta fecha
-viirs_priority: [noaa20, noaa21, snpp]
+# S-NPP queda fuera de la serie (PLAN_NORMALIZACION.md §7): no hay archivos suyos y los lotes se
+# corren sin él. Para volver a usarlo: agregarlo acá y en platform_periods, y bajar viirs-snpp.
+viirs_priority: [noaa20, noaa21]
 # NOAA-21 no tiene solape estable con MODIS: usa el k de NOAA-20.
 k_fallback_platform: {noaa21: noaa20}
 month_window: 1               # ±1 mes alrededor del mes calibrado
 min_source_count: 500         # Σ fuente mínima del estrato para usar ese nivel de región
-calibration_levels: [r3, r2, global]
+# Jerarquía de regiones para k, de más fina a más gruesa: r<resolución H3> y, al final, global.
+# r1 (~600.000 km²) evita caer en "global", que mezcla todo lo que haya en la corrida.
+calibration_levels: [r3, r2, r1, global]
+# Bases de otros lotes (carpeta de datos o prehack.duckdb, relativas a este archivo) cuyos fires_daily se
+# suman al ajustar k. Con la misma lista en todos los lotes, el k de las regiones de frontera y el nivel
+# global son los mismos en todos. Vacío = cada corrida calibra solo con sus datos (corrida principal,
+# L5 y S1). Los lotes L1–L4 y L6 la declaran en lotes/_comun.yaml.
+calibration_from: []
 bootstrap_reps: 200
 bootstrap_seed: 42
 min_median_count: 5           # bajo esto se sugiere la vista mensual (§5.6)
+# Período base de la mediana y de la anomalía: [desde, hasta] o null (todos los años completos).
+# 2003–2021 = MODIS Terra + Aqua observado, sin el tramo Terra sola ni el estimado con VIIRS, y sin
+# que el año que se evalúa entre en su propia mediana. Se recorta a los años que haya en la corrida.
+baseline_years: [2003, 2021]
 
 # --- Plataformas (§4.5) ---
 # operación: rango en que la plataforma puede tener datos. corte: sin datos.
@@ -53,7 +69,6 @@ min_median_count: 5           # bajo esto se sugiere la vista mensual (§5.6)
 platform_periods:
   - {platform: terra,  valid_from: 2000-11-01, valid_to: null,       kind: operación}
   - {platform: aqua,   valid_from: 2002-07-04, valid_to: null,       kind: operación}
-  - {platform: snpp,   valid_from: 2012-01-20, valid_to: null,       kind: operación}
   - {platform: noaa20, valid_from: 2018-04-01, valid_to: null,       kind: operación}
   - {platform: noaa21, valid_from: 2024-01-17, valid_to: null,       kind: operación}
   - {platform: aqua,   valid_from: 2020-08-16, valid_to: 2020-09-02, kind: corte}

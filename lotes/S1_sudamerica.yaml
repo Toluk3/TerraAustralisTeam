@@ -1,65 +1,9 @@
 # Muestra S1: Sudamérica (6 países), 2018–2025. Prueba de escala del módulo del mapa (frontend/map).
 # Datos: scripts/descargar_firms.py --paises <país> --anios 2018-2025 · Zona: scripts/descargar_paises.py
-# Generado desde config.yaml; ver documentacion/PLAN_ANALISIS_LOTES.md.
-# Configuración del pipeline de normalización y armonización.
-# Reglas: documentacion/PLAN_NORMALIZACION.md. Rutas relativas a la carpeta de este archivo.
+# Solo lo que cambia respecto de config.yaml (extends). Las rutas son relativas a esta carpeta.
+extends: ../config.yaml
 
-paths:
-  input_dir: ../Datos         # CSV anuales por país (scripts/descargar_firms.py)
-  data_dir: ../data/lotes/S1
-  publish_dir: ../data/lotes/S1/publish
-
-# Países a ingerir, según el nombre del CSV (<sensor>_<año>_<País>.csv). Lista vacía = todos.
+paths: {input_dir: ../Datos, data_dir: ../data/lotes/S1, publish_dir: ../data/lotes/S1/publish}
 countries: [Argentina, Chile, Uruguay, Brazil, Paraguay, Bolivia]
-# País para los CSV que no siguen ese patrón (descargas NRT de la API de FIRMS).
-default_country: null
-
-# --- Zona de la demo (ARQUITECTURA.md §2) ---
-zone:
-  name: Sudamérica (Argentina, Chile, Uruguay, Brasil, Paraguay y Bolivia)
-  outline: ../zona/sudamerica_6.geojson        # lo genera scripts/descargar_paises.py
-  map_resolutions: [5, 6, 7]                # resoluciones de map/ según el zoom
-
-# --- Normalización (§3) ---
-min_conf_class: nominal       # low | nominal | high: se descarta lo que esté por debajo
-modis_conf_cuts: [30, 80]     # low < 30 <= nominal < 80 <= high
-t_mir_range_k: [250, 550]
-use_static_mask: true
-mask_min_months: 3
-
-# --- Grilla H3 (§4.1) ---
-h3:
-  cluster_res: 8    # foco equivalente de ~1 km y máscara estática
-  cell_res: 7       # celda de los agregados
-  region_res: 3     # región de calibración
-  fallback_res: 2   # región de respaldo
-
-# --- Calibración (§5) ---
-metric: n_clusters            # n_fires | n_clusters | n_clusters_r7 (la que gane la validación)
-reference: terra_aqua         # terra_aqua | aqua
-modis_stable_until: 2021-12-31
-switch_date: 2022-01-01
-terra_fit_to: 2019-12-31      # k Terra → referencia: se ajusta entre el inicio de Aqua y esta fecha
-viirs_priority: [noaa20, noaa21, snpp]
-# NOAA-21 no tiene solape estable con MODIS: usa el k de NOAA-20.
-k_fallback_platform: {noaa21: noaa20}
-month_window: 1               # ±1 mes alrededor del mes calibrado
-min_source_count: 500         # Σ fuente mínima del estrato para usar ese nivel de región
-calibration_levels: [r3, r2, global]
-bootstrap_reps: 200
-bootstrap_seed: 42
-min_median_count: 5           # bajo esto se sugiere la vista mensual (§5.6)
-
-# --- Plataformas (§4.5) ---
-# operación: rango en que la plataforma puede tener datos. corte: sin datos.
-# El fin real se toma además de lo que hay en Datos/ (kind = datos).
-platform_periods:
-  - {platform: terra,  valid_from: 2000-11-01, valid_to: null,       kind: operación}
-  - {platform: aqua,   valid_from: 2002-07-04, valid_to: null,       kind: operación}
-  - {platform: snpp,   valid_from: 2012-01-20, valid_to: null,       kind: operación}
-  - {platform: noaa20, valid_from: 2018-04-01, valid_to: null,       kind: operación}
-  - {platform: noaa21, valid_from: 2024-01-17, valid_to: null,       kind: operación}
-  - {platform: aqua,   valid_from: 2020-08-16, valid_to: 2020-09-02, kind: corte}
-
-calendar_start: 2018-01-01    # la muestra solo tiene 2018–2025
-calendar_end: null            # null = último día con datos
+zone: {name: 'Sudamérica (Argentina, Chile, Uruguay, Brasil, Paraguay y Bolivia)', outline: ../zona/sudamerica_6.geojson}
+calendar_start: 2018-01-01

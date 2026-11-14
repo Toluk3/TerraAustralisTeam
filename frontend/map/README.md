@@ -124,6 +124,11 @@ Todo en JSON **columnar** (un arreglo por columna más `length`): deck.gl lo lee
 python frontend/map/scripts/build_mocks.py --publish data/lotes/S1/publish --out frontend/map/public/mock-s1
 ```
 
+### Reglas del contrato
+
+- **Celdas H3 como texto.** Los índices H3 son enteros de 64 bits, más grandes que el mayor entero exacto de JavaScript (2^53): la API tiene que mandarlos como string hexadecimal, igual que los mocks.
+- **Resoluciones.** El mapa usa las de `meta.map.resolutions` (lo que publicó el pipeline en `zone.map_resolutions`) y elige la más cercana a la ideal para cada zoom.
+
 ## Prueba con 6 países
 
 Muestra **S1**: Argentina, Chile, Uruguay, Brasil, Paraguay y Bolivia, de 2018 a 2025 (tiene el solape MODIS + VIIRS 2018–2021 que necesita la calibración y los años estimados 2022–2025).

@@ -2,6 +2,7 @@
 
 Para cada año del solape estable se ajusta k con los demás años y se predice el excluido:
 predicción = Σ fuente × k, observado = Σ referencia (MODIS), comparados en región r3 × mes.
+Siempre con los datos de la corrida, aunque k se ajuste con calibration_from: mide el método en cada lote.
 """
 from __future__ import annotations
 
@@ -30,20 +31,31 @@ METRIC_VARIANT = {"n_fires": "k_region_mes_dianoche", "n_clusters": "k_region_me
 
 
 def load_overlap(cfg: Config, con, src: str, a, b) -> list[dict]:
+    """Sumas por región × año-mes × día/noche. `r3` es la región en la que se compara; `reg` tiene
+    la región de cada nivel de calibration_levels."""
     ref = sql_in(cfg.reference_platforms)
+    levels = [lv for lv in cfg["calibration_levels"] if lv != "global"]
+    regs = "".join(f"{cfg.level_region_sql(lv)} AS _reg{i}, " for i, lv in enumerate(levels))
     sums = ", ".join(
         f"coalesce(sum(f.{m}) FILTER (f.platform IN ({ref})), 0)::DOUBLE, "
         f"coalesce(sum(f.{m}) FILTER (f.platform = '{src}'), 0)::DOUBLE" for m in METRICS)
     rows = con.execute(f"""
-        SELECT f.region_r3, f.region_r2, year(f.local_date), month(f.local_date), f.is_day, {sums}
+        SELECT f.region_r3, {regs}year(f.local_date), month(f.local_date), f.is_day, {sums}
         FROM fires_daily f
         JOIN _eligible e ON e.source_platform = '{src}' AND e.year = year(f.local_date)
              AND e.month = month(f.local_date)
         WHERE f.local_date BETWEEN DATE '{a}' AND DATE '{b}' AND f.platform IN ({ref}, '{src}')
         GROUP BY ALL
     """).fetchall()
-    keys = ["r3", "r2", "year", "month", "is_day"] + [f"{p}_{m}" for m in METRICS for p in ("ref", "src")]
-    return [dict(zip(keys, r)) for r in rows]
+    n = len(levels)
+    keys = ["year", "month", "is_day"] + [f"{p}_{m}" for m in METRICS for p in ("ref", "src")]
+    out = []
+    for r in rows:
+        d = dict(zip(keys, r[1 + n:]))
+        d["r3"] = r[0]
+        d["reg"] = dict(zip(levels, r[1:1 + n])) | {"global": 0}
+        out.append(d)
+    return out
 
 
 def _mdist(a: int, b: int) -> int:
@@ -52,34 +64,36 @@ def _mdist(a: int, b: int) -> int:
 
 
 class Model:
-    """Mismo estimador que calibrate.py (cociente de sumas, ventana, respaldo r3 → r2 → global)."""
+    """Mismo estimador que calibrate.py (cociente de sumas, ventana, respaldo por calibration_levels)."""
 
-    def __init__(self, train, metric, by_region, by_month, by_dn, window, min_count):
-        self.metric, self.by_region, self.by_month, self.by_dn = metric, by_region, by_month, by_dn
+    def __init__(self, train, metric, levels, by_month, by_dn, window, min_count):
+        self.metric, self.levels, self.by_month, self.by_dn = metric, levels, by_month, by_dn
         self.min_count = min_count
         self.sums: dict[tuple, list[float]] = defaultdict(lambda: [0.0, 0.0])
         months = range(1, 13) if by_month else [0]
         for r in train:
             dn = r["is_day"] if by_dn else None
-            levels = [("r3", r["r3"]), ("r2", r["r2"]), ("global", 0)] if by_region else [("global", 0)]
             for m in months:
                 if by_month and _mdist(m, r["month"]) > window:
                     continue
-                for lvl, reg in levels:
-                    s = self.sums[(lvl, reg, m, dn)]
+                for lvl in levels:
+                    s = self.sums[(lvl, r["reg"][lvl], m, dn)]
                     s[0] += r[f"ref_{metric}"]
                     s[1] += r[f"src_{metric}"]
 
     def k(self, r: dict) -> float | None:
         m = r["month"] if self.by_month else 0
         dn = r["is_day"] if self.by_dn else None
-        if self.by_region:
-            for lvl, reg in (("r3", r["r3"]), ("r2", r["r2"])):
-                s = self.sums.get((lvl, reg, m, dn))
-                if s and s[1] >= self.min_count:
+        for lvl in self.levels:
+            s = self.sums.get((lvl, r["reg"][lvl], m, dn))
+            if not s:
+                continue
+            if lvl == "global":
+                if s[1] > 0:
                     return s[0] / s[1]
-        s = self.sums.get(("global", 0, m, dn))
-        return s[0] / s[1] if s and s[1] > 0 else None
+            elif s[1] >= self.min_count:
+                return s[0] / s[1]
+        return None
 
 
 def metrics(pairs: list[tuple[float, float]]) -> tuple:
@@ -108,6 +122,7 @@ def run(cfg: Config, con) -> dict:
         return {}
     eligible_months(cfg, con, windows)
     w, minc, h = int(cfg["month_window"]), cfg["min_source_count"], cfg.config_hash
+    levels = list(cfg["calibration_levels"])
     ins = "INSERT INTO validation VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     summary = {}
     for src, (a, b) in windows.items():
@@ -120,7 +135,7 @@ def run(cfg: Config, con) -> dict:
             pooled, pooled_dn = [], defaultdict(list)
             for y in years:
                 model = None if none else Model([r for r in data if r["year"] != y], metric,
-                                                by_region, by_month, by_dn, w, minc)
+                                                levels if by_region else ["global"], by_month, by_dn, w, minc)
                 cell: dict[tuple, list[float]] = defaultdict(lambda: [0.0, 0.0])
                 for r in (r for r in data if r["year"] == y):
                     k = 1.0 if none else model.k(r)

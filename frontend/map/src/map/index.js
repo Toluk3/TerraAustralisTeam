@@ -32,8 +32,18 @@ export { BASEMAPS } from './basemaps.js';
  * así que su zoom es uno menos que el de Google Maps para la misma escala:
  * Google ≤ 6 → r5, 7–8 → r6, ≥ 9 → r7.
  */
-export const zoomToRes = (zoom) => (zoom < 6 ? 5 : zoom < 8 ? 6 : 7);
-const RES_AREA = { 5: '≈ 250 km²', 6: '≈ 36 km²', 7: '≈ 5 km²' };
+const idealRes = (zoom) => (zoom < 6 ? 5 : zoom < 8 ? 6 : 7);
+/**
+ * `available` son las resoluciones que publicó el pipeline (meta.map.resolutions): se usa la más
+ * cercana a la ideal. Sin eso, una publicación con otras resoluciones dejaba el mapa vacío sin error.
+ */
+export function zoomToRes(zoom, available) {
+  const ideal = idealRes(zoom);
+  if (!available?.length || available.includes(ideal)) return ideal;
+  return available.reduce((best, r) => (Math.abs(r - ideal) < Math.abs(best - ideal) ? r : best));
+}
+// Área media de una celda H3 por resolución
+const RES_AREA = { 3: '≈ 12.400 km²', 4: '≈ 1.770 km²', 5: '≈ 250 km²', 6: '≈ 36 km²', 7: '≈ 5 km²', 8: '≈ 0,7 km²' };
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const SENSOR = { terra: 'MODIS', aqua: 'MODIS', snpp: 'VIIRS', noaa20: 'VIIRS', noaa21: 'VIIRS' };
 
@@ -159,7 +169,7 @@ export async function createFireMap(container, options = {}) {
   // --- Estado ---
   const state = {
     period: normalizePeriod(opts.period ?? { from: meta.coverage.to.slice(0, 7) }),
-    res: zoomToRes(map.getZoom()),
+    res: zoomToRes(map.getZoom(), meta.map.resolutions),
     metric: opts.metric,
     hexOpacity: opts.hexOpacity,
     fade: opts.fadeOldPoints,
@@ -294,7 +304,7 @@ export async function createFireMap(container, options = {}) {
     // Plegable: en pantallas chicas arranca cerrada y después respeta lo que elija el usuario
     if (legend.dataset.open == null) legend.dataset.open = root.clientWidth > 600 ? '1' : '0';
     legend.innerHTML = `<details ${legend.dataset.open === '1' ? 'open' : ''}><summary>Leyenda</summary>
-      ${state.layers.cells ? `${cells}<div class="tam-legend__note">Celda H3 r${res} (${RES_AREA[res]}) · serie armonizada MODIS + VIIRS</div>` : ''}
+      ${state.layers.cells ? `${cells}<div class="tam-legend__note">Celda H3 r${res} (${RES_AREA[res] ?? '—'}) · serie armonizada MODIS + VIIRS</div>` : ''}
       ${state.layers.points ? `
         <div class="tam-legend__title">Focos detectados · FRP (MW)</div>
         <div class="tam-legend__bar" style="background:${gradientCss(FIRE)}"></div>
@@ -367,7 +377,7 @@ export async function createFireMap(container, options = {}) {
 
   // --- Movimiento del mapa ---
   map.on('zoom', () => {
-    const res = zoomToRes(map.getZoom());
+    const res = zoomToRes(map.getZoom(), meta.map.resolutions);
     if (res !== state.res) {
       state.res = res;
       emit('resolution', res);

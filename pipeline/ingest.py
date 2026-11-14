@@ -22,6 +22,23 @@ log = logging.getLogger(__name__)
 # modis_2020_Argentina.csv, viirs-jpss1_2020_Argentina.csv, viirs-snpp_2015_Rio_Negro.csv
 NAME_RE = re.compile(r"^(?P<prefix>[A-Za-z0-9\-]+)_(?P<year>\d{4})_(?P<country>[^.]+)\.csv$", re.I)
 
+# Prefijo del nombre del archivo → plataformas que trae. Sirve para saber qué años están publicados
+# aunque los países de la configuración no tengan ningún foco ese año (ausencia = 0, no "sin datos").
+PREFIX_PLATFORMS = (
+    ("modis", ("terra", "aqua")),
+    ("viirs-snpp", ("snpp",)),
+    ("viirs-jpss1", ("noaa20",)), ("viirs-noaa20", ("noaa20",)),
+    ("viirs-jpss2", ("noaa21",)), ("viirs-noaa21", ("noaa21",)),
+)
+
+
+def platforms_of(prefix: str) -> tuple[str, ...]:
+    p = prefix.lower()
+    for start, plats in PREFIX_PLATFORMS:
+        if p.startswith(start):
+            return plats
+    return ()
+
 
 @dataclass
 class Source:
@@ -32,33 +49,55 @@ class Source:
 
 def discover(cfg: Config) -> list[Source]:
     """Zips y CSV sueltos en input_dir, filtrados por los países de la configuración."""
+    return scan(cfg)[0]
+
+
+def scan(cfg: Config) -> tuple[list[Source], dict[tuple[str, int], bool], list[str]]:
+    """Fuentes a ingerir, inventario de años publicados y archivos ignorados por no tener país.
+
+    El inventario es {(plataforma, año): completo}. Un zip <sensor>_<año>_all_countries.zip trae todos
+    los países con focos, así que prueba que el año está publicado aunque los países pedidos no figuren
+    (no tuvieron focos). Un CSV suelto solo prueba el año para su país: si se bajó 2024 nada más que para
+    Argentina, eso no dice nada de 2024 en otro lote.
+    `completo` es False para las descargas NRT (cubren solo unos días del año).
+    """
     root = cfg.input_dir
     if not root.exists():
         raise FileNotFoundError(f"No existe {root}. Bajar los datos: python scripts/descargar_firms.py")
     countries = {c.lower() for c in (cfg.get("countries") or [])}
     out: list[Source] = []
-
-    def country_of(name: str) -> str:
-        m = NAME_RE.match(Path(name).name)
-        if m:
-            return m.group("country").replace("_", " ")
-        return cfg.get("default_country") or "unknown"
+    years: dict[tuple[str, int], bool] = {}
+    unnamed: list[str] = []
 
     def keep(country: str) -> bool:
         return not countries or country.lower() in countries
+
+    def country_of(name: str, from_zip: bool) -> str:
+        m = NAME_RE.match(Path(name).name)
+        if m:
+            country = m.group("country").replace("_", " ")
+            if from_zip or keep(country):
+                complete = "nrt" not in m.group("prefix").lower()
+                for plat in platforms_of(m.group("prefix")):
+                    key = (plat, int(m.group("year")))
+                    years[key] = years.get(key, False) or complete
+            return country
+        if not cfg.get("default_country"):
+            unnamed.append(name)
+        return cfg.get("default_country") or "unknown"
 
     for z in sorted(root.rglob("*.zip")):
         with zipfile.ZipFile(z) as zf:
             members = sorted(n for n in zf.namelist() if n.lower().endswith(".csv"))
         for m in members:
-            c = country_of(m)
+            c = country_of(m, True)
             if keep(c):
                 out.append(Source(f"{z.name}!{m}", c, _extract(z, m)))
     for f in sorted(root.rglob("*.csv")):
-        c = country_of(f.name)
+        c = country_of(f.name, False)
         if keep(c):
             out.append(Source(f.relative_to(root).as_posix(), c, lambda tmp, f=f: f))
-    return out
+    return out, years, unnamed
 
 
 def _extract(zpath: Path, member: str):
@@ -93,7 +132,14 @@ def _count_rows(path: Path) -> tuple[str, int]:
 
 
 def run(cfg: Config, con) -> dict:
-    sources = discover(cfg)
+    sources, years, unnamed = scan(cfg)
+    if unnamed and (cfg.get("countries") or []):
+        log.warning("ingesta: %d archivos sin país en el nombre (<sensor>_<año>_<País>.csv) quedan afuera "
+                    "porque `countries` filtra por país y no hay `default_country`: %s",
+                    len(unnamed), ", ".join(unnamed[:5]))
+    con.execute("DELETE FROM data_years")
+    if years:
+        con.executemany("INSERT INTO data_years VALUES (?, ?, ?)", [(p, y, c) for (p, y), c in sorted(years.items())])
     raw_dir = cfg.parquet_dir("raw")
     con.execute("DROP VIEW IF EXISTS fires_raw")
     reset_dir(raw_dir)

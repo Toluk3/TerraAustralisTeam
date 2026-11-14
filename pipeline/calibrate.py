@@ -3,7 +3,10 @@
 - Solape estable: hasta modis_stable_until (VIIRS) o terra_fit_to (Terra → referencia).
 - Solo meses con coverage_frac = 1 en la fuente y en todas las plataformas de referencia.
 - Ventana de ±month_window meses alrededor del mes calibrado (circular: diciembre ↔ enero).
-- Niveles r3 → r2 → global; `usable` dice si Σ fuente alcanza min_source_count.
+- Niveles de `calibration_levels` (r<resolución H3> de más fina a más gruesa y, al final, global);
+  `usable` dice si Σ fuente alcanza min_source_count.
+- Con `calibration_from`, las sumas incluyen los fires_daily de otros lotes: el k de una región que
+  cruza dos lotes, y el nivel global, son los mismos en todos (si no, "global" es "global del lote").
 - Bootstrap: B réplicas remuestreando años-mes completos del solape.
 - Se ajustan las tres métricas; la que se aplica es `metric` de config.yaml.
 """
@@ -13,13 +16,89 @@ import datetime as dt
 import logging
 import random
 
+import duckdb
+
 from .config import METRICS, Config
-from .db import sql_in
+from .db import sql_in, sql_str
+from .qc import data_fingerprint
 
 log = logging.getLogger(__name__)
 
 VIIRS_PLATFORMS = ("snpp", "noaa20", "noaa21")
-LEVEL_COL = {"r3": "f.region_r3", "r2": "f.region_r2", "global": "0::UBIGINT"}
+DAILY_COLS = "cell, region_r3, region_r2, local_date, sensor, platform, is_day, n_fires, n_clusters, n_clusters_r7"
+
+
+def attach_others(cfg: Config, con) -> list[str]:
+    """Adjunta en solo lectura las bases de calibration_from (menos la propia) y devuelve sus alias."""
+    aliases = []
+    attached = {r[0] for r in con.execute("SELECT database_name FROM duckdb_databases()").fetchall()}
+    for i, p in enumerate(cfg.calibration_from):
+        db = p / "prehack.duckdb" if p.is_dir() or p.suffix == "" else p
+        if db.resolve() == cfg.db_path.resolve():
+            continue
+        if not db.exists():
+            raise FileNotFoundError(
+                f"calibration_from: no existe {db}. Correr antes ese lote hasta `aggregate` "
+                f"(python lotes/correr_lote.py <lote> --fase 1).")
+        alias = f"calib_{i}"
+        if alias not in attached:
+            con.execute(f"ATTACH '{sql_str(db)}' AS {alias} (READ_ONLY)")
+        aliases.append(alias)
+    return aliases
+
+
+def calibration_daily(cfg: Config, con) -> str:
+    """Tabla o vista con los agregados diarios que entran al ajuste de k.
+
+    Sin `calibration_from` es fires_daily. Con `calibration_from`, la unión de fires_daily con los de
+    las otras bases (la propia se saltea si figura en la lista, así todos los lotes comparten la lista).
+    """
+    aliases = attach_others(cfg, con)
+    if not aliases:
+        return "fires_daily"
+    parts = [f"SELECT {DAILY_COLS} FROM fires_daily"] + [f"SELECT {DAILY_COLS} FROM {a}.fires_daily" for a in aliases]
+    con.execute("CREATE OR REPLACE TEMP VIEW _calib_daily AS " + " UNION ALL ".join(parts))
+    log.info("calibración común: fires_daily + %d bases de calibration_from", len(aliases))
+    return "_calib_daily"
+
+
+def reuse_common(cfg: Config, con, windows: dict) -> str | None:
+    """Copia la calibración común de otra base que ya la ajustó con la misma clave (calibration_key).
+
+    La calibración común es idéntica para todos los lotes que comparten la lista: se calcula una vez y
+    el resto la copia. De cada nivel solo se copian las regiones que el lote usa, más el nivel global.
+    """
+    key = cfg.calibration_key
+    if not key:
+        return None
+    for alias in attach_others(cfg, con):
+        try:
+            ok = con.execute(f"""SELECT (SELECT count(*) FROM {alias}.calibration_meta WHERE sources = ?) > 0
+                                    AND (SELECT count(*) FROM {alias}.calibration) > 0""", [key]).fetchone()[0]
+        except duckdb.Error:      # base anterior a calibration_meta
+            ok = False
+        if not ok:
+            continue
+        theirs = {r[0]: (r[1], r[2]) for r in con.execute(
+            f"SELECT DISTINCT source_platform, fit_from, fit_to FROM {alias}.calibration").fetchall()}
+        if theirs != windows:     # otro calendario u otros datos: la ventana de ajuste no coincide
+            continue
+        mine = " OR ".join(
+            f"(c.level = '{lv}' AND c.region IN (SELECT DISTINCT {cfg.level_region_sql(lv)} FROM fires_daily f))"
+            for lv in cfg["calibration_levels"] if lv != "global") or "false"
+        h = cfg.config_hash
+        for table in ("calibration", "calibration_boot"):
+            con.execute(f"""INSERT INTO {table} BY NAME
+                            SELECT * REPLACE ('{h}' AS config_hash) FROM {alias}.{table} c
+                            WHERE c.level = 'global' OR {mine}""")
+        con.execute("DELETE FROM k_by_year")
+        con.execute(f"INSERT INTO k_by_year BY NAME SELECT * FROM {alias}.k_by_year")
+        con.execute("INSERT INTO calibration_meta VALUES (?, ?, ?, current_timestamp)",
+                    [h, data_fingerprint(con), key])
+        db = con.execute("SELECT path FROM duckdb_databases() WHERE database_name = ?", [alias]).fetchone()[0]
+        log.info("calibración común %s: copiada de %s", key, db)
+        return db
+    return None
 
 
 def fit_windows(cfg: Config, con) -> dict[str, tuple[dt.date, dt.date]]:
@@ -65,6 +144,7 @@ def eligible_months(cfg: Config, con, sources) -> None:
 def build_month_sums(cfg: Config, con, windows: dict, levels, table: str = "_ym") -> None:
     """Σ referencia y Σ fuente por plataforma × nivel × región × año-mes × día/noche."""
     eligible_months(cfg, con, windows)
+    daily = calibration_daily(cfg, con)
     ref = cfg.reference_platforms
     sums = ", ".join(
         f"coalesce(sum(f.{m}) FILTER (f.platform IN ({sql_in(ref)})), 0)::DOUBLE AS ref_{m}, "
@@ -73,10 +153,10 @@ def build_month_sums(cfg: Config, con, windows: dict, levels, table: str = "_ym"
     for src, (a, b) in windows.items():
         for level in levels:
             parts.append(f"""
-            SELECT s.src AS source_platform, '{level}' AS level, {LEVEL_COL[level]} AS region,
+            SELECT s.src AS source_platform, '{level}' AS level, {cfg.level_region_sql(level)} AS region,
                    year(f.local_date) AS year, month(f.local_date) AS month, f.is_day, {sums},
                    count(DISTINCT (f.cell, f.local_date)) AS n_cell_days
-            FROM fires_daily f
+            FROM {daily} f
             CROSS JOIN (SELECT '{src}' AS src) s
             JOIN _eligible e ON e.source_platform = s.src
                  AND e.year = year(f.local_date) AND e.month = month(f.local_date)
@@ -99,9 +179,21 @@ def run(cfg: Config, con) -> dict:
     windows = fit_windows(cfg, con)
     con.execute("DELETE FROM calibration")
     con.execute("DELETE FROM calibration_boot")
+    con.execute("DELETE FROM calibration_meta")
     if not windows:
         log.warning("calibración: no hay solape entre fuente y referencia; no se ajusta k")
         return {"rows": 0}
+    src_db = reuse_common(cfg, con, windows)
+    if src_db:
+        return {"rows": con.execute("SELECT count(*) FROM calibration").fetchone()[0], "copiada_de": src_db}
+    for p in cfg["viirs_priority"]:
+        if p not in windows and p not in (cfg.get("k_fallback_platform") or {}):
+            log.warning("calibración: %s está en viirs_priority pero no tiene datos en el solape con MODIS; "
+                        "no aporta a la serie ni al ajuste (¿faltan sus archivos en la carpeta de entrada?)", p)
+    for src, (a, b) in windows.items():
+        if src in VIIRS_PLATFORMS and (b - a).days < 5 * 365:
+            log.warning("calibración: el solape de %s con MODIS es de solo %.1f años (%s → %s): k tiene poca muestra",
+                        src, (b - a).days / 365.25, a, b)
     build_month_sums(cfg, con, windows, cfg["calibration_levels"])
     w, minc, h = int(cfg["month_window"]), cfg["min_source_count"], cfg.config_hash
     for metric in METRICS:
@@ -121,6 +213,8 @@ def run(cfg: Config, con) -> dict:
         """)
     for src, (a, b) in windows.items():
         con.execute("UPDATE calibration SET fit_from = ?, fit_to = ? WHERE source_platform = ?", [a, b, src])
+    con.execute("INSERT INTO calibration_meta VALUES (?, ?, ?, current_timestamp)",
+                [h, data_fingerprint(con), cfg.calibration_key])
     bootstrap(cfg, con, windows)
     k_by_year(cfg, con)
     for row in con.execute("""
@@ -191,37 +285,42 @@ def k_by_year(cfg: Config, con) -> None:
 
 
 def k_lookup_sql(cfg: Config, daily: str = "fires_daily") -> str:
-    """fires_daily con el k de cada fila, por jerarquía r3 → r2 → global (§5.3–5.4).
+    """fires_daily con el k de cada fila, por la jerarquía de `calibration_levels` (§5.3–5.4).
 
     Plataformas de referencia desde el inicio de Aqua: k = 1. Terra antes de Aqua y VIIRS: k
-    ajustado. Una plataforma sin calibración usa la de k_fallback_platform.
+    ajustado. Una plataforma sin calibración usa la de k_fallback_platform. Columnas que agrega:
+    metric_value, cal_platform, k, k_level (ref o el nivel usado) y k_region (región de ese nivel).
     """
     metric = cfg["metric"]
+    levels = list(cfg["calibration_levels"])
     ref = sql_in(cfg.reference_platforms)
     fb = cfg.get("k_fallback_platform") or {}
     fb_case = " ".join(f"WHEN '{a}' THEN '{b}'" for a, b in fb.items())
     fb_expr = f"CASE f.platform {fb_case} ELSE f.platform END" if fb_case else "f.platform"
     is_ref = f"d.platform IN ({ref}) AND d.local_date >= DATE '{cfg.aqua_start}'"
-
-    def join(level: str, alias: str, region: str) -> str:
-        return f"""LEFT JOIN calibration {alias} ON {alias}.metric = '{metric}' AND {alias}.level = '{level}'
-            AND {alias}.usable AND {alias}.source_platform = d.cal_platform AND {alias}.region = {region}
-            AND {alias}.month = month(d.local_date) AND {alias}.is_day = d.is_day"""
+    regs = ", ".join(f"{cfg.level_region_sql(lv)} AS _reg{i}" for i, lv in enumerate(levels))
+    joins = "\n    ".join(
+        f"""LEFT JOIN calibration c{i} ON c{i}.metric = '{metric}' AND c{i}.level = '{lv}'
+            AND c{i}.usable AND c{i}.source_platform = d.cal_platform AND c{i}.region = d._reg{i}
+            AND c{i}.month = month(d.local_date) AND c{i}.is_day = d.is_day""" for i, lv in enumerate(levels))
+    ks = ", ".join(f"c{i}.k" for i in range(len(levels)))
+    lvl_case = " ".join(f"WHEN c{i}.k IS NOT NULL THEN '{lv}'" for i, lv in enumerate(levels))
+    reg_case = " ".join(f"WHEN c{i}.k IS NOT NULL THEN d._reg{i}" for i in range(len(levels)))
+    drop = ", ".join(f"_reg{i}" for i in range(len(levels)))
 
     return f"""
     WITH calibrated AS (SELECT DISTINCT source_platform FROM calibration),
     d AS (
         SELECT f.*, f.{metric} AS metric_value,
                CASE WHEN f.platform IN (SELECT source_platform FROM calibrated) THEN f.platform
-                    ELSE {fb_expr} END AS cal_platform
+                    ELSE {fb_expr} END AS cal_platform,
+               {regs}
         FROM {daily} f
     )
-    SELECT d.* EXCLUDE (cal_platform), d.cal_platform,
-           CASE WHEN {is_ref} THEN 1.0 ELSE COALESCE(c3.k, c2.k, cg.k) END AS k,
-           CASE WHEN {is_ref} THEN 'ref' WHEN c3.k IS NOT NULL THEN 'r3'
-                WHEN c2.k IS NOT NULL THEN 'r2' WHEN cg.k IS NOT NULL THEN 'global' END AS k_level
+    SELECT d.* EXCLUDE ({drop}),
+           CASE WHEN {is_ref} THEN 1.0 ELSE COALESCE({ks}) END AS k,
+           CASE WHEN {is_ref} THEN 'ref' {lvl_case} END AS k_level,
+           CASE WHEN {is_ref} THEN NULL {reg_case} END AS k_region
     FROM d
-    {join('r3', 'c3', 'd.region_r3')}
-    {join('r2', 'c2', 'd.region_r2')}
-    {join('global', 'cg', '0::UBIGINT')}
+    {joins}
     """

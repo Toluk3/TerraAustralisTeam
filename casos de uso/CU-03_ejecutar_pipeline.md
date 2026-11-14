@@ -35,7 +35,7 @@ o solo el procesamiento:
 | 2 | `normalize` | Tipos, fecha solar local, filtros `type` y máscara estática, confianza, versión, duplicados, celdas H3 (pasos 2–8) | `data/norm/`, `data/excluded/`, `static_mask` | 4 s |
 | 3 | `support` | Calendario, períodos de cada plataforma, `coverage_frac`, qué plataforma compone la serie cada día (§4.5, §5.2) | `calendar`, `platform_periods`, `platform_days`, `coverage`, `series_source`, `series_coverage` | 0,1 s |
 | 4 | `aggregate` | Celda r7 × día local × plataforma × día/noche con `n_fires`, `n_clusters`, `n_clusters_r7` (§4.2–4.3) | `fires_daily` | 1 s |
-| 5 | `calibrate` | `k` por región × mes × día/noche en el solape estable, con respaldo r3 → r2 → global, y 200 réplicas bootstrap (§5.3, §5.5) | `calibration`, `calibration_boot`, `k_by_year` | 49 s |
+| 5 | `calibrate` | `k` por región × mes × día/noche en el solape estable, con respaldo r3 → r2 → r1 → global (`calibration_levels`), y 200 réplicas bootstrap (§5.3, §5.5) | `calibration`, `calibration_boot`, `k_by_year` | 49 s |
 | 6 | `rollup` | Aplica `k` por día y agrega a mes y a 8 días (§4.4, §5.4) | `fires_monthly`, `fires_8d` | 1,5 s |
 | 7 | `validate` | Validación dejando un año afuera y tabla de ablación (§6) | `validation` | 7 s |
 | 8 | `qc` | Deriva de la hora de pasada, conteos por versión del algoritmo, cierre de conteos (§8) | `qc_solar_hour`, `qc_algo_epoch`, `qc_report` | 0,2 s |

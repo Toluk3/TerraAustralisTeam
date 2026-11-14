@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import shutil
 from importlib import resources
 from pathlib import Path
@@ -23,12 +24,20 @@ def connect(cfg: Config, read_only: bool = False) -> duckdb.DuckDBPyConnection:
     _load_h3(con)
     if not read_only:
         con.execute(resources.files("pipeline").joinpath("schema.sql").read_text(encoding="utf-8"))
-        refresh_views(cfg, con)
+        # Bases viejas guardaban estas vistas con la ruta absoluta de la máquina que las creó
+        for view in VIEW_NAMES.values():
+            con.execute(f"DROP VIEW IF EXISTS main.{view}")
+    refresh_views(cfg, con)
     return con
 
 
 def _load_h3(con: duckdb.DuckDBPyConnection) -> None:
-    """Extensión h3 de la comunidad; si no instala, UDF con h3 v4 de Python (§1)."""
+    """Extensión h3 de la comunidad de DuckDB (indexado vectorizado, §1).
+
+    Si no se puede instalar (sin red) se corta con un mensaje claro. El respaldo con h3 de Python indexa
+    fila por fila y no tiene h3_polygon_wkt_to_cells (el paso `zone` no corre): solo se usa si se pide
+    con PIPELINE_H3_PYTHON=1, para pruebas chicas.
+    """
     try:
         try:
             con.execute("LOAD h3")
@@ -40,7 +49,12 @@ def _load_h3(con: duckdb.DuckDBPyConnection) -> None:
         con.execute("CREATE OR REPLACE TEMP MACRO h3_ring1(c) AS h3_grid_disk(c, 1)")
         return
     except duckdb.Error as e:  # pragma: no cover - depende de la red
-        log.warning("Extensión h3 no disponible (%s); se usa h3 de Python", e)
+        if os.environ.get("PIPELINE_H3_PYTHON") != "1":
+            raise RuntimeError(
+                f"No se pudo cargar la extensión h3 de DuckDB ({e}). Hace falta red la primera vez: "
+                "`INSTALL h3 FROM community`. Para una prueba chica sin la extensión (lento, sin el paso "
+                "zone): PIPELINE_H3_PYTHON=1.") from e
+        log.warning("Extensión h3 no disponible (%s); se usa h3 de Python, fila por fila", e)
     import h3
     from duckdb import sqltypes as T
 
@@ -79,12 +93,16 @@ def read_parquet_sql(cfg: Config, table: str, sensor: str | None = None) -> str:
 
 
 def refresh_views(cfg: Config, con) -> None:
-    """Vistas fires_raw / fires_norm / fires_excluded sobre los Parquet particionados."""
+    """Vistas fires_raw / fires_norm / fires_excluded sobre los Parquet particionados.
+
+    Son temporales (de la conexión): la ruta de los Parquet no queda guardada en el .duckdb, que así se
+    puede mover o compartir junto con su carpeta de datos. También se crean en conexiones de solo lectura.
+    """
     for table, view in VIEW_NAMES.items():
         if has_parquet(cfg, table):
-            con.execute(f"CREATE OR REPLACE VIEW {view} AS SELECT * FROM {read_parquet_sql(cfg, table)}")
+            con.execute(f"CREATE OR REPLACE TEMP VIEW {view} AS SELECT * FROM {read_parquet_sql(cfg, table)}")
         else:
-            con.execute(f"DROP VIEW IF EXISTS {view}")
+            con.execute(f"DROP VIEW IF EXISTS temp.{view}")
 
 
 def require_view(con, view: str) -> None:

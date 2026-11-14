@@ -20,7 +20,7 @@
    | Sensor del archivo | Producto | Desde |
    |---|---|---|
    | `modis` | MODIS Terra + Aqua (C6.1) | 2000 |
-   | `viirs-snpp` | VIIRS Suomi NPP (C2, 375 m) | 2012 |
+   | `viirs-snpp` | VIIRS Suomi NPP (C2, 375 m). No integra la serie: solo se baja si se pide con `--sensores` | 2012 |
    | `viirs-jpss1` | VIIRS NOAA-20 (C2, 375 m) | 2018 |
 
 3. Si el archivo ya está y tiene el mismo tamaño que en el servidor, no lo vuelve a bajar.

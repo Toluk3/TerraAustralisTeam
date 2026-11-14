@@ -26,7 +26,7 @@ Las fuentes son los productos de focos activos de NASA FIRMS para MODIS y VIIRS.
 
 La metodología implementada utiliza celdas H3, agregaciones diarias y mensuales, calibración mediante factores `k` y validación del cambio entre fuentes. La configuración principal usa `n_clusters` como métrica, una referencia Terra + Aqua, datos MODIS hasta el 31 de diciembre de 2021 y una transición a VIIRS a partir del 1 de enero de 2022. Los resultados armonizados son estimaciones —pueden ser valores fraccionarios—, no detecciones adicionales.
 
-El uso de S-NPP no está unificado en toda la configuración: `config.yaml` lo incluye en la prioridad de plataformas VIIRS, mientras que el plan de análisis por lotes lo excluye de esa campaña. Hasta que esa diferencia se resuelva, la documentación no afirma que todas las corridas finales incorporen o excluyan S-NPP de la misma manera.
+S-NPP no integra la serie: se quitó de `config.yaml`, con lo que la configuración principal y los lotes usan las mismas plataformas (Terra, Aqua, NOAA-20 y NOAA-21). El costo es un solape VIIRS–MODIS de 3,75 años en lugar de unos diez. Las decisiones vigentes están en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md), sección 7.
 
 ## 4. Solución implementada
 
@@ -75,8 +75,7 @@ Demostración local del mapa y la barra de tiempo
 
 ## 6. Límites y decisiones pendientes
 
-- **Métrica final:** la configuración usa `n_clusters`; la recomendación final depende de completar y revisar la evidencia de ablación prevista.
-- **S-NPP:** la configuración principal y el análisis de lotes tienen alcances distintos. Debe acordarse cuál será la política para la serie o corrida que se publique.
+- **Decisiones vigentes:** métrica `n_clusters`, referencia Terra + Aqua, celdas H3 r7, serie sin S-NPP y calibración común a los lotes. Sus motivos están en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md), sección 7. Los lotes tienen que volver a correrse con el pipeline corregido antes de publicar.
 - **Datos recientes:** la incorporación de datos NRT de 2026 y su posterior reemplazo por datos estándar requiere ejecutar y validar el pipeline nuevamente.
 - **Cobertura:** disponibilidad parcial, cambios de sensor y ausencia de detecciones deben distinguirse de un cero observado. La serie armonizada no representa por sí sola la cobertura nubosa ni la ausencia de fuego.
 - **Alcance de la interfaz:** el código actual no acredita la entrega de todas las pantallas, indicadores y descargas imaginados en la propuesta inicial.

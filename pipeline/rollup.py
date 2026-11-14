@@ -5,6 +5,7 @@ import logging
 
 from .calibrate import k_lookup_sql
 from .config import Config
+from .qc import data_fingerprint
 
 log = logging.getLogger(__name__)
 
@@ -20,6 +21,19 @@ def check_hash(cfg: Config, con, table: str = "calibration") -> None:
         raise ConfigHashMismatch(
             f"{table} tiene config_hash {sorted(hashes)} y la configuración actual es {cfg.config_hash}. "
             f"Cambió algún filtro o parámetro: volver a correr `python -m pipeline calibrate rollup`.")
+    if table == "calibration":
+        sup = {r[0] for r in con.execute("SELECT config_hash FROM support_meta").fetchall()}
+        if sup and sup != {cfg.config_hash}:
+            raise ConfigHashMismatch(
+                f"Las tablas de apoyo (cobertura, composición de la serie) se armaron con config_hash "
+                f"{sorted(sup)} y la configuración actual es {cfg.config_hash}: "
+                f"volver a correr `python -m pipeline support calibrate rollup`.")
+        fitted = {r[0] for r in con.execute("SELECT DISTINCT data_fingerprint FROM calibration_meta").fetchall()}
+        now = data_fingerprint(con)
+        if fitted and now is not None and fitted != {now}:
+            raise ConfigHashMismatch(
+                "Los datos ingeridos cambiaron desde que se ajustó k (otra descarga u otros archivos): "
+                "volver a correr `python -m pipeline calibrate rollup`.")
 
 
 def run(cfg: Config, con) -> dict:
@@ -37,6 +51,12 @@ def run(cfg: Config, con) -> dict:
     for p, n in con.execute(
             "SELECT platform, count(*) FROM _daily_k WHERE k IS NULL AND in_series GROUP BY 1").fetchall():
         log.warning("¡%d filas de %s de la serie armonizada no tienen k!", n, p)
+
+    out_n, out_f = con.execute("""SELECT count(*), coalesce(sum(n_fires), 0) FROM _daily_k
+                                  WHERE local_date NOT IN (SELECT date FROM calendar)""").fetchone()
+    if out_n:
+        log.warning("rollup: %d filas de fires_daily (%d focos) quedan fuera del calendario "
+                    "(calendar_start/calendar_end) y no entran a los rollups", out_n, out_f)
 
     h = cfg.config_hash
     for table, col, start_col, kind in (("fires_monthly", "month", "month_start", "month"),

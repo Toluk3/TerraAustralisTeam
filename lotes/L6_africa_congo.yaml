@@ -1,0 +1,8 @@
+# Lote L6_africa_congo (global, por continente): ver documentacion/PLAN_ANALISIS_LOTES.md §3.
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
+
+paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L6_africa_congo, publish_dir: ../data/lotes/L6_africa_congo/publish}
+countries: [Democratic Republic of the Congo, Republic of Congo, Gabon, Equatorial Guinea, Sao Tome and Principe]
+zone: {outline: ../zona/rio_negro_neuquen.geojson}
+calendar_end: 2023-12-31

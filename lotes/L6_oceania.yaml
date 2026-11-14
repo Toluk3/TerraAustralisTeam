@@ -1,0 +1,9 @@
+# Lote L6_oceania (global, por continente): ver documentacion/PLAN_ANALISIS_LOTES.md §3.
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
+
+paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L6_oceania, publish_dir: ../data/lotes/L6_oceania/publish}
+countries: [New Zealand, Papua New Guinea, Solomon Islands, Vanuatu, New Caledonia, Fiji, Samoa, American Samoa, Tonga, Niue, Cook Islands, French Polynesia, Kiribati, Nauru, Palau, Federated States of
+    Micronesia, Guam, Northern Mariana Islands, Wallis and Futuna Islands, Norfolk Island, Antarctica, French Southern and Antarctic Lands, Heard I and McDonald Islands]
+zone: {outline: ../zona/rio_negro_neuquen.geojson}
+calendar_end: 2023-12-31

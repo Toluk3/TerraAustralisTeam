@@ -10,7 +10,7 @@ Terra Australis es una demostración de exploración temporal de focos de calor 
 - **Visualización:** demostración Vite con MapLibre y deck.gl; consume JSON generados a partir de `data/publish/`.
 - **Ejecución:** los datos fuente y procesados se generan localmente y no se versionan.
 - **Backend y despliegue:** no hay backend Django/API ni publicación web verificable en este repositorio. La prioridad inmediata es completar el flujo estático.
-- **Decisiones pendientes:** confirmar la métrica final y unificar el alcance de plataformas, en particular S-NPP, para la publicación.
+- **Decisiones vigentes:** métrica `n_clusters`, referencia Terra + Aqua, serie VIIRS con NOAA-20 y NOAA-21 (sin S-NPP), celdas H3 r7 y calibración común a los lotes. Están en [`documentacion/PLAN_NORMALIZACION.md`](documentacion/PLAN_NORMALIZACION.md), sección 7.
 
 ## Comenzar
 

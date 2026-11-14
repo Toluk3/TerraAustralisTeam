@@ -18,6 +18,13 @@ def write_qc(con, cfg, *, sensor, year, step, rows_in, rows_out, drops=None,
     )
 
 
+def data_fingerprint(con) -> str | None:
+    """Huella de lo ingerido (filas y archivos por sensor × año). Cambia si se reingesta otra cosa."""
+    return con.execute("""SELECT md5(string_agg(concat_ws('|', sensor, year, rows_in, detail), ';'
+                                                   ORDER BY sensor, year))
+                          FROM qc_report WHERE step = 'ingest'""").fetchone()[0]
+
+
 def clear_step(con, step: str) -> None:
     con.execute("DELETE FROM qc_report WHERE step = ?", [step])
 

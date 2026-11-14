@@ -1,0 +1,10 @@
+# Lote L6_norte_centroamerica (global, por continente): ver documentacion/PLAN_ANALISIS_LOTES.md §3.
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
+
+paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L6_norte_centroamerica, publish_dir: ../data/lotes/L6_norte_centroamerica/publish}
+countries: [Mexico, Guatemala, Belize, Honduras, El Salvador, Nicaragua, Costa Rica, Panama, Cuba, Jamaica, Haiti, Dominican Republic, Puerto Rico, Bahamas, Barbados, Trinidad and Tobago, Grenada, Saint
+    Lucia, Saint Vincent and the Grenadines, Dominica, Antigua and Barbuda, Saint Kitts and Nevis, Montserrat, Anguilla, Aruba, Curacao, Sint Maarten, Saint-Martin, Guadeloupe, Martinique, Cayman Islands,
+  Turks and Caicos Islands, British Virgin Islands, United States Virgin Islands, Greenland, Saint Pierre and Miquelon, United States Minor Outlying Islands]
+zone: {outline: ../zona/rio_negro_neuquen.geojson}
+calendar_end: 2023-12-31

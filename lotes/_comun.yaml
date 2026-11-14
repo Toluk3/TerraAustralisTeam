@@ -1,0 +1,24 @@
+# Configuración común de los lotes que cubren el mundo sin repetir países (L1–L4 y L6).
+# Todos ajustan k con la suma de sus fires_daily: el k de una región que cruza dos lotes y el nivel
+# global son los mismos en todos. Las variantes L5 y la muestra S1 repiten países y no entran.
+# Orden de corrida: lotes/correr_todos.sh (fase 1 de todos y después fase 2 de todos).
+extends: ../config.yaml
+
+calibration_from:
+  - ../data/lotes/L1
+  - ../data/lotes/L2
+  - ../data/lotes/L3
+  - ../data/lotes/L4
+  - ../data/lotes/L6_africa_angola_zambia
+  - ../data/lotes/L6_africa_centro
+  - ../data/lotes/L6_africa_congo
+  - ../data/lotes/L6_africa_norte_oeste_este
+  - ../data/lotes/L6_africa_sur
+  - ../data/lotes/L6_asia_este_sudeste
+  - ../data/lotes/L6_asia_sur
+  - ../data/lotes/L6_europa
+  - ../data/lotes/L6_medio_oriente
+  - ../data/lotes/L6_norte_centroamerica
+  - ../data/lotes/L6_oceania
+  - ../data/lotes/L6_rusia_asia_central
+  - ../data/lotes/L6_sudamerica

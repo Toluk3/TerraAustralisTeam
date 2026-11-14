@@ -16,6 +16,7 @@ import logging
 from .calibrate import k_lookup_sql
 from .config import Config
 from .db import load_spatial, sql_str
+from .rollup import check_hash
 
 log = logging.getLogger(__name__)
 PERIODS = {"month": ("month", "month_start"), "8d": ("period_8d", "period_8d_start")}
@@ -41,6 +42,7 @@ def build_cells(cfg: Config, con) -> int:
 
 
 def run(cfg: Config, con) -> dict:
+    check_hash(cfg, con)
     n_cells = build_cells(cfg, con)
     con.execute(f"""
         CREATE OR REPLACE TEMP TABLE _zone_daily AS
@@ -64,7 +66,7 @@ def run(cfg: Config, con) -> dict:
                 SELECT d.year, d.period, b.rep, sum(d.metric_value * b.k) v
                 FROM d JOIN calibration_boot b
                   ON b.source_platform = d.cal_platform AND b.level = d.k_level AND b.metric = '{metric}'
-                 AND b.region = CASE d.k_level WHEN 'r3' THEN d.region_r3 WHEN 'r2' THEN d.region_r2 ELSE 0 END
+                 AND b.region = d.k_region
                  AND b.month = month(d.local_date) AND b.is_day = d.is_day
                 WHERE d.k_level <> 'ref'
                 GROUP BY ALL),
@@ -85,14 +87,15 @@ def run(cfg: Config, con) -> dict:
             LEFT JOIN band b ON b.year = p.year AND b.period = p.period
             ORDER BY p.year, p.period
         """)
-    # Mediana y percentiles por período, solo con años de cobertura completa (con sus ceros)
-    con.execute("""
+    # Mediana y percentiles por período, solo con años de cobertura completa (con sus ceros) y dentro
+    # del período base (baseline_years): así el año que se evalúa no entra en su propia mediana.
+    con.execute(f"""
         CREATE OR REPLACE TABLE zone_baseline AS
         SELECT period_kind, period, median(n_equiv) AS median,
                quantile_cont(n_equiv, 0.10) p10, quantile_cont(n_equiv, 0.25) p25,
                quantile_cont(n_equiv, 0.75) p75, quantile_cont(n_equiv, 0.90) p90,
                count(*) AS n_years
-        FROM zone_series WHERE status = 'ok' GROUP BY ALL ORDER BY ALL
+        FROM zone_series WHERE status = 'ok' AND {cfg.baseline_sql()} GROUP BY ALL ORDER BY ALL
     """)
     # Serie por sensor sin k contra la armonizada: el gráfico antes/después del pitch (no va a la app)
     con.execute(f"""
@@ -110,15 +113,21 @@ def run(cfg: Config, con) -> dict:
     return {"cells": n_cells, "series_total": total}
 
 
-def anomaly_sql(kind: str) -> str:
-    """Serie de la zona con mediana, percentiles y anomalía (absoluta, % si la mediana > 0, percentil)."""
+def anomaly_sql(cfg: Config, kind: str) -> str:
+    """Serie de la zona con mediana, percentiles y anomalía (absoluta, % si la mediana > 0, percentil).
+
+    La anomalía solo se informa en períodos de cobertura completa: en uno parcial el valor está
+    subestimado y compararlo con la mediana daría una anomalía negativa falsa.
+    """
     return f"""
         SELECT s.year, s.period, s.period_start, s.n_equiv, s.p05, s.p95, s.coverage_frac, s.status,
                b.median, b.p10, b.p25, b.p75, b.p90,
-               s.n_equiv - b.median AS anomaly_abs,
-               CASE WHEN b.median > 0 THEN (s.n_equiv - b.median) / b.median END AS anomaly_pct,
-               (SELECT avg((h.n_equiv <= s.n_equiv)::INTEGER::DOUBLE) FROM zone_series h
-                WHERE h.period_kind = s.period_kind AND h.period = s.period AND h.status = 'ok') AS pct_rank
+               CASE WHEN s.status = 'ok' THEN s.n_equiv - b.median END AS anomaly_abs,
+               CASE WHEN s.status = 'ok' AND b.median > 0 THEN (s.n_equiv - b.median) / b.median END AS anomaly_pct,
+               CASE WHEN s.status = 'ok' THEN
+                   (SELECT avg((h.n_equiv <= s.n_equiv)::INTEGER::DOUBLE) FROM zone_series h
+                    WHERE h.period_kind = s.period_kind AND h.period = s.period AND h.status = 'ok'
+                      AND {cfg.baseline_sql('h.year')}) END AS pct_rank
         FROM zone_series s
         LEFT JOIN zone_baseline b ON b.period_kind = s.period_kind AND b.period = s.period
         WHERE s.period_kind = '{kind}'

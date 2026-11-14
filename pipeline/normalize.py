@@ -160,11 +160,15 @@ def normalize_sql(cfg: Config, con, sensor: str) -> str:
         WINDOW w AS (PARTITION BY platform, pass_region ORDER BY ts)
     ),
     o AS (
-        -- overpass_bucket = epoch (s) del primer foco de la pasada
+        -- overpass_bucket = epoch (s) del primer foco de la pasada.
+        -- Marco RANGE, no ROWS: los focos con la misma hora son pares y todos ven el inicio de la pasada.
+        -- Con ROWS el resultado dependía del orden (arbitrario) entre empates y n_clusters cambiaba
+        -- de una corrida a otra.
         SELECT g.*,
                CASE WHEN ts IS NOT NULL AND pass_region IS NOT NULL THEN
                    max(CASE WHEN new_pass THEN epoch(ts) END) OVER (
-                       PARTITION BY platform, pass_region ORDER BY ts ROWS UNBOUNDED PRECEDING)::BIGINT
+                       PARTITION BY platform, pass_region ORDER BY ts
+                       RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)::BIGINT
                END AS overpass_bucket
         FROM g
     ),

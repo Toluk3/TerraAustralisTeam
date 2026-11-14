@@ -1,0 +1,8 @@
+# Lote L6_africa_sur (global, por continente): ver documentacion/PLAN_ANALISIS_LOTES.md §3.
+# Solo lo que cambia respecto de _comun.yaml (extends), que parte de config.yaml. Las rutas son relativas a esta carpeta.
+extends: _comun.yaml
+
+paths: {input_dir: ../../Datos, data_dir: ../data/lotes/L6_africa_sur, publish_dir: ../data/lotes/L6_africa_sur/publish}
+countries: [Mozambique, Malawi, Zimbabwe, Botswana, Namibia, South Africa, Lesotho, Swaziland, Madagascar, Comoros, Mauritius, Reunion, Mayotte, Seychelles, Saint Helena]
+zone: {outline: ../zona/rio_negro_neuquen.geojson}
+calendar_end: 2023-12-31
