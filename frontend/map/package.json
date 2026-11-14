@@ -1,0 +1,27 @@
+{
+  "name": "terraaustralis-map",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Módulo del mapa: MapLibre (OpenStreetMap) + deck.gl con la grilla H3 armonizada y los focos de FIRMS",
+  "type": "module",
+  "main": "src/map/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mocks": "python scripts/build_mocks.py"
+  },
+  "dependencies": {
+    "@deck.gl/core": "9.4.0",
+    "@deck.gl/extensions": "9.4.0",
+    "@deck.gl/geo-layers": "9.4.0",
+    "@deck.gl/layers": "9.4.0",
+    "@deck.gl/mapbox": "9.4.0",
+    "@deck.gl/mesh-layers": "9.4.0",
+    "h3-js": "4.5.0",
+    "maplibre-gl": "5.24.0"
+  },
+  "devDependencies": {
+    "vite": "6.3.5"
+  }
+}

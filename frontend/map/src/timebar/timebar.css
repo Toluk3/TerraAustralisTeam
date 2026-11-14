@@ -1,0 +1,61 @@
+.tam-tb {
+  --tb-bg: #161b22;
+  --tb-text: #e8eaed;
+  --tb-muted: #9aa4b2;
+  --tb-accent: #ffffff;
+  background: var(--tb-bg);
+  color: var(--tb-text);
+  padding: 8px 16px 6px;
+  font: 13px/1.35 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  user-select: none;
+}
+.tam-tb__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 6px; }
+.tam-tb button {
+  font: inherit; color: inherit; background: #0e1117; border: 1px solid #39414d;
+  border-radius: 5px; padding: 2px 9px; cursor: pointer; min-height: 26px;
+}
+.tam-tb button:hover { border-color: #6b7686; }
+.tam-tb button:focus-visible, .tam-tb__cursor:focus-visible { outline: 2px solid #fde725; outline-offset: 2px; }
+.tam-tb__play { width: 34px; }
+.tam-tb__modes { display: inline-flex; }
+.tam-tb__modes button { border-radius: 0; }
+.tam-tb__modes button:first-child { border-radius: 5px 0 0 5px; }
+.tam-tb__modes button:last-child { border-radius: 0 5px 5px 0; border-left: 0; }
+.tam-tb__modes button[aria-pressed="true"] { background: #2d3746; border-color: #6b7686; }
+.tam-tb__year { display: inline-flex; align-items: center; gap: 6px; }
+.tam-tb__year[hidden] { display: none; }
+.tam-tb__year span { min-width: 3.2em; text-align: center; font-weight: 600; }
+.tam-tb__readout { flex: 1 1 320px; min-width: 0; }
+.tam-tb__muted { color: var(--tb-muted); }
+.tam-tb__up { color: #fdb863; font-weight: 600; }
+.tam-tb__down { color: #b2abd2; font-weight: 600; }
+.tam-tb__warn { color: #ff8a65; }
+.tam-tb__estimated { color: #fdb863; border-bottom: 1px dashed #fdb863; }
+
+.tam-tb__track {
+  position: relative; height: 34px; cursor: pointer; touch-action: none;
+  border-radius: 4px; overflow: visible;
+}
+.tam-tb__track.is-dragging { cursor: grabbing; }
+.tam-tb__canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 4px; }
+.tam-tb__sel {
+  position: absolute; top: 2px; bottom: 2px; pointer-events: none;
+  background: rgba(255, 255, 255, 0.28); outline: 2px solid var(--tb-accent); border-radius: 2px;
+}
+.tam-tb__cursor {
+  position: absolute; top: -5px; bottom: -5px; width: 14px; margin-left: -7px; cursor: grab;
+}
+.tam-tb__cursor::before {
+  content: ""; position: absolute; left: 6px; top: 0; bottom: 0; width: 2px; background: var(--tb-accent);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+}
+.tam-tb__cursor::after {
+  content: ""; position: absolute; left: 1px; top: -4px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--tb-accent); box-shadow: 0 0 4px rgba(0, 0, 0, 0.7);
+}
+.tam-tb__ticks { position: relative; height: 30px; margin-top: 3px; font-size: 11px; color: var(--tb-muted); }
+.tam-tb__ticks span { position: absolute; top: 0; transform: translateX(-1px); white-space: nowrap; }
+.tam-tb__ticks span::before { content: ""; position: absolute; left: 0; top: -3px; height: 3px; border-left: 1px solid #5b6472; }
+/* "estimado →" va en una segunda línea para no pisar los años */
+.tam-tb__ticks .tam-tb__est { top: 14px; color: #fdb863; }
+.tam-tb__ticks .tam-tb__est::before { display: none; }

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Capas sin mapa base</title>
+<!-- Dibuja las mismas capas del módulo con deck.gl solo, sin mapa base: los datos "en plano", sin depender de las teselas.
+     Parámetros: ?datos=mock-api ?res=5|6|7 &from=YYYY-MM[-DD] &to=... &metric=value|anomaly &lon= &lat= &z= -->
+<style>html,body{margin:0;height:100%;background:#223}#c{position:absolute;inset:0}</style></head>
+<body><div id="c"></div>
+<script type="module">
+import { Deck } from '@deck.gl/core';
+import { createStaticSource } from '/src/map/data.js';
+import { aggregateCells, hexLayer, maskLayer, outlineLayer, pointsLayer } from '/src/map/layers.js';
+import { normalizePeriod } from '/src/map/period.js';
+const p = new URLSearchParams(location.search);
+const res = Number(p.get('res') || 5), period = normalizePeriod({ from: p.get('from') || '2025-02', to: p.get('to') || undefined });
+const s = createStaticSource('/' + (p.get('datos') || 'mock-api'));
+const meta = await s.getMeta();
+const months = [];
+for (let m = period.m0; m <= period.m1; m++) months.push(`${Math.floor(m / 12)}-${String(m % 12 + 1).padStart(2, '0')}`);
+const cells = await Promise.all(months.map((m) => s.getCells(res, m)));
+const chunks = [];
+for (const m of months) {
+  const idx = await s.getPointIndex(m);
+  for (const tile of Object.keys(idx.tiles)) chunks.push({ id: `${m}-${tile}`, table: await s.getPoints(m, tile) });
+}
+const rows = aggregateCells(cells, months.length);
+new Deck({ parent: document.getElementById('c'),
+  initialViewState: { longitude: Number(p.get('lon') || -68.5), latitude: Number(p.get('lat') || -39.5), zoom: Number(p.get('z') || 5.3) }, controller: true,
+  layers: [maskLayer(meta.outline), hexLayer(rows, { res, domain: meta.map.domain[res], metric: p.get('metric') || 'value', opacity: 0.8, visible: true }),
+    outlineLayer(meta.outline), ...chunks.map((c) => pointsLayer(c.id, c.table, { d0: period.d0, d1: period.d1, fade: true, visible: true }))] });
+window.check = { cells: rows.length, points: chunks.reduce((a, c) => a + c.table.length, 0) };
+</script></body></html>

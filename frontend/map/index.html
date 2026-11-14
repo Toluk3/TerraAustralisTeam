@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa de focos · demo del módulo</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #0e1117; color: #e8eaed;
+      font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    body { display: flex; flex-direction: column; }
+    header { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 8px 16px;
+      background: #161b22; border-bottom: 1px solid #2a313c; }
+    header h1 { font-size: 15px; margin: 0 8px 0 0; }
+    label { display: inline-flex; gap: 6px; align-items: center; }
+    input, select { font: inherit; color: inherit; background: #0e1117; border: 1px solid #39414d;
+      border-radius: 5px; padding: 3px 6px; }
+    #map { flex: 1; min-height: 0; }
+    #timebar { border-top: 1px solid #2a313c; }
+    #info { position: fixed; right: 12px; bottom: 130px; width: 260px; max-width: calc(100% - 24px);
+      background: rgba(18,22,30,.9); border-radius: 8px; padding: 10px 12px; font-size: 12px; white-space: pre-wrap;
+      margin: 0; }
+    #info:empty { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">Mapa de focos</h1>
+    <label>Mapa <select id="basemap"></select></label>
+    <label>Color <select id="metric">
+      <option value="value">Focos equivalentes</option>
+      <option value="anomaly">Anomalía (un mes)</option>
+    </select></label>
+    <label>Opacidad <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.75"></label>
+    <label><input id="l-cells" type="checkbox" checked> Celdas</label>
+    <label><input id="l-points" type="checkbox" checked> Focos</label>
+    <label><input id="l-mask" type="checkbox" checked> Máscara</label>
+  </header>
+  <div id="map"></div>
+  <div id="timebar"></div>
+  <pre id="info"></pre>
+  <script type="module" src="/src/demo.js"></script>
+</body>
+</html>
