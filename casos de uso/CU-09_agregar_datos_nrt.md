@@ -14,7 +14,7 @@
    export FIRMS_MAP_KEY=<tu clave>
    python3 scripts/descargar_firms.py --nrt --desde 2026-01-01
    ```
-   El script recorre el rango de a 5 días (el máximo de la API) para `MODIS_NRT`, `VIIRS_NOAA20_NRT`, `VIIRS_NOAA21_NRT` y `VIIRS_SNPP_NRT`, con la caja de Argentina, y guarda los CSV en `Datos/nrt/<fuente>/`.
+   El script recorre el rango de a 5 días (el máximo de la API) para `MODIS_NRT`, `VIIRS_NOAA20_NRT`, `VIIRS_NOAA21_NRT` y `VIIRS_SNPP_NRT`, con la API por país (código ISO3, `ARG`), y guarda los CSV en `Datos/nrt/<fuente>/` con nombres `<fuente>-<fecha>-<días>d_<año>_<País>.csv`, así la ingesta toma el país del nombre. Antes se usaba una caja, que traía focos de los países vecinos etiquetados como Argentina.
 2. Reprocesar todo, porque cambian los datos de entrada:
    ```bash
    .venv/bin/python -m pipeline all
@@ -22,7 +22,7 @@
 
 ## Qué hace el pipeline con los datos NRT
 
-- La ingesta los reconoce por las columnas y les asigna `default_country` (Argentina), porque el nombre del archivo no trae el país.
+- La ingesta los reconoce por las columnas y toma el país del nombre del archivo (`default_country` queda solo para CSV con otro nombre).
 - `is_nrt = true` (la versión termina en `NRT`), así que la app puede marcarlos.
 - Los NRT no traen `type`: los gas flares de Vaca Muerta los saca la **máscara estática**, construida con VIIRS standard (§3, paso 3).
 - NOAA-21 empieza a aparecer y usa el `k` de NOAA-20 (`k_fallback_platform`), porque no tiene solape con el MODIS estable.

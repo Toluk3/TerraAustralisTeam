@@ -1,0 +1,2 @@
+lote,run_at,config_hash,countries,rows_raw,rows_norm,step_seconds,disk_mb
+L3,2026-11-14 16:05:43.302399-03,c2f71d1dfc04,Brazil,20812812,19047830,"{""ingest"": 86.2, ""normalize"": 458.0, ""support"": 3.9, ""aggregate"": 12.3, ""calibrate"": 48.6, ""rollup"": 22.7, ""validate"": 17.0, ""qc"": 5.5}",2064.0

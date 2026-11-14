@@ -13,7 +13,7 @@
 .venv/bin/python -m pytest
 ```
 
-Tarda unos 3 segundos. Resultado esperado: `32 passed`.
+Tarda unos 3 segundos. Resultado esperado: `33 passed`.
 
 ## Qué cubre
 
@@ -26,6 +26,7 @@ Tarda unos 3 segundos. Resultado esperado: `32 passed`.
 | 5 | Dos corridas dan exactamente los mismos focos | `test_idempotencia` |
 | 6 | `SUM(fires_daily.n_fires)` = filas de `fires_norm` | `test_daily_cierra_contra_norm` |
 | 7 | `n_clusters_r7 ≤ n_clusters ≤ n_fires` | `test_orden_de_metricas` |
+| — | Dos focos a 2 min son la misma pasada aunque crucen las 00:00 UTC; a 2 h, no | `test_pasadas_por_huecos_de_tiempo` |
 | 8 | 03:30 UTC en longitud +150° → mismo `local_date`, 13:30 solar | `test_fecha_solar_local` |
 | 9 | Mes sin focos → 0; antes de los datos → `sin_datos` | `test_ceros_y_sin_datos` |
 | 10 | `config_hash` distinto entre calibración y rollups hace fallar el pipeline | `test_config_hash_distinto_falla` |

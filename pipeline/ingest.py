@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Callable
 
 from .config import Config
-from .db import reset_dir
+from .db import reset_dir, sql_str
 from .qc import clear_step, write_qc
 
 log = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def discover(cfg: Config) -> list[Source]:
     for f in sorted(root.rglob("*.csv")):
         c = country_of(f.name)
         if keep(c):
-            out.append(Source(str(f.relative_to(root)), c, lambda tmp, f=f: f))
+            out.append(Source(f.relative_to(root).as_posix(), c, lambda tmp, f=f: f))
     return out
 
 
@@ -113,7 +113,7 @@ def run(cfg: Config, con) -> dict:
                 skipped.append(f"{src.label}: sin filas")
                 continue
             sensor = detect_sensor(header)
-            label, country = src.label.replace("'", "''"), src.country.replace("'", "''")
+            label, country = sql_str(src.label), sql_str(src.country)
             # row_number = orden real del archivo: parallel=false + row_number() sobre el escaneo (§1).
             con.execute(f"""
                 CREATE OR REPLACE TEMP TABLE _ingest AS
@@ -124,14 +124,14 @@ def run(cfg: Config, con) -> dict:
                        '{label}' AS source_file,
                        CAST(row_number() OVER () AS INTEGER) AS row_number,
                        current_timestamp AS ingested_at
-                FROM read_csv('{path}', header = true, all_varchar = true, parallel = false,
+                FROM read_csv('{sql_str(path)}', header = true, all_varchar = true, parallel = false,
                               delim = ',', quote = '"')
             """)
             n = con.execute("SELECT count(*) FROM _ingest").fetchone()[0]
             if n != expected:
                 raise RuntimeError(f"{src.label}: se leyeron {n} filas y el CSV tiene {expected}")
             con.execute(f"""
-                COPY _ingest TO '{raw_dir}' (FORMAT parquet, PARTITION_BY (sensor, year),
+                COPY _ingest TO '{sql_str(raw_dir)}' (FORMAT parquet, PARTITION_BY (sensor, year),
                      OVERWRITE_OR_IGNORE, FILENAME_PATTERN 'f{idx:05d}_{{i}}')
             """)
             for year, cnt in con.execute("SELECT year, count(*) FROM _ingest GROUP BY 1").fetchall():

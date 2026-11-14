@@ -67,6 +67,14 @@ def test_version_y_nrt(pipeline_run):
     assert nrt[4] is True and nrt[3] == "c2"
 
 
+def test_pasadas_por_huecos_de_tiempo(pipeline_run):
+    """Focos a 2 min de distancia son la misma pasada aunque crucen un borde de ventana; a 2 h, no."""
+    _, con = pipeline_run
+    b = [r[0] for r in con.execute("""SELECT overpass_bucket FROM fires_norm WHERE source_file LIKE 'especiales/%'
+                                      AND longitude BETWEEN -67.5003 AND -67.4999 ORDER BY datetime_utc""").fetchall()]
+    assert len(b) == 3 and b[0] == b[1] != b[2]
+
+
 # 2. acq_time = "0231" conserva el cero (y "231" se rellena a 4 dígitos)
 def test_acq_time_conserva_el_cero(pipeline_run):
     _, con = pipeline_run

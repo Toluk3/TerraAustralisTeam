@@ -12,6 +12,7 @@
   python3 -m venv .venv
   .venv/bin/pip install -r requirements.txt
   ```
+  En Windows, `.venv\Scripts\` en lugar de `.venv/bin/` en todos los comandos de los casos de uso.
   DuckDB baja la primera vez las extensiones `h3` (community) y `spatial`. Si `h3` no instala, el pipeline usa `h3` de Python.
 
 ## Flujo principal

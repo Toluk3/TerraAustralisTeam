@@ -19,11 +19,11 @@ Convertir los zips crudos de FIRMS (MODIS y VIIRS) en un dataset limpio, indexad
 |---|---|---|
 | MODIS (Terra + Aqua), `modis_YYYY_all_countries.zip` | 2000-11 → 2025 | Descargado |
 | VIIRS NOAA-20, `viirs-jpss1_YYYY_all_countries.zip` | 2018-04 → 2023 | Descargado |
-| VIIRS Suomi NPP | 2012-01 → ? | Pedido a FIRMS, sin llegar |
+| VIIRS Suomi NPP | 2012-01 → 2025 | Descargado: archivo anual por país (CU-01) y pedido por área `DL_FIRE_SV-C2_846591.zip` |
 
 Cada zip anual tiene una carpeta `<sensor>/<año>/` con un CSV por país (`<sensor>_<año>_<País>.csv`) y un `AttributesReadme.txt`. Si un país no tuvo detecciones ese año, no hay archivo: la ausencia equivale a 0. Coordenadas en WGS84.
 
-Ojo con S-NPP: según FIRMS, Suomi NPP ya no entrega datos nuevos, así que es probable que la serie no llegue hasta hoy. Hay que confirmar hasta qué fecha viene cuando llegue la entrega.
+Ojo con S-NPP: según FIRMS, Suomi NPP ya no entrega datos nuevos, así que la serie no llega hasta hoy. El archivo anual por país llega hasta 2025.
 
 ## Diccionario de campos
 
@@ -146,7 +146,7 @@ Tablas finales (serie harmonizada por celda y mes; mediana y percentiles histór
 
 ## Riesgos
 
-- **S-NPP sin fecha de llegada** y probablemente sin datos recientes.
+- ~~S-NPP sin fecha de llegada~~ Resuelto: descargado 2012–2025; sin datos nuevos desde que Suomi NPP dejó de entregar.
 - **Volumen** de VIIRS: millones de filas por año.
 - **Cobertura 2000–2002** con un solo satélite MODIS, y **agosto-septiembre 2020** por el corte de Aqua.
 - **Calidad de `type` desigual** en MODIS antes de 2018.
