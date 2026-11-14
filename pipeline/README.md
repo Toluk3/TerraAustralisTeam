@@ -1,61 +1,49 @@
-# `pipeline/` — Área 1 · Pipeline de datos
+# Pipeline de datos
 
-**Responsable:** _(completar)_
-**También le pertenecen:** `scripts/`, `tests/`, `zona/`, `casos de uso/`, `config.yaml` y `requirements.txt`.
+## Resumen
 
-## Qué hace
+El pipeline prepara los datos FIRMS que usa Terra Australis para el análisis y la demostración del mapa. Implementa la ingesta, normalización, controles de calidad, agregación espacial y temporal, calibración, validación y exportación. Utiliza Python, DuckDB y H3.
 
-Descarga los focos de FIRMS (MODIS y VIIRS), los normaliza a un esquema común, los calibra entre sensores y publica una sola serie armonizada para la zona de la demo. Es **la única área que escribe en `data/`**.
+El estado y la relación de este componente con el frontend se describen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md). Los datos fuente y los productos generados se almacenan localmente y no se versionan.
 
-Pasos (`python -m pipeline all`):
+## Flujo de procesamiento
 
+```text
+ingest → normalize → support → aggregate → calibrate
+       → rollup → validate → qc → zone → export
 ```
-ingest → normalize → support → aggregate → calibrate → rollup → validate → qc → zone → export
+
+La ejecución completa es:
+
+```bash
+python -m pipeline all
 ```
 
-Las reglas de cada paso están en `documentacion/PLAN_NORMALIZACION.md`. Cómo correr cada cosa, en `casos de uso/` (CU-01 a CU-10).
+Se puede usar `--config` para apuntar a una configuración específica, por ejemplo a una corrida por lotes. La configuración principal está en `config.yaml`; las opciones de normalización y calibración están explicadas en [`documentacion/PLAN_NORMALIZACION.md`](../documentacion/PLAN_NORMALIZACION.md).
 
-## Qué entrega y qué recibe
+## Productos
 
-| | Qué | A / de quién |
-|---|---|---|
-| Entrega | `data/publish/` (`zone/`, `map/`, `points/`, `series/`, `calibration/`, `meta/`) según `CONTRATO_DATOS.md` | Área 3 |
-| Entrega | `data/prehack.duckdb` y `data/publish/reportes/` | Área 2 (solo lectura) |
-| Recibe | Métrica recomendada, celdas a enmascarar, confirmación de `switch_date` | Área 2 |
-| Recibe | Pedidos de cambio en el formato publicado | Área 3 |
+- `data/prehack.duckdb`: tablas de análisis y validación de la corrida.
+- `data/`: Parquet de entrada transformada, datos intermedios y productos locales.
+- `data/publish/`: exportación para consumo posterior, incluida la preparación del frontend.
 
-## Estado
+El frontend crea sus archivos JSON estáticos desde `data/publish/` mediante `frontend/map/scripts/build_mocks.py`. El cierre actual no depende de un backend Django ni de subir los datos a un bucket.
 
-Hecho (commit `88239a4`):
-- [x] Descarga de MODIS 2000–2025, VIIRS S-NPP 2012–2025 y NOAA-20 2018–2025 de Argentina (CU-01)
-- [x] Contorno de Río Negro y Neuquén (CU-02)
-- [x] Ingesta, normalización (pasos 2 a 8) y máscara estática
-- [x] `calendar`, `platform_periods`, cobertura y `fires_daily` con las tres métricas
-- [x] Calibración por región con respaldo jerárquico, bootstrap y `k` por año
-- [x] Rollups mensual y de 8 días, validación dejando un año afuera y ablación
-- [x] QC, serie de la zona, mediana y anomalías, y export a `data/publish/`
-- [x] Pruebas automáticas (CU-10)
+## Estado y decisiones pendientes
 
-## Tareas pendientes
+Las etapas del pipeline y las pruebas automáticas están implementadas. Los datos y las publicaciones deben generarse localmente antes de construir el mapa. Los resúmenes versionados de los lotes están en `lotes/resumen/`; las bases consolidadas de ejecución no se versionan.
 
-**P0**
-- [ ] Escribir `documentacion/CONTRATO_DATOS.md` a partir de `export.py` y acordarlo con el Área 3
-- [ ] Acordar con las Áreas 3 y 4 el formato de `points/` para la barra de tiempo (hoy se particiona por año y celda r3)
-- [ ] Bajar los datos NRT de 2026 (CU-09; necesita una MAP_KEY de FIRMS) y reprocesar
-- [ ] Subir `data/publish/` al bucket cuando el Área 3 lo cree (CU-08)
+Antes de una publicación final hay que identificar la configuración exacta y verificar:
 
-**P1**
-- [ ] Aplicar la métrica que recomiende el Área 2 en `config.yaml` y volver a publicar
-- [ ] Agregar a la máscara las celdas de pozos de gas nuevos que detecte el Área 2 en Vaca Muerta
-- [ ] Ajustar `modis_stable_until` y `switch_date` si el análisis de deriva del Área 2 lo pide
-- [ ] Atender los pedidos de cambio de las Áreas 2 y 3
+- La métrica elegida para la serie, con la evidencia de validación.
+- Las plataformas activas, en particular la diferencia entre la prioridad de S-NPP en `config.yaml` y su exclusión en el plan de análisis por lotes.
+- Los datos y el intervalo temporal efectivamente incluidos.
+- El `config_hash` de los productos generados.
 
-**P2**
-- [ ] Ingerir un país vecino (Chile o Brasil) si el Área 2 lo pide para validar que `k` cambia por región
-- [ ] Reemplazar los NRT por el archivo standard cuando FIRMS lo publique (ver riesgos de CU-09)
+## Pruebas y documentación
 
-## Reglas
+```bash
+python -m pytest
+```
 
-- Cada cambio en `config.yaml` cambia el `config_hash`: hay que correr de nuevo desde `calibrate` (el pipeline falla si los hashes no coinciden).
-- Antes de cambiar columnas o rutas de `data/publish/`, avisar al Área 3: es el contrato de datos.
-- Las pruebas tienen que pasar antes de integrar a `main`: `python -m pytest`.
+Las instrucciones de descarga, procesamiento, QC y publicación están en los casos de uso del repositorio. La especificación ejecutiva está en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md); los procedimientos por lote, en [`documentacion/PLAN_ANALISIS_LOTES.md`](../documentacion/PLAN_ANALISIS_LOTES.md).

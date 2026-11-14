@@ -1,70 +1,59 @@
-# Áreas del proyecto
-
-Cómo se divide el trabajo entre las 5 personas del equipo para avanzar en paralelo sin pisarnos.
-Cada área tiene **una carpeta propia y un único responsable**. Las áreas se comunican solo a través de **dos contratos** y de pedidos explícitos al dueño de cada carpeta.
-
-Documentos relacionados: `PLAN.md`, `ARQUITECTURA.md`, `PLAN_NORMALIZACION.md` y el `README.md` de cada carpeta.
+# Áreas de trabajo y coordinación
 
 ## Resumen
 
-| # | Área | Carpetas que le pertenecen | Qué hace | Responsable |
-|---|---|---|---|---|
-| 1 | Pipeline de datos | `pipeline/`, `scripts/`, `tests/`, `zona/`, `casos de uso/`, `config.yaml`, `requirements.txt` | Descarga, normaliza, armoniza y publica los datos. Es el único que escribe en `data/publish/` | _(completar)_ |
-| 2 | Análisis y validación | `analisis/` | Revisa con los datos reales que la armonización funciona, recomienda la métrica y produce los gráficos y tablas del pitch | _(completar)_ |
-| 3 | Backend e infraestructura | `backend/` | API en Django sobre los Parquet publicados, bucket de Cloud Storage, deploy en Cloud Run, clave de Google Maps y dominio | _(completar)_ |
-| 4 | Frontend y visualización | `frontend/` | La app: mapa de Google Maps, barra de tiempo, focos, calendario, panel del mes y descarga del CSV | _(completar)_ |
-| 5 | Producto, integración y pitch | `pitch/`, `documentacion/` (salvo los contratos), `README.md`, `.gitignore` | Coordina, escribe los textos de la app, prueba todo de punta a punta y arma la presentación y la entrega | _(completar)_ |
+El proyecto organiza sus tareas en áreas para separar el procesamiento de datos, la validación, la visualización y la comunicación. Esta división identifica responsabilidades de trabajo; no significa que cada componente descrito esté implementado ni que haya una persona asignada en el repositorio.
 
-El pipeline lo implementó Toluk3, así que lo natural es que siga a cargo del Área 1.
+El estado de cada componente y la ruta de cierre se describen en [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md).
 
-## Reglas para no pisarse
+## 1. Áreas del proyecto
 
-1. **Cada carpeta tiene un único dueño.** Si necesitás un cambio en una carpeta ajena, se lo pedís al dueño (issue o mensaje); no lo editás vos.
-2. **Una rama por área:** `area/pipeline`, `area/analisis`, `area/backend`, `area/frontend`, `area/producto`. Se integra a `main` con PR, y lo revisa el dueño de lo que se toca.
-3. **Dos contratos.** Cambiarlos requiere el OK de las dos áreas que los usan:
-   - `documentacion/CONTRATO_DATOS.md`: estructura y columnas de `data/publish/` (lo que el pipeline entrega al backend). **Dueño: Área 1. Lo revisa: Área 3.**
-   - `documentacion/CONTRATO_API.md`: endpoints y JSON que el backend entrega al front. **Dueño: Área 3. Lo revisa: Área 4.**
-4. **Nadie espera a nadie.** El backend arranca con una copia local de `data/publish/` o con fixtures armados según el contrato de datos. El front arranca con JSON de prueba armados según el contrato de API.
-5. **Los datos no se editan a mano.** `data/` lo genera el pipeline y no se versiona. El Área 2 lo lee en solo lectura; si necesita otra corrida, usa su propia configuración y su propia carpeta de datos (ver `analisis/README.md`).
-6. **Nada de secretos en el repo:** MAP_KEY de FIRMS, clave de Google Maps, credenciales de Google Cloud y `SECRET_KEY` de Django van en variables de entorno.
+| Área | Función | Estado verificable |
+|---|---|---|
+| 1 · Datos | Descargar y procesar FIRMS, normalizar, calibrar, validar y publicar los datos | Pipeline implementado en `pipeline/`; la configuración final y los datos de publicación deben identificarse por corrida |
+| 2 · Análisis | Contrastar la armonización y aportar evidencia para las decisiones metodológicas | Hay resúmenes versionados de los lotes L1–L3; no se encontraron scripts ni resultados finales propios en `analisis/` |
+| 3 · Backend e infraestructura | Desarrollar una API y servicios de backend si fueran necesarios | No implementado. No es requisito de la ruta estática inmediata |
+| 4 · Frontend | Mostrar los datos armonizados en el mapa y permitir recorrer el tiempo | Demostración local implementada en `frontend/map/` con Vite, MapLibre y deck.gl |
+| 5 · Producto y documentación | Mantener claro el alcance, las limitaciones y la presentación del proyecto | Documentación e integración requieren alinearse con el estado del código |
 
-## Cómo fluye el trabajo entre áreas
+Los nombres de carpetas describen funciones del repositorio. Los campos de responsable que aparecían en documentos anteriores no se consideran asignaciones vigentes si no se han completado expresamente.
 
-```
-Área 1 (pipeline) ──data/publish/──▶ Área 3 (backend) ──API──▶ Área 4 (frontend) ──app──▶ Área 5 (demo)
-      ▲                  │                                                                   ▲
-      │ pedidos          └──reportes/──▶ Área 2 (análisis) ──gráficos y recomendaciones─────┘
-      └──────────── métrica, celdas a enmascarar, fechas ──┘
+## 2. Flujo de trabajo entre áreas
+
+```text
+Datos FIRMS
+   ↓
+Área 1 · Pipeline ──data/publish/──▶ Generador JSON ──▶ Área 4 · Frontend
+       │                                                   │
+       └── DuckDB y reportes ──▶ Área 2 · Análisis         └──▶ Área 5 · Presentación
 ```
 
-| De | A | Qué se entrega | Por dónde |
-|---|---|---|---|
-| 1 | 3 | Tablas publicadas para la app | `data/publish/` según `CONTRATO_DATOS.md`, y el bucket |
-| 1 | 2 | Base y reportes | `data/prehack.duckdb` (solo lectura) y `data/publish/reportes/` |
-| 2 | 1 | Métrica recomendada, celdas a enmascarar, confirmación de `switch_date` | Issue o mensaje con el dato y la evidencia |
-| 2 | 5 | Gráficos y tablas del pitch, lista de picos para el caso de la demo | `analisis/resultados/` |
-| 3 | 4 | API y clave de Google Maps | `CONTRATO_API.md` y variable de entorno |
-| 5 | 4 | Textos de la app (aclaraciones, atribución de FIRMS, ayudas) | `documentacion/TEXTOS_APP.md` |
-| 4 | 5 | App desplegada para la demo | URL del deploy |
+El flujo activo para la demostración no requiere un backend: el pipeline produce Parquet, el frontend prepara archivos JSON estáticos y la aplicación los consume. El trabajo de análisis revisa la evidencia de calibración y comunica recomendaciones al mantenimiento del pipeline.
 
-## Hitos en común
+## 3. Acuerdos de coordinación
 
-| Momento | Qué tiene que estar | Quién |
-|---|---|---|
-| Primera hora | Responsables asignados, ramas creadas, los dos contratos acordados | Todos; 1 + 3; 3 + 4 |
-| Tarde del día 1 | Backend respondiendo con los datos reales de `data/publish/` en local | 3 |
-| Tarde del día 1 | Métrica recomendada y `switch_date` confirmado con datos | 2 → 1 |
-| Noche del día 1 | App funcionando de punta a punta en Cloud Run | 3 + 4, lo verifica 5 |
-| Mañana del día 2 | Gráficos y tablas del pitch con datos reales; caso de la demo elegido | 2 → 5 |
-| Mediodía del día 2 | Código congelado y deploy final | Todos |
-| Día 2, al menos 2 h antes del cierre | Entrega enviada | 5 |
+- Los datos de origen y los productos generados se crean mediante los procedimientos del pipeline; no se editan manualmente ni se versionan por defecto.
+- El análisis abre las bases de datos del pipeline en modo de solo lectura y registra la configuración con la que obtuvo cada resultado.
+- Los cambios de parámetros que afecten a los productos publicados deben ejecutarse de nuevo y verificarse antes de regenerar los datos del frontend.
+- El frontend no recalcula la armonización ni debe presentar detecciones crudas como si fueran los valores armonizados.
+- Las claves, credenciales y otros secretos no se guardan en el repositorio.
+- Las decisiones que cambien el conjunto de datos o la interfaz se documentan en `FUNDAMENTOS_DEL_PROYECTO.md` y en la guía técnica pertinente.
 
-## Decisiones que cruzan áreas
+## 4. Decisiones que requieren coordinación
 
-| Decisión | Quién decide | Con quién |
-|---|---|---|
-| Métrica final (`n_fires`, `n_clusters`, `n_clusters_r7`) | Área 1 | Recomendación del Área 2 |
-| Framework del front y si lo sirve Django o va aparte | Área 4 | Área 3 |
-| Formato de `points/` para la barra de tiempo | Área 1 y Área 3 | Área 4 |
-| Caso de la demo | Área 5 | Lista de picos del Área 2 |
-| Contorno de la zona: hoy `zona/` tiene las dos provincias completas; si se prefiere un sector, se cambia ahí | Todo el equipo | Lo aplica el Área 1 |
+| Decisión | Participación necesaria |
+|---|---|
+| Métrica de la serie que se publicará (`n_fires`, `n_clusters` o `n_clusters_r7`) | Datos y análisis |
+| Plataformas que integran la corrida final, incluida la política de S-NPP | Datos y análisis |
+| Identificación de la publicación y versión de los JSON estáticos | Datos y frontend |
+| Hosting estático y verificación de la URL pública | Frontend y producto |
+| Necesidad futura de API o backend | Producto, frontend y datos; debe aprobarse antes de ampliar el alcance |
+
+La implementación de Django, Google Cloud Run, Google Maps y el contrato API de la arquitectura anterior no se consideran entregables vigentes. Se podrán revisar si aparece una necesidad que no cubra la publicación estática.
+
+## 5. Documentación relacionada
+
+- [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md): referencia ejecutiva y estado por área.
+- [`PLAN.md`](PLAN.md): alcance del producto.
+- [`ARQUITECTURA.md`](ARQUITECTURA.md): flujo técnico actual y alternativas posibles.
+- [`PLAN_ANALISIS_LOTES.md`](PLAN_ANALISIS_LOTES.md): corridas y resultados de análisis.
