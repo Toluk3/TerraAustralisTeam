@@ -81,7 +81,9 @@
       "day": "día",
       "night": "noche",
       "confidence": "confianza"
-    }
+    },
+    "tooManyCells": "La selección supera las {max} celdas r{res}: dibujá un área más chica o acercá el mapa.",
+    "loadFailed": "No se pudieron cargar los datos de la selección: {msg}"
   },
   "analysis": {
     "title": "Análisis",

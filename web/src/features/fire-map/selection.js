@@ -181,6 +181,7 @@ export function createSelection(ctx) {
   function setSelection(cells, rings) {
     if (!cells.size) { clear(); return; }
     if (cells.size > MAX_CELLS) {
+      ctx.emit('notice', { code: 'too-many-cells', cells: cells.size, max: MAX_CELLS, res: CALC });
       showMessage(`La selección tiene ${fmt(cells.size, 0)} celdas r${CALC} (máximo ${fmt(MAX_CELLS, 0)}): dibujá un área más chica.`);
       return;
     }
@@ -207,6 +208,7 @@ export function createSelection(ctx) {
     // Antes de pedir las celdas finas, una cuenta gruesa: un dibujo continental no entra en memoria
     const coarse = Math.max(0, CALC - 3);
     if (polygonToCells(latlng, coarse).length * 7 ** (CALC - coarse) > MAX_CELLS * 1.5) {
+      ctx.emit('notice', { code: 'too-many-cells', max: MAX_CELLS, res: CALC });
       showMessage(`El área dibujada supera las ${fmt(MAX_CELLS, 0)} celdas r${CALC} (~${fmt(MAX_CELLS * getHexagonAreaAvg(CALC, 'km2') / 1e6, 1)} millones de km²): dibujá un área más chica.`);
       return;
     }
@@ -303,7 +305,10 @@ export function createSelection(ctx) {
       ctx.emit('selection', { res: sel.res, cells: [...sel.cells], area: sel.area, bbox: sel.bbox, ...summary,
         fireCellIds: [...summary.fireCellIds] });
     } catch (e) {
-      if (my === token) showMessage(`No se pudieron cargar los datos: ${e.message}`);
+      if (my === token) {
+        ctx.emit('notice', { code: 'load-failed', message: e.message });
+        showMessage(`No se pudieron cargar los datos: ${e.message}`);
+      }
     }
   }
 

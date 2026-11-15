@@ -81,7 +81,9 @@
       "day": "day",
       "night": "night",
       "confidence": "confidence"
-    }
+    },
+    "tooManyCells": "The selection exceeds {max} r{res} cells: draw a smaller area or zoom in.",
+    "loadFailed": "The selection's data could not be loaded: {msg}"
   },
   "analysis": {
     "title": "Analysis",

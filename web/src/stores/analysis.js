@@ -104,3 +104,15 @@ export function setView(v) {
 }
 
 export const periodMonths = (p) => (p?.from ? monthsBetween(p.from, p.to ?? p.from) : []);
+
+// --- API de la instancia A del mapa (para borrar la selección o activar el lazo desde la UI) ---
+let mapA = null;
+export function setMapApi(api) { mapA = api; }
+export function getMapApi() { return mapA; }
+export function clearSelection() {
+  mapA?.clearSelection();
+  analysis.selection = null;
+}
+export function setLasso(on) {
+  mapA?.setLassoMode(Boolean(on));
+}

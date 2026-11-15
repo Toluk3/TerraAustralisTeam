@@ -20,7 +20,7 @@ const props = defineProps({
   camera: { type: Object, default: null },            // cámara inicial (segunda instancia)
   label: { type: String, default: '' },               // nombre accesible del mapa
 });
-const emit = defineEmits(['ready', 'selection', 'lasso', 'cell-click', 'move', 'state', 'error']);
+const emit = defineEmits(['ready', 'selection', 'lasso', 'cell-click', 'move', 'state', 'error', 'notice']);
 
 const { t, locale } = useI18n();
 const el = ref(null);
@@ -79,6 +79,7 @@ onMounted(async () => {
     offs = [
       m.on('selection', (s) => emit('selection', s)),
       m.on('lasso', (on) => emit('lasso', on)),
+      m.on('notice', (n) => emit('notice', n)),
       m.on('click', (d) => { if (d?.kind === 'cell') emit('cell-click', d); }),
       m.on('change', (s) => emit('state', s)),
       m.on('resolution', () => { if (props.diff) drawDiff(); }),
