@@ -1,0 +1,16 @@
+/* Piezas comunes de los gráficos de Análisis */
+.chart-head { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.chart-title { font-size: 1.05rem; font-weight: 500; letter-spacing: 0; margin-right: auto; }
+.chart-seg > button { min-height: 34px; font-size: 0.8rem; }
+.chart-keys { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.78rem; align-items: center; }
+.chart-note { font-size: 0.78rem; color: var(--muted); margin: 8px 0 0; }
+.chart-canvas { width: 100%; height: 260px; }
+.chart-empty { display: grid; place-items: center; text-align: center; height: 200px; color: var(--muted); font-size: 0.88rem; padding: 0 24px; border: 1px dashed var(--line-strong); border-radius: var(--radius-s); }
+.chart-table { margin-top: 10px; font-size: 0.8rem; }
+.chart-table > summary { cursor: pointer; color: var(--muted); min-height: 32px; display: inline-flex; align-items: center; }
+.chart-table > summary:hover { color: var(--ink); }
+.chart-table__scroll { overflow-x: auto; max-height: 280px; overflow-y: auto; margin-top: 6px; border: 1px solid var(--line); border-radius: var(--radius-s); }
+.chart-table table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.chart-table th, .chart-table td { padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+.chart-table th:first-child, .chart-table td:first-child { text-align: left; }
+.chart-table thead th { position: sticky; top: 0; background: var(--surface); font-weight: 500; }

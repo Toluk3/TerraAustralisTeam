@@ -11,6 +11,11 @@ import FilterBar from '@/components/map/FilterBar.vue';
 import LayerPanel from '@/components/map/LayerPanel.vue';
 import SelectionSummary from '@/components/summary/SelectionSummary.vue';
 import { useSummaries } from '@/features/useSummaries.js';
+import BurnCalendar from '@/components/charts/BurnCalendar.vue';
+import YearCompare from '@/components/charts/YearCompare.vue';
+import FrpHistogram from '@/components/charts/FrpHistogram.vue';
+import DataQuality from '@/components/charts/DataQuality.vue';
+import '@/components/charts/charts.css';
 
 const { t } = useI18n();
 const route = useRoute();
@@ -47,6 +52,14 @@ const monthA = computed({
         </section>
       </div>
       <SelectionSummary :meta="ds.meta" :rows="rows" />
+      <div class="an__pair an__pair--cal">
+        <BurnCalendar :rows="rows" :meta="ds.meta" />
+        <YearCompare :rows="rows" />
+      </div>
+      <div class="an__pair">
+        <FrpHistogram />
+        <DataQuality />
+      </div>
     </template>
   </div>
 </template>
@@ -59,8 +72,10 @@ const monthA = computed({
 .an__layers { padding: 16px 14px; position: sticky; top: calc(var(--nav-h) + 12px); }
 .an__map { padding: 12px; }
 .an__time { margin-top: 12px; }
+.an__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.an__pair--cal { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
 @media (max-width: 900px) {
-  .an__maprow { grid-template-columns: 1fr; }
+  .an__maprow, .an__pair, .an__pair--cal { grid-template-columns: 1fr; }
   .an__layers { position: static; padding: 10px 12px; }
 }
 </style>

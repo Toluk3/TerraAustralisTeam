@@ -267,7 +267,7 @@
       "estimated": "Estimated share",
       "estimatedText": "{pct} % of the value comes from estimated months",
       "method": "How it is computed",
-      "months": "{n} months"
+      "months": "{n} month | {n} months"
     }
   },
   "fixedFooter": {

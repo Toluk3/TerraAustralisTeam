@@ -267,7 +267,7 @@
       "estimated": "Proporción estimada",
       "estimatedText": "{pct} % del valor viene de meses estimados",
       "method": "Cómo se calcula",
-      "months": "{n} meses"
+      "months": "{n} mes | {n} meses"
     }
   },
   "fixedFooter": {
