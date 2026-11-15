@@ -6,9 +6,8 @@ DOMAIN="www.terraaustralis.space"
 CERT_FILE="/etc/ssl/cloudflare/terraaustralis-origin.pem"
 KEY_FILE="/etc/ssl/cloudflare/terraaustralis-origin.key"
 ROOT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
-# App científica (web/) en la raíz del sitio; EduAustralis (frontend/) en /edu/ si sigue existiendo
+# App científica (web/) en la raíz del sitio. EduAustralis es una ruta de esa misma app (/#/edu).
 WEB_DIR="$ROOT_DIR/web"
-EDU_DIR="$ROOT_DIR/frontend"
 # Datos del mapa: carpeta mock-s1 (release datos-s1-2026-11-15). Se puede indicar con MOCK_DIR=/ruta/mock-s1
 MOCK_DIR="${MOCK_DIR:-}"
 if [[ -z "$MOCK_DIR" ]]; then
@@ -51,28 +50,13 @@ printf 'Instalando dependencias y compilando la app científica (web/)...\n'
 (
   cd "$WEB_DIR"
   npm ci
-  VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/ npm run build
+  VITE_MOCK_BASE=mock-s1 npm run build
 )
-
-HAS_EDU=0
-if [[ -f "$EDU_DIR/package.json" ]]; then
-  HAS_EDU=1
-  printf 'Compilando EduAustralis (frontend/) para /edu/...\n'
-  (
-    cd "$EDU_DIR"
-    npm ci
-    npm run build -- --base=/edu/
-  )
-fi
 
 printf 'Publicando los archivos en %s...\n' "$WEB_ROOT"
 sudo install -d -m 755 "$WEB_ROOT"
-# --delete no toca /edu/ ni /mock-s1/, que se publican aparte
-sudo rsync -a --delete --exclude '/edu/' --exclude '/mock-s1/' "$WEB_DIR/dist/" "$WEB_ROOT/"
-if [[ "$HAS_EDU" == 1 ]]; then
-  sudo install -d -m 755 "$WEB_ROOT/edu"
-  sudo rsync -a --delete "$EDU_DIR/dist/" "$WEB_ROOT/edu/"
-fi
+# --delete no toca /mock-s1/, que se publica aparte (y borra un /edu/ viejo si quedó de despliegues anteriores)
+sudo rsync -a --delete --exclude '/mock-s1/' "$WEB_DIR/dist/" "$WEB_ROOT/"
 if [[ -n "$MOCK_DIR" && -f "$MOCK_DIR/meta.json" ]]; then
   printf 'Copiando los datos del mapa desde %s...\n' "$MOCK_DIR"
   sudo rsync -a --delete "$MOCK_DIR/" "$WEB_ROOT/mock-s1/"

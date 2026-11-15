@@ -2,7 +2,7 @@
 
 > **Cambios respecto de este plan original (implementados en `web/`, rama `feature/frontend-cientifico`).** Este documento es la especificación de producto acordada. Lo que cambió al construirlo:
 >
-> - **La app vive en `web/`**, nueva y separada. No se movió ni se reutilizó `frontend/`: esa carpeta sigue siendo **EduAustralis** y la app científica la enlaza aparte (`VITE_EDU_URL` o `/edu/`), no como ruta propia.
+> - **La app vive en `web/`**, nueva y separada. No se movió ni se reutilizó `frontend/`: esa carpeta era **EduAustralis**; después su contenido se trajo a `web/` como sección propia (`/#/edu`) y `frontend/` dejó de publicarse.
 > - **Navbar de 5 ítems:** Inicio, Análisis, Proyecto, Equipo, EduAustralis (en lugar de "Mapa y análisis" y "Metodología"). Rutas con `#`: `/`, `/analisis`, `/proyecto` (metodología), `/equipo`.
 > - **La landing sigue el boceto del equipo** (`web/docs/boceto-landing.webp`) y la pantalla Análisis, `web/docs/boceto-analisis.html`.
 > - **Equipo** tiene pantalla propia con los 6 integrantes (foto, nombre y carrera), en `web/src/content/team.js`.
@@ -10,7 +10,7 @@
 > - **Comparar y A | AB | B** van en la línea de controles sobre el mapa (como en el boceto), no en la barra de filtros.
 > - **Barra de tiempo:** componente propio traducible (`TimeSlider.vue`); la de `frontend/map/src/timebar` se copió pero no se usa.
 > - **Selección:** el módulo del mapa se copió a `web/src/features/fire-map/` con parches (`ui`, `labels`, `selectable`, `selectCell`, `setLabels`, `jumpTo`, eventos `lasso` y `notice`); no se separó `selection.js`, el panel interno queda oculto y la ficha se dibuja en Vue.
-> - **Despliegue:** `scripts/deploy_vps.sh` publica `web/` en la raíz, EduAustralis en `/edu/` y `mock-s1/` aparte (ver [`DESPLIEGUE_VPS.md`](DESPLIEGUE_VPS.md)).
+> - **Despliegue:** `scripts/deploy_vps.sh` publica `web/` en la raíz (EduAustralis incluido, en `/#/edu`) y `mock-s1/` aparte (ver [`DESPLIEGUE_VPS.md`](DESPLIEGUE_VPS.md)).
 > - Las fases de la sección 6 y la estructura de la sección 7 quedaron reemplazadas por las tareas T0–T13 de `web/PLAN_IMPLEMENTACION.md`.
 
 Documento de trabajo para quien implemente el nuevo frontend (con Claude Code o a mano). Todo lo que figura como decisión ya fue acordado con el equipo. Lo que figura como *propuesta* se puede ajustar, pero conviene avisar antes de cambiarlo.

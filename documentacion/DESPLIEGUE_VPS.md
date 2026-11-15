@@ -1,6 +1,6 @@
 # Despliegue de la web en una VPS
 
-El despliegue publica el frontend científico de `web/` en la raíz del sitio y EduAustralis (`frontend/`) en `/edu/`, como web estática; no necesita PostgreSQL ni un backend. Nginx sirve los archivos compilados para `www.terraaustralis.space`; no se abre ningun puerto de aplicacion. La demo independiente de `frontend/map/` no se publica.
+El despliegue publica el frontend científico de `web/` en la raíz del sitio, como web estática (EduAustralis es una sección de esa app, en `/#/edu`); no necesita PostgreSQL ni un backend. Nginx sirve los archivos compilados para `www.terraaustralis.space`; no se abre ningun puerto de aplicacion. La demo independiente de `frontend/map/` no se publica.
 
 ## Preparacion previa
 
@@ -39,12 +39,11 @@ bash scripts/deploy_vps.sh
 
 El script:
 
-1. Compila `web/` con `VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/` y publica `web/dist/` en `/var/www/terra-australis` (`rsync --delete`, sin tocar `/edu/` ni `/mock-s1/`).
-2. Si existe `frontend/`, compila EduAustralis con `--base=/edu/` y lo publica en `/var/www/terra-australis/edu/`.
-3. Copia `mock-s1/` a `/var/www/terra-australis/mock-s1/` (primera que encuentre entre `MOCK_DIR`, `web/public/mock-s1` y `frontend/map/public/mock-s1`).
-4. Configura Nginx para redirigir HTTP a HTTPS y servir el contenido (con caché de una hora para `/mock-s1/`), y lo habilita al iniciar el sistema.
+1. Compila `web/` con `VITE_MOCK_BASE=mock-s1` y publica `web/dist/` en `/var/www/terra-australis` (`rsync --delete`, sin tocar `/mock-s1/`; si quedó un `/edu/` de un despliegue anterior, lo borra).
+2. Copia `mock-s1/` a `/var/www/terra-australis/mock-s1/` (primera que encuentre entre `MOCK_DIR`, `web/public/mock-s1` y `frontend/map/public/mock-s1`).
+3. Configura Nginx para redirigir HTTP a HTTPS y servir el contenido (con caché de una hora para `/mock-s1/`), y lo habilita al iniciar el sistema.
 
-La app usa rutas con `#` (`/#/analisis`), así que `try_files $uri $uri/ =404` alcanza. La web queda disponible en `https://www.terraaustralis.space/` y EduAustralis en `https://www.terraaustralis.space/edu/`.
+La app usa rutas con `#` (`/#/analisis`), así que `try_files $uri $uri/ =404` alcanza. La web queda disponible en `https://www.terraaustralis.space/` y EduAustralis en `https://www.terraaustralis.space/#/edu`. La app vieja de `frontend/` ya no se publica.
 
 ```bash
 MOCK_DIR=/opt/terra/datos/mock-s1 bash scripts/deploy_vps.sh   # si los datos están en otra carpeta

@@ -36,7 +36,6 @@ En `dev` y `preview`, Vite sirve `GET /mock-<nombre>/<ruta>.json` desde la prime
 |---|---|---|
 | `TERRA_DATA_DIR` | `.env.local` | Carpeta con `mock-*/` para `dev` y `preview` |
 | `VITE_MOCK_BASE` | entorno al compilar | Carpeta de datos a usar primero (en producción: `mock-s1`) |
-| `VITE_EDU_URL` | entorno al compilar | Enlace a EduAustralis (por defecto `/edu/`) |
 
 ## Estructura
 
@@ -95,4 +94,4 @@ Copiado de `frontend/map/src/map/`. Cambios: opciones `ui: { legend, badges, pan
 
 ## Despliegue
 
-`scripts/deploy_vps.sh` compila esta app con `VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/`, la publica en la raíz del sitio, publica EduAustralis en `/edu/` y copia `mock-s1/` aparte. Detalle en [`../documentacion/DESPLIEGUE_VPS.md`](../documentacion/DESPLIEGUE_VPS.md).
+`scripts/deploy_vps.sh` compila esta app con `VITE_MOCK_BASE=mock-s1`, la publica en la raíz del sitio (EduAustralis incluido, en `/#/edu`) y copia `mock-s1/` aparte. Detalle en [`../documentacion/DESPLIEGUE_VPS.md`](../documentacion/DESPLIEGUE_VPS.md).
