@@ -281,6 +281,14 @@ export async function createFireMap(container, options = {}) {
     return state.metric === 'anomaly' && state.period.nMonths === 1 ? 'anomaly' : 'value';
   }
 
+  // Capas de otros módulos (el juego), dibujadas encima de las del mapa y debajo de las etiquetas.
+  // draw() no toca la leyenda ni los carteles: se puede llamar en cada cuadro de una animación.
+  let baseLayers = [];
+  let extraLayers = [];
+  function draw() {
+    overlay.setProps({ layers: [...baseLayers, ...extraLayers.map((l) => l.clone({ beforeId: state.beforeId }))] });
+  }
+
   function render() {
     const { res, period, layers: vis, beforeId } = state;
     const metric = effectiveMetric();
@@ -294,7 +302,8 @@ export async function createFireMap(container, options = {}) {
       ...state.points.chunks.map((c) =>
         pointsLayer(c.id, c.table, { d0: period.d0, d1: period.d1, fade: state.fade, visible: vis.points })),
     ];
-    overlay.setProps({ layers });
+    baseLayers = layers;
+    draw();
     renderLegend(metric);
     renderBadges(metric);
     emit('change', getState());
@@ -422,8 +431,10 @@ export async function createFireMap(container, options = {}) {
   }
 
   const api = {
-    map, overlay, meta,
+    map, overlay, meta, root, source: opts.source,
     getState,
+    /** Capas de deck.gl de otro módulo (p. ej. el juego). Es barato: se puede llamar en cada cuadro. */
+    setExtraLayers(layers) { extraLayers = layers ?? []; draw(); },
     setPeriod(p) { state.period = normalizePeriod(p); selection.periodChanged(); return update(); },
     setMetric(m) { state.metric = m === 'anomaly' ? 'anomaly' : 'value'; render(); },
     setHexOpacity(x) { state.hexOpacity = Math.min(1, Math.max(0, x)); render(); },

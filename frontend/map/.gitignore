@@ -6,3 +6,5 @@ public/mock-api/
 public/mock-s1/
 public/mock-argentina/
 .claude/
+# Cualquier otra salida de build_mocks.py
+public/mock-*/

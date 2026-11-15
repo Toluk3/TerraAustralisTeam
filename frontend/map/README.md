@@ -123,6 +123,36 @@ El cálculo está en `src/map/summary.js` (sin DOM ni deck.gl): `summarize(sel, 
 
 `map.map` es el `maplibregl.Map` y `map.overlay`, el `MapboxOverlay`.
 
+## Juego: Apagá los incendios
+
+Módulo educativo (`src/game/`) que se monta sobre el mapa. En la demo: botón **🔥 Jugar** (abajo a la izquierda) o `?jugar` en la URL.
+
+- **Tablero:** celdas H3 de la zona, en la resolución que deja más cerca de 200 hexágonos (r4 para Río Negro y Neuquén, r2 para el Cono Sur).
+- **Fuego:** aparece cada vez más seguido y sin techo (1,2 incendios por segundo al empezar, +1 por cada minuto). Cada incendio crece en tres etapas (amarillo → naranja → rojo, 4 s cada una) y en la última contagia a una celda vecina cada 5 s.
+- **Dónde aparece:** más seguido donde hubo más focos reales (suma de las celdas del mapa en los 6 meses con más fuego de la serie). Sin datos, aparece parejo.
+- **Apagar:** un clic o un toque sobre el hexágono. Suma **30, 20 o 10 puntos** según la etapa: vale más apagarlo cuando recién empieza.
+- **Modo infinito** (por defecto): se juega hasta perder, que es cuando más del **50 %** del tablero está en llamas. Cuenta el puntaje; el récord se guarda en el navegador.
+- **Con tiempo** (`rules: { duration: 120 }`): al llegar a ese tiempo se gana con menos del **20 %** en llamas; entre el 20 % y el 50 %, se pierde.
+- **Mensajes:** cada 13 s aparece abajo un consejo de prevención de una línea (`src/game/tips.js`), sin frenar la partida. Al terminar se muestra otro.
+- Mientras está abierto, el mapa queda quieto, encuadrado en el tablero y sin sus capas; al salir (× o `Esc`) vuelve a como estaba.
+
+```js
+import { createFireGame } from './game/index.js';
+
+const game = createFireGame(map, {                 // map = lo que devuelve createFireMap()
+  rules: { loseFrac: 0.5, difficulty: 1 },         // opcional; ver GAME_DEFAULTS en engine.js
+  button: true,                                    // false: sin botón, se abre con game.open()
+});
+game.on('end', ({ status, reason, stats }) => …);  // status: 'won' | 'lost'; reason: 'time' | 'overrun'
+game.on('open' | 'start' | 'exit', …);
+game.open();  game.start();  game.close();  game.getStats();  game.getBurning();  game.destroy();
+```
+
+- `engine.js` tiene las reglas, sin DOM ni mapa, y `board.js` arma el tablero; los dos se prueban con `npm test` (`tests/game.test.mjs`).
+- El juego dibuja con `map.setExtraLayers(capas)`, que agrega capas de deck.gl encima de las del mapa sin tocar la leyenda.
+- **Dificultad:** el límite es cuántos clics por segundo hace una persona, así que los ritmos no dependen del tamaño del tablero. Con los valores por defecto una partida dura entre 1 y 3 minutos (de 1,5 a 3 aciertos por segundo); `difficulty` multiplica el ritmo (0,7 para chicos, 1,3 difícil).
+- **En el sitio:** `frontend/src/components/MapView.vue` monta el mapa y el juego en las páginas Mapa y EduAustralis.
+
 ## Datos que esperan (propuesta para `CONTRATO_API.md`)
 
 Todo en JSON **columnar** (un arreglo por columna más `length`): deck.gl lo lee por índice sin armar objetos, y pesa la mitad. `mes` es siempre `YYYY-MM`.

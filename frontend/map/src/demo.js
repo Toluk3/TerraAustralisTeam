@@ -2,6 +2,7 @@
 //   ?datos=mock-s1   usa public/mock-s1 en vez de public/mock-api (otra salida de build_mocks.py)
 import { createFireMap, createStaticSource, createApiSource, basemapOptions } from './map/index.js';
 import { createTimebar } from './timebar/index.js';
+import { createFireGame } from './game/index.js';
 
 const env = import.meta.env;
 const $ = (id) => document.getElementById(id);
@@ -27,6 +28,13 @@ const [map, timebar] = await Promise.all([
 timebar.on('input', (p) => map.setPeriod(p));
 window.fireMap = map; // para probar desde la consola
 window.timebar = timebar;
+
+// Juego "Apagá los incendios": botón "Jugar" sobre el mapa. Mientras está abierto se ocultan los controles.
+const game = createFireGame(map);
+game.on('open', () => document.body.classList.add('jugando'));
+game.on('exit', () => document.body.classList.remove('jugando'));
+window.fireGame = game;
+if (params.has('jugar')) game.open(); // ?jugar abre el juego directamente
 
 $('basemap').addEventListener('change', (e) => map.setBasemap(e.target.value));
 $('metric').addEventListener('change', (e) => map.setMetric(e.target.value));

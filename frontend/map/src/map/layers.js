@@ -67,7 +67,8 @@ export function maskLayer(outline, { visible = true, opacity = 0.35, beforeId } 
   return [
     // Mismo beforeId que la caja: en el modo intercalado de MapLibre, deck.gl dibuja las capas por grupo de
     // beforeId y la forma de la máscara tiene que estar en el grupo de la capa que la usa.
-    new GeoJsonLayer({ id: 'zone-mask-shape', data: outline, operation: 'mask', beforeId, stroked: false, filled: true }),
+    // `visible` también acá: si no, la forma se sigue dibujando en cada cuadro aunque la máscara esté apagada.
+    new GeoJsonLayer({ id: 'zone-mask-shape', data: outline, operation: 'mask', visible, beforeId, stroked: false, filled: true }),
     new GeoJsonLayer({
       id: 'zone-mask', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [box] } },
       visible, beforeId, stroked: false, filled: true, pickable: false,
