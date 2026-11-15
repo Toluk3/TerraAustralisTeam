@@ -12,10 +12,14 @@ import { useI18n } from 'vue-i18n';
 import { COMBUSTION_COEF, EF_CO2 } from '@/features/fire-map/summary.js';
 import { explCsv, fmtMassParts } from '@/features/selectionDetail.js';
 import { intlLocale } from '@/stores/ui.js';
+import { analysis } from '@/stores/analysis.js';
+import SelectionCharts from './SelectionCharts.vue';
 
 const props = defineProps({
   /** analysis.selection: { cells, area, months, rows, total } */
   selection: { type: Object, required: true },
+  /** { source, meta }: para los gráficos, que cargan los meses anteriores al período */
+  dataset: { type: Object, required: true },
 });
 const { t, locale } = useI18n();
 
@@ -82,6 +86,9 @@ function downloadCsv() {
         <dt>{{ t('selwin.activity.peakMonth') }}</dt>
         <dd>{{ tot.peakMonth ? t('selwin.activity.peakValue', { month: fmtMonth(tot.peakMonth.month), v: fmtV(tot.peakMonth.nEquiv) }) : '—' }}</dd>
       </dl>
+
+      <!-- Gráficos: la selección en el tiempo -->
+      <SelectionCharts :selection="selection" :dataset="dataset" :period="analysis.periodA" />
 
       <!-- Exploratorio: biomasa y CO₂ -->
       <details class="sw__sec sw__sec--expl" open>

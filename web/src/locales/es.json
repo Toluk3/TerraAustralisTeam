@@ -279,6 +279,29 @@
       "nEquiv": "Focos eq.",
       "origin": "Origen",
       "cov": "Cob."
+    },
+    "charts": {
+      "fireByMonth": "Fuego por mes",
+      "fireByYear": "Fuego por año",
+      "partialYear": "{year} ({n} meses)",
+      "peak": "Pico en {when} con {v} focos equivalentes; {n} de {of} meses con fuego.",
+      "peakYears": "Pico en {when} con {v} focos equivalentes; {n} de {of} años con fuego.",
+      "noFire": "Sin fuego en la selección en este período.",
+      "sensors": "Qué detectó cada satélite",
+      "rawDet": "detecciones crudas",
+      "ratio": "VIIRS detectó {x} veces lo que MODIS: ve fuegos más chicos. Por eso la serie de arriba lleva todo a una escala común.",
+      "onlyModis": "En este período solo hay MODIS: VIIRS opera desde {since}.",
+      "noCompare": "Sin detecciones de los dos sensores para comparar en este período.",
+      "hint": "Pasá el mouse por el gráfico para ver los valores.",
+      "eqShort": "focos eq.",
+      "error": "No se pudieron cargar los gráficos.",
+      "keys": {
+        "obs": "MODIS directo",
+        "conv": "convertido a escala MODIS",
+        "band": "intervalo p05–p95",
+        "partial": "cobertura parcial",
+        "period": "período A"
+      }
     }
   },
   "charts": {

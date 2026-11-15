@@ -185,7 +185,7 @@ defineExpose({ mapA, mapB, sameMonths });
     </button>
 
     <!-- Ventana con el detalle de la selección (lo que la ficha de abajo no muestra) -->
-    <SelectionWindow v-if="analysis.selection" :selection="analysis.selection" />
+    <SelectionWindow v-if="analysis.selection" :selection="analysis.selection" :dataset="dataset" />
 
     <!-- Barra vertical -->
     <div v-if="mode === 'AB'" class="cmap__divider" :style="{ left: `${analysis.split * 100}%` }"

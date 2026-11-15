@@ -279,6 +279,29 @@
       "nEquiv": "Eq. hotspots",
       "origin": "Origin",
       "cov": "Cov."
+    },
+    "charts": {
+      "fireByMonth": "Fire by month",
+      "fireByYear": "Fire by year",
+      "partialYear": "{year} ({n} months)",
+      "peak": "Peak in {when} with {v} equivalent hotspots; {n} of {of} months with fire.",
+      "peakYears": "Peak in {when} with {v} equivalent hotspots; {n} of {of} years with fire.",
+      "noFire": "No fire in the selection in this period.",
+      "sensors": "What each satellite detected",
+      "rawDet": "raw detections",
+      "ratio": "VIIRS detected {x} times what MODIS did: it sees smaller fires. That is why the series above puts everything on a common scale.",
+      "onlyModis": "Only MODIS in this period: VIIRS has operated since {since}.",
+      "noCompare": "No detections from both sensors to compare in this period.",
+      "hint": "Hover over the chart to read the values.",
+      "eqShort": "eq. hotspots",
+      "error": "The charts could not be loaded.",
+      "keys": {
+        "obs": "MODIS direct",
+        "conv": "converted to MODIS scale",
+        "band": "p05–p95 interval",
+        "partial": "partial coverage",
+        "period": "period A"
+      }
     }
   },
   "charts": {
