@@ -51,10 +51,28 @@ function mapData(env) {
   };
 }
 
-export default defineConfig(({ mode }) => {
+/** Carpetas mock-* con meta.json en las carpetas de datos: la app solo prueba esas (sin 404 en la consola). */
+function availableDatasets(env, command) {
+  const roots = command === 'build'
+    ? [path.resolve(here, 'public')]
+    : [env.TERRA_DATA_DIR, path.resolve(here, '../frontend/map/public'), path.resolve(here, 'public')].filter(Boolean);
+  const found = new Set();
+  for (const r of roots) {
+    try {
+      for (const name of fs.readdirSync(r)) {
+        if (name.startsWith('mock-') && fs.existsSync(path.join(r, name, 'meta.json'))) found.add(name);
+      }
+    } catch { /* carpeta inexistente */ }
+  }
+  return [...found];
+}
+
+export default defineConfig(({ mode, command }) => {
   const env = { ...loadEnv(mode, here, ''), ...process.env };
   return {
     plugins: [vue(), mapData(env)],
+    // En el build queda vacío: se prueban VITE_MOCK_BASE y la lista fija de dataset.js
+    define: { __TERRA_DATASETS__: JSON.stringify(availableDatasets(env, command)) },
     resolve: { alias: { '@': path.resolve(here, 'src') } },
     server: { port: 5175, strictPort: true },
     preview: { port: 5175 },

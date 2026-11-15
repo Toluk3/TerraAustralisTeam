@@ -5,9 +5,16 @@
  */
 import { createStaticSource } from './fire-map/data.js';
 
-export const CANDIDATES = [import.meta.env?.VITE_MOCK_BASE, 'mock-s1', 'mock-conosur', 'mock-api']
+const ORDER = [import.meta.env?.VITE_MOCK_BASE, 'mock-s1', 'mock-conosur', 'mock-api']
   .filter(Boolean)
   .map((b) => String(b).replace(/^\/|\/$/g, ''));
+// Carpetas que el servidor de desarrollo encontró (vite.config.js). Si hay lista, solo se prueban esas,
+// así no queda un 404 en la consola por cada carpeta que no existe.
+// eslint-disable-next-line no-undef
+const FOUND = typeof __TERRA_DATASETS__ !== 'undefined' ? __TERRA_DATASETS__ : [];
+export const CANDIDATES = FOUND.length
+  ? [...ORDER.filter((b) => FOUND.includes(b)), ...FOUND.filter((b) => !ORDER.includes(b))]
+  : ORDER;
 
 let pending = null;
 

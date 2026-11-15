@@ -84,12 +84,196 @@
     }
   },
   "analysis": {
-    "title": "Análisis"
+    "title": "Análisis",
+    "lead": "Serie armonizada de focos equivalentes por mes (escala MODIS Terra + Aqua).",
+    "loading": "Cargando los datos…",
+    "noData": "No se encontraron datos para el mapa.",
+    "noDataHint": "La app busca {list}. Copiá una carpeta mock-s1 o mock-conosur en web/public/ o apuntá TERRA_DATA_DIR (en web/.env.local) a la carpeta que la contiene.",
+    "error": "No se pudieron cargar los datos: {msg}",
+    "retry": "Reintentar",
+    "mapSection": "Mapa"
   },
   "project": {
     "title": "Proyecto"
   },
   "team": {
     "title": "El equipo"
+  },
+  "time": {
+    "label": "Mes del período A",
+    "play": "Reproducir mes a mes",
+    "pause": "Pausar",
+    "estimated": "estimado",
+    "reduced": "cobertura reducida",
+    "valueText": "{month}: {value} focos equivalentes"
+  },
+  "compare": {
+    "button": "Comparar",
+    "modes": "Vista de la comparación",
+    "modeA": "Solo el período A",
+    "modeAB": "A y B, repartidos por la barra",
+    "modeB": "Solo el período B",
+    "hint": "Arrastrá la barra para repartir el mapa",
+    "split": "Reparto del mapa entre A y B",
+    "splitText": "{pct} % del mapa muestra A",
+    "mapA": "Mapa del período A",
+    "mapB": "Mapa del período B",
+    "diffOn": "Vista Diferencia: un solo mapa con A menos B"
+  },
+  "legend": {
+    "title": "Leyenda",
+    "value": "Focos equivalentes por mes",
+    "anomaly": "Anomalía del mes contra su mediana",
+    "diff": "A menos B (promedio mensual por celda)",
+    "lessB": "menos que B",
+    "moreB": "más que B",
+    "less": "−100 %",
+    "median": "mediana",
+    "noMedian": "sin mediana (casi nunca hubo fuego)",
+    "frp": "Focos detectados · FRP (MW)",
+    "frpNote": "Ubicación de cada detección; no se cuentan.",
+    "cell": "Celda H3 r{res} (≈ {area} km²) · serie armonizada MODIS + VIIRS",
+    "zoomIn": "Acercá el mapa para ver los focos",
+    "truncated": "Focos parciales: acercá para ver todos"
+  },
+  "badge": {
+    "estimated": "Estimado (VIIRS × k) desde {date}",
+    "reduced": "Cobertura reducida: {month} ({pct} %)",
+    "noData": "Sin datos publicados para este período",
+    "anomalyMonth": "La anomalía es por mes: elegí un solo mes"
+  },
+  "filters": {
+    "label": "Filtros del análisis",
+    "zone": "Zona",
+    "periodA": "Período A",
+    "periodB": "Período B",
+    "from": "desde",
+    "to": "hasta",
+    "month": "Mes",
+    "year": "Año",
+    "metric": "Métrica",
+    "metricValue": "focos equivalentes",
+    "export": "Exportar",
+    "exportCsv": "Ficha en CSV",
+    "exportJson": "Ficha en JSON",
+    "range": "Rango",
+    "single": "Un mes"
+  },
+  "layers": {
+    "title": "Capas",
+    "show": "Mostrar",
+    "cells": "Celdas H3",
+    "points": "Focos",
+    "mask": "Máscara",
+    "outline": "Contorno",
+    "view": "Vista",
+    "value": "Valor",
+    "anomaly": "Anomalía",
+    "diff": "Diferencia",
+    "anomalyOnlyMonth": "Anomalía: solo con un mes",
+    "diffOnlyCompare": "Diferencia: solo comparando",
+    "opacity": "Opacidad de las celdas",
+    "lassoHint": "Lazo: botón del mapa o tecla L",
+    "open": "Capas y vista",
+    "close": "Cerrar capas"
+  },
+  "summary": {
+    "title": "Ficha de la selección",
+    "selection": "Selección: {n} celdas · {area} km²",
+    "zone": "Zona completa: {zone}",
+    "clear": "Borrar selección",
+    "periodCard": "{p} · {period}",
+    "unit": "focos equivalentes",
+    "interval": "p05–p95: {lo}–{hi}",
+    "noInterval": "sin intervalo",
+    "noIntervalMonths": "se suman {n} meses y los percentiles no se suman",
+    "noIntervalData": "los datos no traen la incertidumbre de los meses convertidos",
+    "diffTitle": "A − B",
+    "diffRel": "{pct} % respecto de B",
+    "diffAbs": "B = 0: diferencia absoluta",
+    "inconclusive": "Diferencia no concluyente",
+    "inconclusiveWhy": "Los intervalos de A y B se solapan",
+    "noOverlap": "Los intervalos no se solapan",
+    "noIntervalCompare": "Sin intervalos: no se puede decir si es concluyente",
+    "anomaly": "Anomalía vs mediana",
+    "anomalyZone": "Anomalía vs mediana (zona completa)",
+    "anomalyNone": "sin mediana para ese mes",
+    "anomalyRange": "solo para un mes",
+    "rank": "{pos}.º {month} más activo de {of} en la serie",
+    "origin": "Origen del valor",
+    "coverage": "cobertura {pct} %",
+    "estimated": "estimado",
+    "observed": "observado",
+    "belowScale": "Por debajo de la escala validada (~12.400 km²): el k regional puede no representar pocas celdas.",
+    "loading": "Calculando…",
+    "noFire": "Sin focos equivalentes en el período",
+    "origins": {
+      "modis": "MODIS (directo)",
+      "viirs": "VIIRS → MODIS",
+      "terra": "Terra sola → MODIS",
+      "mixed": "Mixto"
+    },
+    "originsLong": {
+      "modis": "MODIS (directo)",
+      "viirs": "VIIRS convertido a escala MODIS",
+      "terra": "Terra sola, convertida a escala MODIS"
+    }
+  },
+  "charts": {
+    "table": "Ver los datos como tabla",
+    "month": "Mes",
+    "value": "Valor",
+    "calendar": {
+      "title": "Calendario de quema",
+      "aria": "Calendario de quema: años por meses, color según focos equivalentes",
+      "value": "Valor",
+      "anomaly": "Anomalía",
+      "reduced": "cobertura reducida",
+      "estimated": "estimado desde {year}",
+      "hint": "Clic fija A · Mayús + clic fija B",
+      "cell": "{month}: {value} focos equivalentes",
+      "cellInterval": "p05–p95 {lo}–{hi}",
+      "cellAnomaly": "anomalía {pct}",
+      "statusEstimated": "estimado",
+      "statusObserved": "observado",
+      "year": "Año"
+    },
+    "years": {
+      "title": "Comparar años",
+      "aria": "Líneas mensuales por año con la mediana histórica y la banda p05–p95",
+      "median": "mediana",
+      "band": "p05–p95 {year}",
+      "add": "Sumar un año",
+      "remove": "Quitar {year}",
+      "hint": "Clic en un punto fija A · Mayús + clic fija B",
+      "max": "Hasta 6 años más"
+    },
+    "frp": {
+      "title": "Intensidad (FRP)",
+      "aria": "Histograma de FRP de los focos de la selección, en porcentaje de detecciones por familia de sensor",
+      "note": "Descriptivo: % de detecciones por familia de sensor; no comparable entre sensores ni entre años.",
+      "empty": "Dibujá un lazo o hacé clic en una celda del mapa para ver la distribución de FRP de esa zona.",
+      "none": "Sin detecciones en la selección para el período.",
+      "axisY": "% de detecciones",
+      "axisX": "FRP (MW)",
+      "loading": "Leyendo los focos de la selección…"
+    },
+    "quality": {
+      "title": "Calidad del dato",
+      "coverage": "Cobertura del período",
+      "origin": "Origen del valor",
+      "estimated": "Proporción estimada",
+      "estimatedText": "{pct} % del valor viene de meses estimados",
+      "method": "Cómo se calcula",
+      "months": "{n} meses"
+    }
+  },
+  "fixedFooter": {
+    "label": "Advertencias",
+    "hotspot": "Un foco no es un incendio confirmado.",
+    "harmonized": "Valores armonizados (focos equivalentes en escala MODIS), no conteos crudos.",
+    "window": "Ventanas menores a ~8 días tienen sesgo.",
+    "version": "Datos {version} · config_hash {hash}",
+    "attribution": "Focos: NASA FIRMS. Mapa base: OpenFreeMap / © OpenStreetMap."
   }
 }

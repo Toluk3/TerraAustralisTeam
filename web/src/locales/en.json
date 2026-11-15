@@ -84,12 +84,196 @@
     }
   },
   "analysis": {
-    "title": "Analysis"
+    "title": "Analysis",
+    "lead": "Harmonized series of equivalent hotspots per month (MODIS Terra + Aqua scale).",
+    "loading": "Loading data…",
+    "noData": "No map data was found.",
+    "noDataHint": "The app looks for {list}. Copy a mock-s1 or mock-conosur folder into web/public/ or point TERRA_DATA_DIR (in web/.env.local) to the folder that holds it.",
+    "error": "Data could not be loaded: {msg}",
+    "retry": "Try again",
+    "mapSection": "Map"
   },
   "project": {
     "title": "Project"
   },
   "team": {
     "title": "The team"
+  },
+  "time": {
+    "label": "Month of period A",
+    "play": "Play month by month",
+    "pause": "Pause",
+    "estimated": "estimated",
+    "reduced": "reduced coverage",
+    "valueText": "{month}: {value} equivalent hotspots"
+  },
+  "compare": {
+    "button": "Compare",
+    "modes": "Comparison view",
+    "modeA": "Period A only",
+    "modeAB": "A and B, split by the bar",
+    "modeB": "Period B only",
+    "hint": "Drag the bar to split the map",
+    "split": "Map split between A and B",
+    "splitText": "{pct} % of the map shows A",
+    "mapA": "Map of period A",
+    "mapB": "Map of period B",
+    "diffOn": "Difference view: a single map with A minus B"
+  },
+  "legend": {
+    "title": "Legend",
+    "value": "Equivalent hotspots per month",
+    "anomaly": "Month anomaly vs its median",
+    "diff": "A minus B (monthly mean per cell)",
+    "lessB": "less than B",
+    "moreB": "more than B",
+    "less": "−100 %",
+    "median": "median",
+    "noMedian": "no median (fire almost never happened)",
+    "frp": "Detected hotspots · FRP (MW)",
+    "frpNote": "Location of each detection; not counted.",
+    "cell": "H3 r{res} cell (≈ {area} km²) · harmonized MODIS + VIIRS series",
+    "zoomIn": "Zoom in to see the hotspots",
+    "truncated": "Partial hotspots: zoom in to see them all"
+  },
+  "badge": {
+    "estimated": "Estimated (VIIRS × k) since {date}",
+    "reduced": "Reduced coverage: {month} ({pct} %)",
+    "noData": "No published data for this period",
+    "anomalyMonth": "Anomaly is per month: choose a single month"
+  },
+  "filters": {
+    "label": "Analysis filters",
+    "zone": "Area",
+    "periodA": "Period A",
+    "periodB": "Period B",
+    "from": "from",
+    "to": "to",
+    "month": "Month",
+    "year": "Year",
+    "metric": "Metric",
+    "metricValue": "equivalent hotspots",
+    "export": "Export",
+    "exportCsv": "Summary as CSV",
+    "exportJson": "Summary as JSON",
+    "range": "Range",
+    "single": "One month"
+  },
+  "layers": {
+    "title": "Layers",
+    "show": "Show",
+    "cells": "H3 cells",
+    "points": "Hotspots",
+    "mask": "Mask",
+    "outline": "Outline",
+    "view": "View",
+    "value": "Value",
+    "anomaly": "Anomaly",
+    "diff": "Difference",
+    "anomalyOnlyMonth": "Anomaly: single month only",
+    "diffOnlyCompare": "Difference: only when comparing",
+    "opacity": "Cell opacity",
+    "lassoHint": "Lasso: map button or L key",
+    "open": "Layers and view",
+    "close": "Close layers"
+  },
+  "summary": {
+    "title": "Selection summary",
+    "selection": "Selection: {n} cells · {area} km²",
+    "zone": "Whole area: {zone}",
+    "clear": "Clear selection",
+    "periodCard": "{p} · {period}",
+    "unit": "equivalent hotspots",
+    "interval": "p05–p95: {lo}–{hi}",
+    "noInterval": "no interval",
+    "noIntervalMonths": "{n} months are added and percentiles do not add up",
+    "noIntervalData": "the data carry no uncertainty for converted months",
+    "diffTitle": "A − B",
+    "diffRel": "{pct} % relative to B",
+    "diffAbs": "B = 0: absolute difference",
+    "inconclusive": "Inconclusive difference",
+    "inconclusiveWhy": "The A and B intervals overlap",
+    "noOverlap": "Intervals do not overlap",
+    "noIntervalCompare": "No intervals: cannot tell whether it is conclusive",
+    "anomaly": "Anomaly vs median",
+    "anomalyZone": "Anomaly vs median (whole area)",
+    "anomalyNone": "no median for that month",
+    "anomalyRange": "single month only",
+    "rank": "{pos}{suffix} most active {month} of {of} in the series",
+    "origin": "Value source",
+    "coverage": "coverage {pct} %",
+    "estimated": "estimated",
+    "observed": "observed",
+    "belowScale": "Below the validated scale (~12,400 km²): the regional k may not represent a few cells.",
+    "loading": "Computing…",
+    "noFire": "No equivalent hotspots in the period",
+    "origins": {
+      "modis": "MODIS (direct)",
+      "viirs": "VIIRS → MODIS",
+      "terra": "Terra only → MODIS",
+      "mixed": "Mixed"
+    },
+    "originsLong": {
+      "modis": "MODIS (direct)",
+      "viirs": "VIIRS converted to the MODIS scale",
+      "terra": "Terra only, converted to the MODIS scale"
+    }
+  },
+  "charts": {
+    "table": "Show the data as a table",
+    "month": "Month",
+    "value": "Value",
+    "calendar": {
+      "title": "Burn calendar",
+      "aria": "Burn calendar: years by months, colored by equivalent hotspots",
+      "value": "Value",
+      "anomaly": "Anomaly",
+      "reduced": "reduced coverage",
+      "estimated": "estimated since {year}",
+      "hint": "Click sets A · Shift + click sets B",
+      "cell": "{month}: {value} equivalent hotspots",
+      "cellInterval": "p05–p95 {lo}–{hi}",
+      "cellAnomaly": "anomaly {pct}",
+      "statusEstimated": "estimated",
+      "statusObserved": "observed",
+      "year": "Year"
+    },
+    "years": {
+      "title": "Compare years",
+      "aria": "Monthly lines per year with the historical median and the p05–p95 band",
+      "median": "median",
+      "band": "p05–p95 {year}",
+      "add": "Add a year",
+      "remove": "Remove {year}",
+      "hint": "Click a point to set A · Shift + click sets B",
+      "max": "Up to 6 more years"
+    },
+    "frp": {
+      "title": "Intensity (FRP)",
+      "aria": "FRP histogram of the selection's hotspots, as a percentage of detections per sensor family",
+      "note": "Descriptive: % of detections per sensor family; not comparable across sensors or years.",
+      "empty": "Draw a lasso or click a cell on the map to see the FRP distribution of that area.",
+      "none": "No detections in the selection for the period.",
+      "axisY": "% of detections",
+      "axisX": "FRP (MW)",
+      "loading": "Reading the selection's hotspots…"
+    },
+    "quality": {
+      "title": "Data quality",
+      "coverage": "Period coverage",
+      "origin": "Value source",
+      "estimated": "Estimated share",
+      "estimatedText": "{pct} % of the value comes from estimated months",
+      "method": "How it is computed",
+      "months": "{n} months"
+    }
+  },
+  "fixedFooter": {
+    "label": "Warnings",
+    "hotspot": "A hotspot is not a confirmed fire.",
+    "harmonized": "Harmonized values (equivalent hotspots on the MODIS scale), not raw counts.",
+    "window": "Windows shorter than ~8 days are biased.",
+    "version": "Data {version} · config_hash {hash}",
+    "attribution": "Hotspots: NASA FIRMS. Basemap: OpenFreeMap / © OpenStreetMap."
   }
 }
