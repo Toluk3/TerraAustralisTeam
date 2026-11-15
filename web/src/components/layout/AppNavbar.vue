@@ -58,8 +58,8 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
           <svg v-if="dark" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M5.3 18.7l1.6-1.6M17.1 6.9l1.6-1.6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
           <svg v-else viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M20 14.2A8 8 0 1 1 9.8 4a6.4 6.4 0 0 0 10.2 10.2Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         </button>
-        <a :href="REPO" class="nav__repo" target="_blank" rel="noopener">
-          <span class="dot" aria-hidden="true"></span>{{ t('nav.repo') }}<span class="visually-hidden"> ({{ t('nav.newTab') }})</span>
+        <a :href="REPO" class="nav__repo" target="_blank" rel="noopener" :aria-label="`${t('nav.repo')} (${t('nav.newTab')})`" :title="t('nav.repo')">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M12 .5a11.5 11.5 0 0 0-3.64 22.41c.58.1.79-.25.79-.56v-2c-3.2.7-3.88-1.37-3.88-1.37-.52-1.33-1.28-1.69-1.28-1.69-1.05-.71.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.77 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.42-2.69 5.39-5.26 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .5Z"/></svg>
         </a>
       </div>
     </div>
@@ -104,10 +104,11 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
   transition: transform var(--t-in) var(--ease), background-color var(--t-in) var(--ease);
 }
 .nav__theme:hover { transform: translateY(-1px); background: var(--surface-2); }
+/* Repositorio: botón redondo con el logo de GitHub, del mismo tamaño que el de tema */
 .nav__repo {
-  display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px;
-  background: var(--btn-bg); color: var(--btn-ink); border-radius: var(--radius-pill); text-decoration: none;
-  font-size: 0.95rem; letter-spacing: -0.01em; transition: transform var(--t-in) var(--ease), background-color var(--t-in) var(--ease);
+  width: 44px; height: 44px; display: inline-grid; place-items: center; border-radius: 50%; flex: none;
+  background: var(--btn-bg); color: var(--btn-ink); text-decoration: none;
+  transition: transform var(--t-in) var(--ease), background-color var(--t-in) var(--ease);
 }
 .nav__repo:hover { transform: translateY(-1px); background: var(--btn-bg-hover); }
 
@@ -115,7 +116,6 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
   .nav__inner { grid-template-columns: auto 1fr; row-gap: 8px; padding-block: 10px; }
   .nav__pill { grid-column: 1 / -1; grid-row: 2; justify-self: center; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
   .nav__pill::-webkit-scrollbar { display: none; }
-  .nav__repo { display: none; }
 }
 @media (max-width: 520px) {
   .nav__logo { width: 44px; height: 44px; }

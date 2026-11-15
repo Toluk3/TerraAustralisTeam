@@ -14,7 +14,7 @@
     "language": "Language",
     "themeToLight": "Switch to light theme",
     "themeToDark": "Switch to dark theme",
-    "repo": "Repository",
+    "repo": "GitHub repository",
     "newTab": "opens in a new tab"
   },
   "footer": {
