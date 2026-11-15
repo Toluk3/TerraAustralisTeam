@@ -26,6 +26,8 @@
     "logoAlt": "Logo de Terra Australis",
     "memberAlt": "Integrante {n} del equipo",
     "title": "Armonización MODIS y VIIRS, un sistema enfocado en Latam",
+    "titleLine1": "Armonización MODIS y VIIRS,",
+    "titleLine2": "un sistema enfocado en Latam",
     "lead": "Un pipeline calibra los focos de calor de NASA FIRMS para que los años de MODIS y los de VIIRS se puedan comparar. {years} años de serie que se exploran en un mapa, un calendario de quema y comparaciones entre meses.",
     "cta": "Abrir el mapa",
     "demo": "Ver una comparación",

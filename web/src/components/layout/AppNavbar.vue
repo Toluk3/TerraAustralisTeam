@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ui, setLocale, toggleTheme, effectiveTheme } from '@/stores/ui.js';
 
@@ -14,12 +14,24 @@ const links = [
   { to: '/equipo', key: 'nav.team', name: 'team' },
 ];
 
+// --nav-h sigue el alto real de la barra (bajo 1100 px pasa a dos filas): las pantallas de una
+// pantalla de alto y los anclajes lo usan.
+const header = ref(null);
+let ro = null;
+onMounted(() => {
+  ro = new ResizeObserver(() => {
+    if (header.value) document.documentElement.style.setProperty('--nav-h', `${header.value.offsetHeight}px`);
+  });
+  ro.observe(header.value);
+});
+onBeforeUnmount(() => ro?.disconnect());
+
 const dark = computed(() => effectiveTheme() === 'dark');
 const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.themeToDark'));
 </script>
 
 <template>
-  <header class="nav">
+  <header ref="header" class="nav">
     <div class="nav__inner">
       <RouterLink to="/" class="nav__brand" :aria-label="t('nav.homeLabel')">
         <img src="/logo.webp" width="56" height="56" alt="" class="nav__logo" />
@@ -63,7 +75,7 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
 }
 .nav__inner {
   max-width: calc(1640px + 2 * var(--gutter)); margin-inline: auto; padding: 14px var(--gutter);
-  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; min-height: var(--nav-h);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; min-height: 84px;
 }
 .nav__brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); justify-self: start; border-radius: 12px; }
 .nav__logo { width: 56px; height: 56px; object-fit: contain; }

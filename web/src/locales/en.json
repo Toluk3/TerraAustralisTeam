@@ -26,6 +26,8 @@
     "logoAlt": "Terra Australis logo",
     "memberAlt": "Team member {n}",
     "title": "MODIS and VIIRS Harmonization · Latam focused system",
+    "titleLine1": "MODIS and VIIRS Harmonization",
+    "titleLine2": "Latam focused system",
     "lead": "A pipeline calibrates NASA FIRMS hotspots so MODIS years and VIIRS years can be compared. {years} years of series, explored on a map, a burn calendar and month-to-month comparisons.",
     "cta": "Open the map",
     "demo": "See a comparison",
