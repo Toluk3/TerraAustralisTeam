@@ -68,6 +68,7 @@ def run(cfg: Config, con) -> dict:
                    d.sensor, d.platform, d.is_day,
                    sum(d.n_fires)::INTEGER AS n_fires, sum(d.n_clusters)::INTEGER AS n_clusters,
                    sum(d.n_clusters_r7)::INTEGER AS n_clusters_r7, sum(d.frp_sum_mw) AS frp_sum_mw,
+                   sum(d.n_clusters_det) AS n_clusters_det,
                    count(DISTINCT d.local_date)::INTEGER AS n_fire_days,
                    sum(d.n_equiv) AS n_equiv,
                    sum(CASE WHEN d.in_series THEN d.n_equiv ELSE 0 END) AS n_equiv_series,

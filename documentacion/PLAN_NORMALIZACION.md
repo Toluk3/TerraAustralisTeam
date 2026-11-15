@@ -4,7 +4,7 @@
 
 Este documento describe el método implementado por el pipeline para transformar las observaciones de NASA FIRMS en productos comparables. Los datos se unifican en un esquema común, se filtran y agregan con una grilla H3, y se armonizan mediante factores de calibración ajustados durante períodos de observación simultánea.
 
-La configuración principal es la fuente de verdad para una ejecución: actualmente especifica la métrica `n_clusters`, la referencia Terra + Aqua, el uso de MODIS hasta el 31 de diciembre de 2021 y el cambio a VIIRS desde el 1 de enero de 2022. La serie usa Terra, Aqua, NOAA-20 y NOAA-21; S-NPP quedó fuera. Las decisiones vigentes están en la sección 7.
+La configuración principal es la fuente de verdad para una ejecución: actualmente especifica la métrica `n_clusters_det`, la referencia Terra + Aqua, el uso de MODIS hasta el 31 de diciembre de 2021 y el cambio a VIIRS desde el 1 de enero de 2022. La serie usa Terra, Aqua, NOAA-20 y NOAA-21; S-NPP quedó fuera. Las decisiones vigentes están en la sección 7.
 
 ## 1. Flujo de datos
 
@@ -55,13 +55,24 @@ El pipeline utiliza H3, en lugar de las grillas de aproximadamente un kilómetro
 | r3 | Región principal para calibración |
 | r2 | Nivel regional de respaldo cuando r3 tiene pocas observaciones |
 
-Se conservan tres métricas para evaluar la sensibilidad a la resolución:
+Se conservan cuatro métricas para evaluar la sensibilidad a la resolución y a la detectabilidad:
 
 - `n_fires`: número de detecciones de píxel.
 - `n_clusters`: número de celdas r8 distintas con fuego en una pasada.
 - `n_clusters_r7`: número de celdas r7 distintas con fuego en una pasada.
+- `n_clusters_det`: igual que `n_clusters`, pero de noche cada cluster VIIRS cuenta según la probabilidad de que MODIS lo detecte por su FRP (paso `detect`, explicado abajo). De día, y para MODIS, es igual a `n_clusters`.
 
-La configuración principal selecciona `n_clusters`. La ablación permite contrastarla con las alternativas; la configuración vigente no equivale por sí sola a una recomendación final validada para todas las regiones.
+### Detectabilidad nocturna (`n_clusters_det`)
+
+De noche MODIS no ve la mayoría de los fuegos débiles que ve VIIRS, y la proporción de fuegos débiles cambia de un año y de una región a otra. Contando todos los clusters, `k` nocturno cambia con esa proporción: en Argentina, 2018 tuvo más fuegos débiles (40 % de los clusters bajo 1,5 MW contra 29–36 % los otros años) y su cociente de validación nocturno da 1,18. NOAA-20 y S-NPP coinciden en eso, así que no es un problema del instrumento.
+
+Un umbral fijo de FRP no alcanza: la detección de MODIS crece de forma gradual (Aqua ve ~2 % de los clusters de menos de 1 MW, ~6 % de los de 1,5–2 MW y ~50 % de los de más de 10 MW) y el umbral que mejor anda cambia con la región. Por eso:
+
+- `aggregate` guarda, por celda y día, los clusters VIIRS nocturnos en seis tramos de FRP (< 1, 1–1,5, 1,5–2, 2–5, 5–10 y ≥ 10 MW) y cuántos tienen una detección de Aqua en la misma celda r7 y noche. Aqua cruza a la misma hora que NOAA-20 (~01:30).
+- `detect` estima la probabilidad por tramo en cada región r1 (`detect_level`), con respaldo al total si la región tiene menos de `detect_min_count` clusters en el tramo, y la normaliza para que la suma total no cambie. Con `calibration_from` usa todos los lotes.
+- `validate` vuelve a estimar los pesos sin el año que deja afuera.
+
+La configuración principal selecciona `n_clusters_det`. La ablación la sigue comparando con `n_clusters` y las demás métricas.
 
 ## 4. Calibración y composición de la serie
 
@@ -78,7 +89,7 @@ La configuración actual establece:
 | Parámetro | Valor configurado | Interpretación |
 |---|---|---|
 | `reference` | `terra_aqua` | Escala de referencia de la serie |
-| `metric` | `n_clusters` | Métrica base de la ejecución principal |
+| `metric` | `n_clusters_det` | Métrica base de la ejecución principal |
 | `modis_stable_until` | `2021-12-31` | Fin del intervalo MODIS considerado estable para el ajuste |
 | `switch_date` | `2022-01-01` | Inicio de la serie estimada con VIIRS |
 | `calibration_levels` | `r3`, `r2`, `r1`, `global` | Respaldo jerárquico para estratos con pocas observaciones; `r1` evita caer en `global`, que mezcla todo lo que haya en la corrida |
@@ -114,6 +125,13 @@ El pipeline implementa reportes de control de calidad, validación de la calibra
 - Clasificación de ceros y períodos sin cobertura.
 - Compatibilidad entre el hash de configuración usado en calibración y el de los productos derivados.
 
+**Criterio de aceptación de la validación** (dejando un año afuera, en `validate.acceptance`):
+
+- Principal: el cociente armonizado / MODIS de día + noche de cada año entre 0,9 y 1,1, y el de día también; sesgo anual dentro de ±10 %. Día + noche es lo que muestra la serie.
+- Aviso: el cociente nocturno de cada año fuera de 0,85–1,15. MODIS detecta pocos fuegos de noche (en Argentina, alrededor del 10 % de sus clusters) y su cociente varía más de un año a otro.
+
+Con `n_clusters_det`, L1–L4 cumplen el criterio principal. Queda un aviso en Argentina: la noche de 2020 da 1,155, casi toda por octubre de 2020 (incendios de Córdoba, fuegos más intensos que el resto del solape). No está explicado del todo.
+
 Los lotes L1–L3 cuentan con resúmenes versionados en `lotes/resumen/`. La carpeta `analisis/` todavía no incluye scripts ni resultados finales propios. Por lo tanto, esta evidencia no permite afirmar que las preguntas de análisis regional, sensibilidad y transferibilidad estén todas respondidas.
 
 ## 7. Decisiones y límites vigentes
@@ -122,7 +140,7 @@ Los lotes L1–L3 cuentan con resúmenes versionados en `lotes/resumen/`. La car
 
 | Decisión | Valor | Motivo |
 |---|---|---|
-| Métrica | `n_clusters` | En la ablación de Argentina tiene el menor sesgo (+0,3 %) y la mayor correlación (0,974). `n_fires` tiene un error mediano algo menor (0,080 contra 0,084), pero cuenta píxeles, que dependen de la resolución de cada sensor. |
+| Métrica | `n_clusters_det` | Con datos reales de L1–L4 y calibración común, frente a `n_clusters`: el peor año de noche baja de 18,4 a 15,5 % (Argentina), de 15,2 a 10,6 % (Cono Sur), de 10,3 a 6,8 % (Brasil) y de 11,6 a 8,7 % (L4); el error mediano nocturno baja entre 29 y 45 %, y el de día + noche también baja en los cuatro. El día no cambia. |
 | Referencia | Terra + Aqua | Cubre desde noviembre de 2000. Con solo Aqua la validación de Argentina empeora (error mediano 0,091 contra 0,084) y se pierde 2000–2002. |
 | Plataformas VIIRS | NOAA-20 y NOAA-21; S-NPP fuera | No hay archivos de S-NPP en los datos del proyecto y la configuración principal y los lotes quedan iguales. Costo: el solape VIIRS–MODIS es de 3,75 años (NOAA-20, 2018-04 → 2021-12) en lugar de unos diez; `calibrate` lo avisa. |
 | Celda de los agregados | H3 r7 | El mapa ya publica r5 y r6 agregadas para zooms lejanos; r7 conserva el detalle de cerca. |
@@ -137,7 +155,7 @@ Los lotes L1–L3 cuentan con resúmenes versionados en `lotes/resumen/`. La car
 1. **Datos de 2026:** la incorporación de NRT está pendiente y exige una corrida con su configuración y controles correspondientes.
 2. **Transferibilidad:** resúmenes de Argentina y otros lotes no implican que un factor calibrado en una región sea válido para todas las demás.
 3. **Interpretación:** el producto describe detecciones satelitales armonizadas; no identifica perímetros, causas ni confirma incendios.
-4. **Evidencia:** la métrica y la referencia se eligieron con la validación de Argentina. Conviene repetir la comparación cuando estén los lotes vueltos a correr.
+4. **Evidencia:** la métrica se eligió con la validación de L1–L4; los lotes de África no tienen todavía validación real. La referencia se eligió con Argentina.
 
 ## 8. Referencias de operación
 

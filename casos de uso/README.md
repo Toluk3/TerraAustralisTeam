@@ -24,7 +24,7 @@ scripts/descargar_firms.py ──▶ Datos/<sensor>/<año>/*.csv
 scripts/descargar_zona.py  ──▶ zona/rio_negro_neuquen.geojson
                                    │
 python -m pipeline all             ▼
-  ingest → normalize → support → aggregate → calibrate → rollup → validate → qc → zone → export
+  ingest → normalize → support → aggregate → detect → calibrate → rollup → validate → qc → zone → export
      │         │                       │           │                                    │
   data/raw  data/norm            fires_daily   calibration                         data/publish/
             data/excluded                      calibration_boot                    (estructura del bucket)

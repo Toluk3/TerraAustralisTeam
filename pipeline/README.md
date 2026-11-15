@@ -9,7 +9,7 @@ El estado y la relación de este componente con el frontend se describen en [`do
 ## Flujo de procesamiento
 
 ```text
-ingest → normalize → support → aggregate → calibrate
+ingest → normalize → support → aggregate → detect → calibrate
        → rollup → validate → qc → zone → export
 ```
 

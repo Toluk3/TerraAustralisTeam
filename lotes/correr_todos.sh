@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Corre todos los lotes en el orden que pide la calibración común (lotes/_comun.yaml):
 #   1. fase 1 (ingest → aggregate) de L1–L4 y L6
-#   2. fase 2 (calibrate → qc) de los mismos: el primero ajusta k con todos y el resto lo copia
+#   2. fase 2 (detect → qc) de los mismos: pesos y k salen de todos; el primero ajusta k y el resto lo copia
 #   3. las variantes L5, que calibran solas
 # Uso: bash lotes/correr_todos.sh        Logs: data/lotes/logs/<lote>.log
 set -uo pipefail

@@ -47,14 +47,16 @@ En una corrida anterior que incluía S-NPP el orden era parecido (sesgo entre +0
 
 ## Criterios de aceptación (§6)
 
-El paso los evalúa sobre la variante de la métrica configurada y los deja en `qc_report` (`step = 'validation'`):
+El paso los evalúa sobre la variante de la métrica configurada (`n_clusters_det`) y los deja en `qc_report` (`step = 'validation'`):
 
-| Criterio | NOAA-20 | S-NPP |
-|---|---|---|
-| Sesgo anual dentro de ±10 % | Cumple | Cumple |
-| Cociente armonizado / MODIS entre 0,9 y 1,1 por año, día y noche | No: 2018 de noche da 1,20 | No: 2013 de noche da 1,12 |
+| Criterio | Tipo | L1 Argentina | L2 Cono Sur | L3 Brasil | L4 Contrastes |
+|---|---|---|---|---|---|
+| Cociente día + noche por año entre 0,9 y 1,1 | Principal | Cumple (0,98–1,03) | Cumple (0,97–1,05) | Cumple (0,97–1,05) | Cumple (1,00–1,02) |
+| Cociente de día por año entre 0,9 y 1,1 | Principal | Cumple | Cumple | Cumple | Cumple |
+| Sesgo anual dentro de ±10 % | Principal | Cumple | Cumple | Cumple | Cumple |
+| Cociente nocturno por año fuera de 0,85–1,15 | Aviso | 2020: 1,155 | — | — | — |
 
-En NOAA-20, 2018 solo tiene datos desde abril y es el año con menos meses en el solape. Los demás años quedan entre 0,98 y 1,05, y los totales día + noche entre 0,99 y 1,01.
+Con `n_clusters` (antes de los pesos de detectabilidad), la noche de 2018 en Argentina daba 1,184: 2018 tuvo más fuegos débiles, que VIIRS ve y MODIS no. Con `n_clusters_det` da 0,981. Ver `PLAN_NORMALIZACION.md` §3 y §6.
 
 ## Diagnóstico de deriva
 

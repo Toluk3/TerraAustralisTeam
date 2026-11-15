@@ -16,7 +16,7 @@ import yaml
 log = logging.getLogger(__name__)
 
 CONF_ORDER = ["low", "nominal", "high"]
-METRICS = ("n_fires", "n_clusters", "n_clusters_r7")
+METRICS = ("n_fires", "n_clusters", "n_clusters_r7", "n_clusters_det")
 REFERENCES = {"terra_aqua": ["terra", "aqua"], "aqua": ["aqua"]}
 
 # Parámetros que cambian el k: si alguno cambia, el k deja de valer y hay que reajustar.
@@ -27,6 +27,8 @@ HASHED_KEYS = [
     "min_source_count", "calibration_levels", "platform_periods",
     # El calendario define qué meses tienen cobertura completa, y eso decide con qué meses se ajusta k.
     "calendar_start", "calendar_end", "calibration_from",
+    # Pesos de detectabilidad de n_clusters_det
+    "detect_level", "detect_min_count",
 ]
 LEVEL_RE = re.compile(r"^(global|r\d{1,2})$")
 

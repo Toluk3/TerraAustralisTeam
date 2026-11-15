@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from pipeline import aggregate, calibrate, ingest, normalize, qc, rollup, support, validate, zone
+from pipeline import aggregate, calibrate, detect, ingest, normalize, qc, rollup, support, validate, zone
 from pipeline.config import load_config
 from pipeline.db import connect
 
@@ -121,7 +121,7 @@ def make_config(tmp: Path, **overrides):
 
 def run_all(cfg):
     con = connect(cfg)
-    for step in (ingest, normalize, support, aggregate, calibrate, rollup, validate, qc, zone):
+    for step in (ingest, normalize, support, aggregate, detect, calibrate, rollup, validate, qc, zone):
         step.run(cfg, con)
     return con
 

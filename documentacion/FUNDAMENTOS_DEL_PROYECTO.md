@@ -75,7 +75,7 @@ Demostración local del mapa y la barra de tiempo
 
 ## 6. Límites y decisiones pendientes
 
-- **Decisiones vigentes:** métrica `n_clusters`, referencia Terra + Aqua, celdas H3 r7, serie sin S-NPP y calibración común a los lotes. Sus motivos están en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md), sección 7. Los lotes tienen que volver a correrse con el pipeline corregido antes de publicar.
+- **Decisiones vigentes:** métrica `n_clusters_det`, referencia Terra + Aqua, celdas H3 r7, serie sin S-NPP y calibración común a los lotes. Sus motivos están en [`PLAN_NORMALIZACION.md`](PLAN_NORMALIZACION.md), sección 7. Los lotes tienen que volver a correrse con el pipeline corregido antes de publicar.
 - **Datos recientes:** la incorporación de datos NRT de 2026 y su posterior reemplazo por datos estándar requiere ejecutar y validar el pipeline nuevamente.
 - **Cobertura:** disponibilidad parcial, cambios de sensor y ausencia de detecciones deben distinguirse de un cero observado. La serie armonizada no representa por sí sola la cobertura nubosa ni la ausencia de fuego.
 - **Alcance de la interfaz:** el código actual no acredita la entrega de todas las pantallas, indicadores y descargas imaginados en la propuesta inicial.

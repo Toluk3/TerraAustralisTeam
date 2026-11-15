@@ -39,7 +39,7 @@ Estas preguntas son objetivos de análisis. La presencia de resultados de un lot
 
 El directorio `lotes/resumen/` contiene subdirectorios para L1–L4 y las ocho variantes de L5.
 
-> **Nota:** esos resúmenes son anteriores a las correcciones de cobertura y de niveles de calibración (rama `fixes-juana`). Cambian `config_hash` y los resultados: hay que volver a correr los lotes antes de usarlos en una publicación. Los archivos de resultados consolidados que permitirían volver a analizar todas las corridas residen en `data/` y no se versionan.
+> **Nota:** esos resúmenes son anteriores a las correcciones de cobertura y de niveles de calibración (rama `fixes-juana`). Cambian `config_hash` y los resultados: hay que volver a correr los lotes antes de usarlos en una publicación. Desde la métrica `n_clusters_det`, `aggregate` guarda columnas nuevas: los lotes ya procesados tienen que repetir la fase 1. Los archivos de resultados consolidados que permitirían volver a analizar todas las corridas residen en `data/` y no se versionan.
 
 ## 4. Selección de plataformas en esta campaña
 
@@ -80,7 +80,7 @@ Los lotes L1–L4 y L6 extienden `lotes/_comun.yaml`, que lista sus carpetas de 
 Eso obliga a correr en dos fases, y `lotes/correr_todos.sh` lo hace en orden:
 
 1. **Fase 1** de todos (`--fase 1`: `ingest` → `aggregate`).
-2. **Fase 2** de todos (`--fase 2`: `calibrate` en adelante). El primer lote ajusta `k` con los datos de todos; los demás lo copian si la configuración y la ventana de ajuste coinciden.
+2. **Fase 2** de todos (`--fase 2`: `detect` en adelante). Los pesos de detectabilidad y `k` salen de los datos de todos los lotes. El primer lote ajusta `k`; los demás lo copian si la configuración y la ventana de ajuste coinciden.
 3. Las ocho variantes L5.
 
 ```bash
