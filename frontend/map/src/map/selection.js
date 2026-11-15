@@ -189,7 +189,7 @@ export function createSelection(ctx) {
   const tool = document.createElement('button');
   tool.type = 'button';
   tool.className = 'tam-map__tool';
-  tool.title = 'Seleccionar celdas dibujando con el mouse (L). Mayús suma, Esc borra.';
+  tool.title = 'Dibujar una selección con el mouse (L). Se desactiva al soltar; Mayús suma, Esc borra.';
   tool.innerHTML = '<svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 3c4.4 0 7 2 7 4.5S14.4 12 10 12c-1.2 0-2.3-.1-3.2-.4M3 7.5C3 5 5.6 3 10 3M3 7.5c0 1.4.8 2.6 2.2 3.4M5.2 10.9 4 17l3-3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span>Lazo</span>';
   tool.setAttribute('aria-pressed', 'false');
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -225,6 +225,8 @@ export function createSelection(ctx) {
     const { pts, add } = drawing;
     drawing = null;
     path.setAttribute('d', '');
+    // El lazo es de un solo uso: después de dibujar vuelve a moverse el mapa (para otro, apretar Lazo o L)
+    setMode(false);
     if (pts.length < 4) {
       // Fue un clic: el pointerdown no llegó a deck.gl, así que la celda se busca acá
       const hit = ctx.pickCell(pts[0][0], pts[0][1]);

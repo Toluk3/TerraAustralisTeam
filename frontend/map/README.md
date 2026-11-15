@@ -97,7 +97,7 @@ map.destroy();
 ### Selección y panel de análisis
 
 - **Clic** en una celda la selecciona; **Mayús + clic** la suma o la saca.
-- **Lazo** (botón debajo del zoom o tecla `L`): se dibuja con el mouse y quedan las celdas H3 de la resolución actual con el centro adentro. Mayús suma a la selección y `Esc` la borra.
+- **Lazo** (botón debajo del zoom o tecla `L`): se dibuja con el mouse y quedan las celdas H3 de la resolución actual con el centro adentro. Es de un solo uso: al soltar se desactiva y el mapa se vuelve a mover; para otro dibujo, apretar Lazo de nuevo. Mayús suma a la selección y `Esc` la borra.
 - El panel suma los meses de **Desde / Hasta** (por defecto, el período del mapa; como mucho 36). **Seguir incendio** extiende el rango para los dos lados mientras la selección tenga fuego, y **Ver en el mapa** pinta la suma de esos meses.
 - Muestra los focos equivalentes (armonizados), las detecciones crudas por plataforma y día/noche, FRP (mediana, p90, máx.), FRE, días activos, día pico, centroide, y exporta CSV, JSON y la lista de celdas.
 - **Biomasa (estimación de primer orden):** por día local se toma el ΣFRP de una sola familia de sensores (MODIS si hubo, si no VIIRS) ÷ pasadas nominales (2 por satélite activo) × 86 400 s = FRE; biomasa = FRE × 0,368 kg/MJ (Wooster et al. 2005) y CO₂ = biomasa × 1,6 (Andreae 2019). Una detección aislada se extiende a todo el día, así que en fuegos chicos sobrestima; los fuegos entre pasadas o bajo nubes no se ven.
