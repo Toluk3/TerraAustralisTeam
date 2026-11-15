@@ -56,7 +56,26 @@ onMounted(() => {
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
 });
+// --- Entrada de "Del dato al mapa": las tarjetas suben una tras otra la primera vez que se ve la sección ---
+const stepsEl = ref(null);
+const stepsArmed = ref(false); // solo se ocultan si hay JS y movimiento: sin eso se ven quietas
+const stepsIn = ref(false);
+let stepsIo = null;
+onMounted(() => {
+  if (reduce || !stepsEl.value || typeof IntersectionObserver === 'undefined') return;
+  // Si la sección ya está a la vista al cargar (p. ej. al volver con el historial), no se anima
+  if (stepsEl.value.getBoundingClientRect().top < window.innerHeight * 0.75) return;
+  stepsArmed.value = true;
+  stepsIo = new IntersectionObserver(([e]) => {
+    if (!e.isIntersecting) return;
+    stepsIn.value = true;
+    stepsIo.disconnect();
+  }, { threshold: 0.3 });
+  stepsIo.observe(stepsEl.value);
+});
+
 onBeforeUnmount(() => {
+  stepsIo?.disconnect();
   io?.disconnect();
   window.removeEventListener('scroll', onScroll);
   window.removeEventListener('resize', onScroll);
@@ -105,11 +124,11 @@ onBeforeUnmount(() => {
     </section>
 
     <!-- (3) Del dato al mapa -->
-    <section class="steps" aria-labelledby="steps-title">
+    <section ref="stepsEl" class="steps" :class="{ 'is-armed': stepsArmed, 'is-in': stepsIn }" aria-labelledby="steps-title">
       <div class="wrap">
         <h2 id="steps-title">{{ t('home.steps.title') }}</h2>
         <ol class="steps__list">
-          <li v-for="(s, i) in steps" :key="s" class="card steps__card">
+          <li v-for="(s, i) in steps" :key="s" class="card steps__card" :style="{ '--i': i }">
             <span class="steps__n" aria-hidden="true">0{{ i + 1 }}</span>
             <h3>{{ t(`home.steps.${s}.title`) }}</h3>
             <p>{{ t(`home.steps.${s}.body`) }}</p>
@@ -191,7 +210,24 @@ onBeforeUnmount(() => {
 .steps__list { list-style: none; margin: clamp(28px, 5vh, 48px) 0 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 24px); }
 .steps__card { display: flex; flex-direction: column; gap: 12px; padding: clamp(22px, 2.4vw, 32px); min-height: 260px; }
 .steps__card p { margin: 0; color: var(--ink-2); }
-.steps__n { font-family: var(--font-brand); font-weight: 800; font-size: 0.95rem; color: var(--muted); margin-bottom: auto; padding-bottom: 28px; }
+.steps__n { font-family: var(--font-brand); font-weight: 800; font-size: 0.95rem; color: var(--muted); margin-bottom: auto; padding-bottom: 28px; transition: color 400ms var(--ease); }
+
+/* Entrada: cada tarjeta sube y aparece con 140 ms de diferencia; en escritorio una línea une los pasos */
+.steps__list { position: relative; }
+.steps__list::before {
+  content: ''; position: absolute; left: 0; right: 0; top: -14px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--ink) 0%, var(--ink) 100%); opacity: 0.18;
+  transform-origin: left center; transform: scaleX(1);
+}
+.steps.is-armed .steps__card { opacity: 0; transform: translateY(28px); }
+.steps.is-armed .steps__list::before { transform: scaleX(0); }
+.steps.is-in .steps__card {
+  opacity: 1; transform: none;
+  transition: opacity 700ms var(--ease-enter), transform 700ms var(--ease-enter), border-color var(--t-in) var(--ease);
+  transition-delay: calc(var(--i) * 140ms + 120ms);
+}
+.steps.is-in .steps__list::before { transform: scaleX(1); transition: transform 1100ms var(--ease-enter) 80ms; }
+.steps.is-in .steps__n { color: var(--ink); transition-delay: calc(var(--i) * 140ms + 500ms); }
 
 /* ---------- Cifras ---------- */
 .facts__row { margin: clamp(28px, 5vh, 48px) 0 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid var(--line); }
@@ -212,6 +248,7 @@ onBeforeUnmount(() => {
   .steps__list { grid-template-columns: 1fr; }
   .steps__card { min-height: 0; }
   .steps__n { padding-bottom: 6px; }
+  .steps__list::before { display: none; }
   .facts__row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .facts__item:nth-child(3) { padding-left: 0; border-left: 0; }
   .facts__item:nth-child(n + 3) { padding-top: 26px; }
