@@ -10,9 +10,9 @@ const { t, locale } = useI18n();
 const { liveText, years } = useLiveFigure();
 const EDU = import.meta.env.VITE_EDU_URL || '/edu/';
 
-// Hero: 5 integrantes con el logo en el medio (2 + logo + 3, como el boceto)
-const left = team.slice(0, 2);
-const right = team.slice(2);
+// Hero: los 6 integrantes con el logo en el medio (3 + logo + 3)
+const left = team.slice(0, 3);
+const right = team.slice(3);
 
 const yearsText = computed(() => (years.value ? years.value.n : '…'));
 
@@ -91,10 +91,10 @@ onBeforeUnmount(() => {
       <div class="wrap hero__inner" data-enter>
         <div class="hero__faces" role="group" :aria-label="t('home.teamLabel')" style="--i: 0">
           <MemberAvatar v-for="(m, i) in left" :key="m.id" :member="m" :size="96" class="hero__face"
-            :alt="t('home.memberAlt', { n: i + 1 })" />
+            :alt="m.name" />
           <img src="/logo.webp" width="150" height="150" :alt="t('home.logoAlt')" class="hero__logo" />
           <MemberAvatar v-for="(m, i) in right" :key="m.id" :member="m" :size="96" class="hero__face"
-            :alt="t('home.memberAlt', { n: i + 3 })" />
+            :alt="m.name" />
         </div>
         <h1 id="hero-title" class="hero__title" style="--i: 1" :aria-label="t('home.title')">
           <span aria-hidden="true">{{ t('home.titleLine1') }}</span>
@@ -180,10 +180,13 @@ onBeforeUnmount(() => {
 .hero__inner { display: flex; flex-direction: column; align-items: center; text-align: center; }
 .hero__faces { display: flex; align-items: center; justify-content: center; margin-bottom: clamp(20px, 3vh, 36px); }
 .hero__face, .hero__logo { flex: none; position: relative; }
-.hero__face { width: clamp(64px, 6.6vw, 96px); height: clamp(64px, 6.6vw, 96px); margin-inline: calc(clamp(64px, 6.6vw, 96px) * -0.12); box-shadow: 0 0 0 3px var(--bg); }
-.hero__face:nth-child(1), .hero__face:nth-child(5) { z-index: 1; }
-.hero__face:nth-child(2), .hero__face:nth-child(4) { z-index: 2; }
-.hero__logo { width: clamp(100px, 10vw, 150px); height: auto; z-index: 3; margin-inline: calc(clamp(64px, 6.6vw, 96px) * -0.14); filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.14)); }
+.hero__faces { --face: clamp(46px, 6.4vw, 96px); }
+.hero__face { width: var(--face); height: var(--face); margin-inline: calc(var(--face) * -0.12); box-shadow: 0 0 0 3px var(--bg); }
+/* Los de afuera quedan debajo y los que tocan el logo, encima: la fila se escalona hacia el centro */
+.hero__face:nth-child(1), .hero__face:nth-child(7) { z-index: 1; }
+.hero__face:nth-child(2), .hero__face:nth-child(6) { z-index: 2; }
+.hero__face:nth-child(3), .hero__face:nth-child(5) { z-index: 3; }
+.hero__logo { width: clamp(90px, 10vw, 150px); height: auto; z-index: 4; margin-inline: calc(var(--face) * -0.14); filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.14)); }
 .hero__title {
   font-weight: 400; font-size: clamp(2rem, 3.95vw, 4.4rem); line-height: 1.16; letter-spacing: -0.025em;
 }
