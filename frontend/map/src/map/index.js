@@ -19,13 +19,15 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { MapboxOverlay } from '@deck.gl/mapbox';
 import { polygonToCells, gridDisk, cellToLatLng, latLngToCell } from 'h3-js';
 import { aggregateCells, hexLayer, maskLayer, outlineBounds, outlineLayer, pointsLayer } from './layers.js';
-import { VIRIDIS, PUOR, FIRE, FRP_MAX, ANOMALY_MAX, gradientCss } from './colors.js';
+import { CELLS, PUOR, FIRE, FRP_MAX, ANOMALY_MAX, gradientCss } from './colors.js';
 import { normalizePeriod, periodLabel, toDay, dayToIso, ym } from './period.js';
 import { BASEMAPS, resolveBasemap } from './basemaps.js';
+import { createSelection } from './selection.js';
 import './map.css';
 
 export { createStaticSource, createApiSource } from './data.js';
 export { BASEMAPS } from './basemaps.js';
+export { summarize, COMBUSTION_COEF, EF_CO2 } from './selection.js';
 
 /**
  * Resolución H3 según el zoom de MapLibre (ARQUITECTURA.md §4.4). MapLibre usa teselas de 512 px,
@@ -142,7 +144,13 @@ export async function createFireMap(container, options = {}) {
   const overlay = new MapboxOverlay({
     interleaved: true,
     getTooltip: (info) => tooltip(info),
-    onClick: (info) => info.picked && emit('click', describe(info)),
+    onClick: (info, event) => {
+      if (!info.picked) return;
+      const d = describe(info);
+      const shift = Boolean(event?.srcEvent?.shiftKey ?? event?.shiftKey ?? info.srcEvent?.shiftKey);
+      if (d?.kind === 'cell') selection.clickCell(d.cell, d.res, shift);
+      emit('click', d);
+    },
     onHover: (info) => emit('hover', info.picked ? describe(info) : null),
   });
   map.addControl(overlay);
@@ -180,6 +188,16 @@ export async function createFireMap(container, options = {}) {
   };
   const tables = new Map(); // `${res}|${mes}` → tabla de celdas, `p|${mes}|${tesela}` → tabla de focos
   let loadToken = 0;
+
+  const selection = createSelection({
+    map, root, meta, source: opts.source, tileRes, cellMonths, pointMonths,
+    getRes: () => state.res,
+    pickCell: (x, y) => overlay.pickObject({ x, y, layerIds: ['cells'] })?.object?.cell ?? null,
+    getPeriodMonths: () => periodMonths(opts.maxCellMonths).months,
+    setPeriod: (p) => api.setPeriod(p),
+    rerender: () => render(),
+    emit,
+  });
 
   /** Meses del período, como 'YYYY-MM'. Para las celdas, como mucho los últimos maxCellMonths. */
   function periodMonths(max = Infinity) {
@@ -269,6 +287,7 @@ export async function createFireMap(container, options = {}) {
       hexLayer(state.cells.rows, { res, domain: meta.map.domain[res] ?? 1, metric, opacity: state.hexOpacity,
         visible: vis.cells, beforeId }),
       outlineLayer(meta.outline, { visible: vis.outline, beforeId }),
+      ...selection.layers(beforeId),
       // Los focos van encima de todo, etiquetas incluidas
       ...state.points.chunks.map((c) =>
         pointsLayer(c.id, c.table, { d0: period.d0, d1: period.d1, fade: state.fade, visible: vis.points })),
@@ -298,7 +317,7 @@ export async function createFireMap(container, options = {}) {
          <div class="tam-legend__ticks"><span>−100 %</span><span>mediana</span><span>+${ANOMALY_MAX * 100} %</span></div>
          <div class="tam-legend__note"><i class="tam-swatch" style="background:#a0a0a0"></i>sin mediana (casi nunca hubo fuego)</div>`
       : `<div class="tam-legend__title">Focos equivalentes por mes</div>
-         <div class="tam-legend__bar" style="background:${gradientCss(VIRIDIS)}"></div>
+         <div class="tam-legend__bar" style="background:${gradientCss(CELLS)}"></div>
          <div class="tam-legend__ticks"><span>0</span><span>${tick(0.5)}</span><span>${tick(1)}+</span></div>`;
     const legend = $('.tam-map__legend');
     // Plegable: en pantallas chicas arranca cerrada y después respeta lo que elija el usuario
@@ -403,7 +422,7 @@ export async function createFireMap(container, options = {}) {
   const api = {
     map, overlay, meta,
     getState,
-    setPeriod(p) { state.period = normalizePeriod(p); return update(); },
+    setPeriod(p) { state.period = normalizePeriod(p); selection.periodChanged(); return update(); },
     setMetric(m) { state.metric = m === 'anomaly' ? 'anomaly' : 'value'; render(); },
     setHexOpacity(x) { state.hexOpacity = Math.min(1, Math.max(0, x)); render(); },
     setLayerVisible(name, on) { state.layers[name] = Boolean(on); return update(); },
@@ -419,9 +438,15 @@ export async function createFireMap(container, options = {}) {
         map.setStyle(resolveBasemap(b));
       });
     },
+    /** Selección: lazo (true/false), polígono [[lng, lat], …], borrar, rango de meses del panel, estado. */
+    setLassoMode(on) { selection.setMode(on); },
+    selectPolygon(ring, add = false) { selection.selectPolygon(ring, add); },
+    clearSelection() { selection.clear(); },
+    setSelectionRange(r) { selection.setRange(r); },
+    getSelection() { return selection.get(); },
     fitZone() { map.fitBounds(bbox, { padding: 24 }); },
     on(ev, cb) { (listeners[ev] ||= []).push(cb); return () => { listeners[ev] = listeners[ev].filter((x) => x !== cb); }; },
-    destroy() { ro.disconnect(); map.removeControl(overlay); map.remove(); root.remove(); },
+    destroy() { selection.destroy(); ro.disconnect(); map.removeControl(overlay); map.remove(); root.remove(); },
   };
 
   await update();

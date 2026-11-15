@@ -1,16 +1,17 @@
-/** Rampas de color del mapa (ARQUITECTURA.md §4.4): viridis para el valor, PuOr para la anomalía. */
+/** Rampas de color del mapa: amarillo → rojo para el valor de las celdas, PuOr para la anomalía y azul → verde para los focos. */
 
 const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
 
-export const VIRIDIS = ['#440154', '#482878', '#3e4989', '#31688e', '#26828e',
-  '#1f9e89', '#35b779', '#6ece58', '#b5de2b', '#fde725'].map(hex);
+// Celdas (focos equivalentes por mes): amarillo → rojo oscuro (YlOrRd de ColorBrewer)
+export const CELLS = ['#ffeda0', '#fed976', '#feb24c', '#fd8d3c', '#fc4e2a',
+  '#e31a1c', '#bd0026', '#800026'].map(hex);
 
 // PuOr invertida: violeta = menos focos que la mediana, naranja = más
 export const PUOR = ['#542788', '#8073ac', '#b2abd2', '#d8daeb', '#f7f7f7',
   '#fee0b6', '#fdb863', '#e08214', '#b35806'].map(hex);
 
-// Focos: amarillo → rojo oscuro según FRP
-export const FIRE = ['#ffe066', '#ffb000', '#ff6a00', '#e0201b', '#8b0010'].map(hex);
+// Focos: azul → verde según FRP
+export const FIRE = ['#08519c', '#2171b5', '#1d91c0', '#1fa187', '#31c46c', '#7be04a'].map(hex);
 
 /** Interpola una rampa en t ∈ [0, 1] y devuelve [r, g, b, a]. */
 export function ramp(stops, t, alpha = 255) {

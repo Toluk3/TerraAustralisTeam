@@ -34,4 +34,6 @@ $('opacity').addEventListener('input', (e) => map.setHexOpacity(Number(e.target.
 for (const name of ['cells', 'points', 'mask']) {
   $(`l-${name}`).addEventListener('change', (e) => map.setLayerVisible(name, e.target.checked));
 }
-map.on('click', (info) => { $('info').textContent = JSON.stringify(info, null, 2); });
+// Las celdas abren el panel de selección; el recuadro de abajo queda para los focos
+map.on('click', (info) => { $('info').textContent = info?.kind === 'point' ? JSON.stringify(info, null, 2) : ''; });
+map.on('selection', (s) => { window.selection = s; });

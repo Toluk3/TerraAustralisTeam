@@ -2,7 +2,7 @@
 import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import { H3HexagonLayer } from '@deck.gl/geo-layers';
 import { DataFilterExtension, MaskExtension } from '@deck.gl/extensions';
-import { VIRIDIS, PUOR, FIRE, ramp, logScale, anomalyT, frpT } from './colors.js';
+import { CELLS, PUOR, FIRE, ramp, logScale, anomalyT, frpT } from './colors.js';
 
 // Una sola instancia: si cambia entre renders, deck.gl vuelve a inicializar la capa.
 const DATE_FILTER = new DataFilterExtension({ filterSize: 1 });
@@ -92,7 +92,7 @@ export function hexLayer(rows, { res, domain, metric, opacity, visible, beforeId
     getHexagon: (d) => d.cell,
     getFillColor: isAnomaly
       ? (d) => (d.anomaly == null ? [160, 160, 160, 90] : ramp(PUOR, anomalyT(d.anomaly)))
-      : (d) => ramp(VIRIDIS, logScale(d.value, domain)),
+      : (d) => ramp(CELLS, logScale(d.value, domain)),
     getLineColor: [255, 255, 255, 60], lineWidthUnits: 'pixels', getLineWidth: 0.5,
     updateTriggers: { getFillColor: [metric, domain] },
   });
@@ -123,7 +123,7 @@ export function pointsLayer(id, table, { d0, d1, fade, visible }) {
     },
     getRadius: (_, { index, data }) => 2.5 + 2 * Math.sqrt(frpT(data.src.frp[index]) * 4),
     getFillColor: (_, { index, data }) => ramp(FIRE, frpT(data.src.frp[index]), 235),
-    stroked: true, getLineColor: [40, 0, 0, 200], lineWidthUnits: 'pixels', getLineWidth: 0.5,
+    stroked: true, getLineColor: [0, 25, 45, 200], lineWidthUnits: 'pixels', getLineWidth: 0.5,
     extensions: [DATE_FILTER],
     getFilterValue: (_, { index, data }) => data.src.d[index],
     filterRange: [d0, d1 + 0.999],

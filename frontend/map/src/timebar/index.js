@@ -13,7 +13,7 @@
  *
  * Los números son siempre de la serie armonizada de la zona (calendar / timeline_8d), nunca de los puntos.
  */
-import { VIRIDIS, ramp, logScale, css } from '../map/colors.js';
+import { CELLS, ramp, logScale, css } from '../map/colors.js';
 import { toDay, dayToIso, dayToDate } from '../map/period.js';
 import './timebar.css';
 
@@ -156,7 +156,7 @@ export async function createTimebar(container, options = {}) {
       if (item.status === 'sin_datos' || item.value == null) {
         ctx.fillStyle = '#3a3f48';
       } else {
-        ctx.fillStyle = css(ramp(VIRIDIS, logScale(item.value, domain)));
+        ctx.fillStyle = css(ramp(CELLS, logScale(item.value, domain)));
       }
       ctx.fillRect(x0, 6, Math.max(1, x1 - x0 - (x1 - x0 > 3 ? 0.5 : 0)), h - 12);
       if (item.status === 'parcial') { // cobertura reducida: marca naranja arriba

@@ -17,8 +17,8 @@ timebar.on('input', (periodo) => map.setPeriod(periodo));
 |---|---|---|
 | Máscara | Oscurece todo lo que queda fuera de la zona analizada | `meta.outline` |
 | Contorno | Límite de la zona | `meta.outline` |
-| Celdas H3 | Valor **armonizado** (`n_equiv`, focos equivalentes Terra + Aqua) por celda. Color viridis en escala log, fija por resolución (`meta.map.domain`) para comparar meses y años | `map/res=<r>/<mes>` |
-| Focos | Cada detección de FIRMS, con color y tamaño según FRP. Se filtran por fecha en la GPU y los más viejos de la ventana se desvanecen | `points/<mes>/<tesela>` |
+| Celdas H3 | Valor **armonizado** (`n_equiv`, focos equivalentes Terra + Aqua) por celda. Color amarillo → rojo (YlOrRd) en escala log, fija por resolución (`meta.map.domain`) para comparar meses y años | `map/res=<r>/<mes>` |
+| Focos | Cada detección de FIRMS, con color (azul → verde) y tamaño según FRP. Se filtran por fecha en la GPU y los más viejos de la ventana se desvanecen | `points/<mes>/<tesela>` |
 
 - La resolución de las celdas cambia con el zoom de MapLibre: menos de 6 → r5 (≈ 250 km²), 6 a 8 → r6 (≈ 36 km²), 8 o más → r7 (≈ 5 km²). Equivale a la tabla de `ARQUITECTURA.md`, pensada para Google Maps, cuyo zoom es uno más para la misma escala.
 - Las etiquetas del mapa base quedan encima de las celdas, y los focos encima de todo.
@@ -32,7 +32,7 @@ timebar.on('input', (periodo) => map.setPeriod(periodo));
 
 | Clave | Fuente | Nota |
 |---|---|---|
-| `claro` (por defecto) | OpenFreeMap Positron | El que mejor contrasta con viridis |
+| `claro` (por defecto) | OpenFreeMap Positron | El que mejor contrasta con las celdas |
 | `calles` | OpenFreeMap Liberty | Rutas y localidades con más detalle |
 | `oscuro` | OpenFreeMap Dark | |
 | `satelite` | Esri World Imagery | Muestra las cicatrices de los incendios. Uso libre con atribución en proyectos no comerciales |
@@ -93,6 +93,24 @@ map.on('click', (info) => …);    // { kind: 'cell', cell, res, total, monthlyM
 map.on('hover' | 'change' | 'resolution' | 'error', …);
 map.destroy();
 ```
+
+### Selección y panel de análisis
+
+- **Clic** en una celda la selecciona; **Mayús + clic** la suma o la saca.
+- **Lazo** (botón debajo del zoom o tecla `L`): se dibuja con el mouse y quedan las celdas H3 de la resolución actual con el centro adentro. Mayús suma a la selección y `Esc` la borra.
+- El panel suma los meses de **Desde / Hasta** (por defecto, el período del mapa; como mucho 36). **Seguir incendio** extiende el rango para los dos lados mientras la selección tenga fuego, y **Ver en el mapa** pinta la suma de esos meses.
+- Muestra los focos equivalentes (armonizados), las detecciones crudas por plataforma y día/noche, FRP (mediana, p90, máx.), FRE, días activos, día pico, centroide, y exporta CSV, JSON y la lista de celdas.
+- **Biomasa (estimación de primer orden):** por día local se toma el ΣFRP de una sola familia de sensores (MODIS si hubo, si no VIIRS) ÷ pasadas nominales (2 por satélite activo) × 86 400 s = FRE; biomasa = FRE × 0,368 kg/MJ (Wooster et al. 2005) y CO₂ = biomasa × 1,6 (Andreae 2019). Una detección aislada se extiende a todo el día, así que en fuegos chicos sobrestima; los fuegos entre pasadas o bajo nubes no se ven.
+
+```js
+map.setLassoMode(true);
+map.selectPolygon([[lng, lat], …]);          // mismo efecto que dibujar
+map.setSelectionRange({ from: '2024-12', to: '2025-03' });
+map.getSelection();                           // { res, cells, summary: { rows (por mes), total } }
+map.on('selection', (s) => …);                // null al borrar
+```
+
+`summarize(sel, months, cellTables, pointTables)` se exporta para usar el mismo cálculo fuera del mapa.
 
 `map.map` es el `maplibregl.Map` y `map.overlay`, el `MapboxOverlay`.
 
