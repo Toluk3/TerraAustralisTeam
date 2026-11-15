@@ -232,8 +232,6 @@
   },
   "selwin": {
     "title": "Detalle de la selección",
-    "open": "Detalle de la selección",
-    "close": "Cerrar la ventana",
     "collapse": "Plegar",
     "expand": "Desplegar",
     "units": {

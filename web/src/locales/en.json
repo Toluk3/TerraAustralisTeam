@@ -232,8 +232,6 @@
   },
   "selwin": {
     "title": "Selection detail",
-    "open": "Selection detail",
-    "close": "Close window",
     "collapse": "Collapse",
     "expand": "Expand",
     "units": {

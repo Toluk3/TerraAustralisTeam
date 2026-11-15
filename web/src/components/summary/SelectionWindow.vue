@@ -12,7 +12,7 @@ import { useI18n } from 'vue-i18n';
 import { COMBUSTION_COEF, EF_CO2 } from '@/features/fire-map/summary.js';
 import { explCsv, fmtMassParts } from '@/features/selectionDetail.js';
 import { intlLocale } from '@/stores/ui.js';
-import { analysis } from '@/stores/analysis.js';
+import { analysis, clearSelection } from '@/stores/analysis.js';
 import SelectionCharts from './SelectionCharts.vue';
 
 const props = defineProps({
@@ -23,7 +23,6 @@ const props = defineProps({
 });
 const { t, locale } = useI18n();
 
-const open = ref(true);       // false: queda solo el botón para volver a abrirla
 const folded = ref(false);    // true: solo el encabezado
 
 const nf = (d = 0) => { locale.value; return new Intl.NumberFormat(intlLocale(), { maximumFractionDigits: d }); };
@@ -61,9 +60,7 @@ function downloadCsv() {
 </script>
 
 <template>
-  <button v-if="!open" type="button" class="sw-open" @click="open = true">{{ t('selwin.open') }}</button>
-
-  <section v-else-if="tot" class="sw" aria-labelledby="sw-title">
+  <section v-if="tot" class="sw" aria-labelledby="sw-title">
     <header class="sw__head">
       <button type="button" class="sw__fold" :aria-expanded="!folded" :title="folded ? t('selwin.expand') : t('selwin.collapse')"
         @click="folded = !folded">
@@ -71,7 +68,8 @@ function downloadCsv() {
         <span id="sw-title" class="sw__title">{{ t('selwin.title') }}</span>
       </button>
       <span class="sw__period">{{ period }}</span>
-      <button type="button" class="sw__x" :aria-label="t('selwin.close')" :title="t('selwin.close')" @click="open = false">×</button>
+      <!-- Borra la selección: se va el trazo del lazo del mapa y, con él, esta ventana -->
+      <button type="button" class="sw__x" :aria-label="t('summary.clear')" :title="t('summary.clear')" @click="clearSelection">×</button>
     </header>
 
     <div v-show="!folded" class="sw__body">
@@ -150,14 +148,12 @@ function downloadCsv() {
 
 <style scoped>
 /* Va sobre el mapa, que siempre es claro (CompareMap fija color-scheme: light): colores fijos como sus otros carteles */
-.sw, .sw-open {
+.sw {
   position: absolute; top: 126px; right: 10px; z-index: 5;
   background: rgba(255, 255, 255, 0.97); color: #1d1e20; border: 1px solid rgba(0, 0, 0, 0.14);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); font-size: 0.78rem; line-height: 1.4;
 }
 .sw { width: 330px; max-width: calc(100% - 20px); max-height: calc(100% - 150px); border-radius: 10px; display: flex; flex-direction: column; }
-.sw-open { min-height: 34px; padding: 0 12px; border-radius: 6px; font-weight: 500; }
-.sw-open:hover { background: #f2f2f2; }
 
 .sw__head { display: flex; align-items: center; gap: 8px; padding: 8px 8px 8px 10px; border-bottom: 1px solid rgba(0, 0, 0, 0.08); }
 .sw__fold { display: inline-flex; align-items: center; gap: 6px; min-height: 28px; padding: 0; border: 0; background: none; color: inherit; text-align: left; }
@@ -192,7 +188,7 @@ function downloadCsv() {
 .sw thead th { color: #5f6166; font-weight: 500; }
 .sw th:first-child { text-align: left; }
 
-.sw button:focus-visible, .sw summary:focus-visible, .sw-open:focus-visible { outline: 2px solid #1d5fd1; outline-offset: 2px; }
+.sw button:focus-visible, .sw summary:focus-visible { outline: 2px solid #1d5fd1; outline-offset: 2px; }
 
 @media (max-width: 900px) {
   .sw { left: 10px; width: auto; max-height: calc(100% - 190px); }
