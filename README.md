@@ -7,7 +7,8 @@ Terra Australis es una demostración de exploración temporal de focos de calor 
 ## Estado actual
 
 - **Datos:** pipeline en Python, DuckDB y H3 para ingesta, normalización, calibración, control de calidad y exportación.
-- **Interfaz web:** aplicación Vue/Vite en `frontend/`, publicada por el despliegue de la VPS.
+- **Interfaz web:** aplicación Vue/Vite en `frontend/` (EduAustralis, versión para escuelas), publicada en `/edu/` por el despliegue de la VPS.
+- **Frontend científico:** aplicación Vue/Vite en `web/` (landing, Análisis con comparación A | AB | B, Proyecto y Equipo); ver [`web/README.md`](web/README.md).
 - **Demo científica:** aplicación independiente con MapLibre y deck.gl en `frontend/map/`; consume JSON generados a partir de `data/publish/`.
 - **Ejecución:** los datos fuente y procesados se generan localmente y no se versionan.
 - **Backend y despliegue:** no hay backend Django/API; existe un script para publicar la interfaz Vue estática en una VPS, pero el repositorio no verifica el estado de una publicación externa.
@@ -37,7 +38,7 @@ En Windows:
 
 La ejecución completa de descarga y pipeline se describe en [`pipeline/README.md`](pipeline/README.md) y en los casos de uso. Para iniciar la demo científica del mapa se requiere primero una publicación del pipeline y después generar los JSON según [`frontend/map/README.md`](frontend/map/README.md).
 
-Para desplegar la interfaz Vue en una VPS, consultar [`documentacion/DESPLIEGUE_VPS.md`](documentacion/DESPLIEGUE_VPS.md).
+Para desplegar las dos interfaces (`web/` en la raíz y EduAustralis en `/edu/`) en una VPS, consultar [`documentacion/DESPLIEGUE_VPS.md`](documentacion/DESPLIEGUE_VPS.md).
 
 ## Componentes
 
@@ -46,7 +47,8 @@ Para desplegar la interfaz Vue en una VPS, consultar [`documentacion/DESPLIEGUE_
 | [`documentacion/`](documentacion/) | Estado ejecutivo, método, arquitectura y decisiones abiertas |
 | [`pipeline/`](pipeline/) | Procesamiento y publicación de los datos |
 | [`analisis/`](analisis/) | Análisis de validación y resultados |
-| [`frontend/`](frontend/) | Interfaz web Vue/Vite publicada en la VPS |
+| [`web/`](web/) | Frontend científico: mapa, comparación de períodos, ficha y gráficos de la serie armonizada |
+| [`frontend/`](frontend/) | EduAustralis: interfaz Vue/Vite para escuelas, publicada en `/edu/` |
 | [`frontend/map/`](frontend/map/) | Demo científica del mapa y navegación temporal |
 | [`lotes/`](lotes/) | Configuraciones y resúmenes de ejecuciones por lote |
 | [`scripts/`](scripts/) | Descarga y utilidades de preparación |

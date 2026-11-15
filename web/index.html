@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Terra Australis · Armonización MODIS y VIIRS</title>
+    <meta name="description" content="Serie armonizada de focos de calor MODIS y VIIRS (NASA FIRMS) para Latinoamérica: mapa, calendario de quema y comparación de períodos." />
+    <meta name="theme-color" content="#fdfdfb" />
+    <link rel="icon" type="image/webp" href="/logo.webp" />
+    <meta property="og:title" content="Terra Australis" />
+    <meta property="og:description" content="Armonización MODIS y VIIRS, un sistema enfocado en Latam." />
+    <meta property="og:image" content="/logo.webp" />
+    <script>
+      // Tema e idioma guardados, aplicados antes de pintar (sin parpadeo)
+      (function () {
+        try {
+          var t = localStorage.getItem('terra-theme');
+          if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+          var l = localStorage.getItem('terra-locale');
+          if (!l) l = (navigator.language || 'es').toLowerCase().indexOf('es') === 0 ? 'es' : 'en';
+          if (l === 'es' || l === 'en') document.documentElement.setAttribute('lang', l);
+        } catch (e) { /* sin almacenamiento: valores por defecto */ }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

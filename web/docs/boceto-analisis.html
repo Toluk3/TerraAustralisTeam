@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boceto · Pantalla Análisis de Terra Australis</title>
+<!--
+  Boceto de referencia (wireframe) de la pantalla "Análisis". Los datos son inventados: solo muestra
+  estructura, proporciones y la mecánica de la comparación A | AB | B (barra vertical arrastrable).
+  Es interactivo: Comparar, A | AB | B, la barra, ES/EN y claro/oscuro funcionan.
+  Los números de los círculos son los de web/PLAN_IMPLEMENTACION.md y documentacion/PLAN_FRONTEND_CIENTIFICO.md §4.
+-->
+<style>
+:root{
+  --text-primary:#1a1a1a;--text-secondary:#55575a;--text-muted:#7d8085;
+  --page:#f6f5f1;--surface-1:#f1efe8;--surface-2:#ffffff;
+  --border:rgba(0,0,0,.12);--border-strong:rgba(0,0,0,.25);--border-stronger:rgba(0,0,0,.45);
+  --bg-accent:#e6eefb;--text-accent:#1d5fd1;--border-accent:#85b7eb;
+  --bg-warning:#fdf0dd;--text-warning:#9a5a07;--border-warning:#ef9f27;
+  --text-success:#2f7a1b;--bg-success:#eaf3de;--radius:8px;
+}
+:root[data-theme=dark]{
+  --text-primary:#f3f3ef;--text-secondary:#b8bbc0;--text-muted:#8b8e94;
+  --page:#0d0e10;--surface-1:#1f2023;--surface-2:#17181b;
+  --border:rgba(255,255,255,.14);--border-strong:rgba(255,255,255,.28);--border-stronger:rgba(255,255,255,.45);
+  --bg-accent:#14233f;--text-accent:#6ea0ff;--border-accent:#2f6bd6;
+  --bg-warning:#3a2810;--text-warning:#f2b45a;--border-warning:#ba7517;
+  --text-success:#97c459;--bg-success:#27500a;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--text-primary);font:12px/1.4 Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;padding:20px}
+.m{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
+.pn{background:var(--surface-2);border:.5px solid var(--border);border-radius:var(--radius);padding:10px}
+.hd{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:500;margin-bottom:6px}
+.nb{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;background:var(--bg-accent);color:var(--text-accent);font-size:11px;font-weight:500;flex:none;padding:0 4px}
+.sc{color:var(--text-secondary);font-size:11px}
+.chip{display:inline-block;border:.5px solid var(--border-strong);border-radius:var(--radius);padding:2px 8px;font-size:11px;color:var(--text-secondary)}
+.chip.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.kpi{background:var(--surface-1);border-radius:var(--radius);padding:6px 8px}
+.kpi b{display:block;font-size:16px;font-weight:500}
+.tab{padding:6px 10px;font-size:12px;color:var(--text-secondary);border-bottom:2px solid transparent}
+.tab.on{color:var(--text-primary);font-weight:500;border-bottom-color:var(--text-accent)}
+.seg{display:inline-flex;border:.5px solid var(--border-strong);border-radius:var(--radius);overflow:hidden}
+.seg button{border:none;border-radius:0;background:transparent;padding:3px 12px;font:inherit;font-size:12px;color:var(--text-secondary);cursor:pointer}
+.seg button+button{border-left:.5px solid var(--border-strong)}
+.seg button.on{background:var(--bg-accent);color:var(--text-accent);font-weight:500}
+.seg.sm button{padding:2px 8px;font-size:11px}
+.btn{border:.5px solid var(--border-strong);border-radius:var(--radius);background:transparent;padding:3px 10px;font:inherit;font-size:12px;color:var(--text-primary);cursor:pointer}
+.btn.on{background:var(--bg-accent);color:var(--text-accent);border-color:var(--border-accent)}
+.mapbox{position:relative;width:100%;aspect-ratio:540/330;border-radius:6px;overflow:hidden;touch-action:none;user-select:none}
+.mapbox svg{position:absolute;inset:0;width:100%;height:100%}
+.lab{position:absolute;top:8px;padding:2px 8px;border-radius:var(--radius);font-size:11px;font-weight:500;background:var(--surface-2);border:.5px solid var(--border-strong)}
+#divd{position:absolute;top:0;bottom:0;width:2px;background:var(--text-primary);cursor:ew-resize}
+#hdl{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30px;height:30px;border-radius:50%;background:var(--surface-2);border:1.5px solid var(--text-primary);display:flex;align-items:center;justify-content:center;font-size:14px}
+#divd:before{content:"";position:absolute;left:-10px;right:-10px;top:0;bottom:0}
+.brand{font-family:Montserrat,Poppins,sans-serif;font-weight:800;text-transform:uppercase;line-height:.92;font-size:13px}
+.grid-a{display:grid;grid-template-columns:112px minmax(0,1fr);gap:8px}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:8px}
+.grid-2b{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.col{display:flex;flex-direction:column;gap:7px}
+@media(max-width:760px){.grid-a,.grid-2,.grid-2b{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="m" id="root">
+
+<!-- 1 · Navbar -->
+<div class="pn" style="padding:6px 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+  <span class="nb">1</span>
+  <span style="display:flex;align-items:center;gap:8px"><span style="width:30px;height:30px;border-radius:50%;background:var(--bg-accent);display:inline-block"></span><span class="brand">Terra<br>Australis</span></span>
+  <span style="display:flex;gap:2px;background:var(--surface-1);border-radius:999px;padding:3px 6px;margin-inline:auto">
+    <span class="tab" data-es="Inicio" data-en="Home">Inicio</span>
+    <span class="tab on" data-es="Análisis" data-en="Analysis">Análisis</span>
+    <span class="tab" data-es="Proyecto" data-en="Project">Proyecto</span>
+    <span class="tab" data-es="Equipo" data-en="Team">Equipo</span>
+    <span class="tab">EduAustralis</span>
+  </span>
+  <span class="nb">2</span>
+  <span class="seg sm" id="lang"><button class="on" data-l="es">ES</button><button data-l="en">EN</button></span>
+  <span class="seg sm" id="theme"><button data-t="light" aria-label="Claro">☀</button><button data-t="dark" aria-label="Oscuro">☾</button></span>
+  <span class="chip" style="background:var(--text-primary);color:var(--page);border-color:transparent;border-radius:999px">● Repositorio</span>
+</div>
+
+<!-- 3 · Barra de filtros -->
+<div class="pn" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+  <span class="nb">3</span>
+  <span class="chip" data-es="Zona: Cono Sur" data-en="Area: Southern Cone">Zona: Cono Sur</span>
+  <span class="chip on">A: feb 2024</span>
+  <span class="chip" id="bchip" style="background:var(--bg-warning);color:var(--text-warning);border-color:var(--border-warning)">B: feb 2023</span>
+  <span class="chip" data-es="Métrica: focos equivalentes" data-en="Metric: equivalent hotspots">Métrica: focos equivalentes</span>
+  <span style="margin-left:auto" class="chip" data-es="⭳ Exportar" data-en="⭳ Export">⭳ Exportar</span>
+</div>
+
+<div class="grid-a">
+  <!-- 4 · Capas -->
+  <div class="pn col">
+    <div class="hd" style="margin:0"><span class="nb">4</span><span data-es="Capas" data-en="Layers">Capas</span></div>
+    <div class="sc" data-es="Mostrar" data-en="Show">Mostrar</div>
+    <div class="sc">☑ H3<br>☑ <span data-es="Focos" data-en="Hotspots">Focos</span><br>☑ <span data-es="Máscara" data-en="Mask">Máscara</span><br>☑ <span data-es="Contorno" data-en="Outline">Contorno</span></div>
+    <div class="sc" data-es="Vista" data-en="View">Vista</div>
+    <div class="col" style="gap:4px"><span class="chip on" data-es="Valor" data-en="Value">Valor</span><span class="chip" data-es="Anomalía" data-en="Anomaly">Anomalía</span><span class="chip" data-es="Diferencia" data-en="Difference">Diferencia</span></div>
+    <div class="sc" data-es="Opacidad" data-en="Opacity">Opacidad</div>
+    <input type="range" min="0" max="100" value="60" style="width:100%">
+    <span class="sc" data-es="Lazo: botón del mapa o tecla L" data-en="Lasso: map button or L key">Lazo: botón del mapa o tecla L</span>
+  </div>
+
+  <!-- 5 · Mapa -->
+  <div class="pn" style="padding:6px">
+    <div style="display:flex;align-items:center;gap:8px;padding:2px 4px 6px;flex-wrap:wrap">
+      <span class="nb">5</span><span style="font-weight:500" data-es="Mapa" data-en="Map">Mapa</span>
+      <button class="btn on" id="cmpBtn" aria-pressed="true"><span id="cmpTxt" data-es="Comparar" data-en="Compare">Comparar</span></button>
+      <span class="seg" id="tri"><button data-m="A">A</button><button class="on" data-m="AB">AB</button><button data-m="B">B</button></span>
+      <span class="sc" id="hint" data-es="Arrastrá la barra para repartir el mapa" data-en="Drag the bar to split the map">Arrastrá la barra para repartir el mapa</span>
+    </div>
+    <div class="mapbox" id="box">
+      <svg id="mA" viewBox="0 0 540 330" role="img"><title>Mapa A</title></svg>
+      <svg id="mB" viewBox="0 0 540 330" role="img" style="clip-path:inset(0 0 0 50%)"><title>Mapa B</title></svg>
+      <span class="lab" id="labA" style="left:8px;color:var(--text-accent)">A · feb 2024</span>
+      <span class="lab" id="labB" style="right:72px;color:var(--text-warning)">B · feb 2023</span>
+      <div id="divd" style="left:50%"><div id="hdl">⇄</div></div>
+      <svg viewBox="0 0 540 330" style="pointer-events:none"><rect x="10" y="276" width="104" height="44" rx="4" fill="#fff" opacity=".92"/><text x="16" y="292" font-size="11" fill="#555">Valor armonizado</text><g id="lg"></g><text x="16" y="314" font-size="11" fill="#555">0</text><text x="108" y="314" font-size="11" text-anchor="end" fill="#555">alto (log)</text><rect x="502" y="10" width="28" height="56" rx="4" fill="#fff" opacity=".92"/><text x="516" y="34" font-size="16" text-anchor="middle" fill="#222">+</text><text x="516" y="56" font-size="16" text-anchor="middle" fill="#222">−</text></svg>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 4px 0">
+      <span>▶</span><span class="sc" id="tl">feb 2024 (A)</span>
+      <div style="flex:1;height:6px;background:var(--surface-1);border-radius:3px;position:relative"><div style="position:absolute;left:0;width:72%;height:6px;background:var(--border-stronger);border-radius:3px"></div><div style="position:absolute;left:70%;top:-4px;width:6px;height:14px;background:var(--text-accent);border-radius:2px"></div></div>
+      <span class="sc" data-es="Mes" data-en="Month">Mes</span>
+    </div>
+  </div>
+</div>
+
+<!-- 6 · Ficha de la selección (a todo el ancho) -->
+<div class="pn">
+  <div class="hd"><span class="nb">6</span><span data-es="Ficha de la selección" data-en="Selection summary">Ficha de la selección</span><span class="sc" style="margin-left:auto">Lazo: 4.820 celdas · 24.100 km²</span></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px">
+    <div class="kpi"><span class="sc">A · feb 2024</span><b>1.240</b><span class="sc">p05–p95: 1.080–1.410</span></div>
+    <div class="kpi" id="kB"><span class="sc">B · feb 2023</span><b>610</b><span class="sc">p05–p95: 540–690</span></div>
+    <div class="kpi" id="kD" style="background:var(--bg-warning)"><span class="sc" style="color:var(--text-warning)">A − B</span><b style="color:var(--text-warning)">+103 %</b><span class="sc" style="color:var(--text-warning)" data-es="Intervalos no se solapan" data-en="Intervals do not overlap">Intervalos no se solapan</span></div>
+    <div class="kpi"><span class="sc" data-es="Anomalía vs mediana (zona)" data-en="Anomaly vs median (area)">Anomalía vs mediana (zona)</span><b>+42 %</b><span class="sc" data-es="3.er mes más activo de la serie" data-en="3rd most active month in the series">3.er mes más activo de la serie</span></div>
+    <div class="kpi"><span class="sc" data-es="Origen del valor" data-en="Value source">Origen del valor</span><b style="font-size:13px">VIIRS→MODIS</b><span class="sc" data-es="estimado · cobertura 94 %" data-en="estimated · coverage 94 %">estimado · cobertura 94 %</span></div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- 7 · Calendario -->
+  <div class="pn">
+    <div class="hd"><span class="nb">7</span><span data-es="Calendario de quema" data-en="Burn calendar">Calendario de quema</span><span class="chip on" style="margin-left:auto" data-es="Valor" data-en="Value">Valor</span><span class="chip" data-es="Anomalía" data-en="Anomaly">Anomalía</span></div>
+    <svg id="cal" viewBox="0 0 330 150" width="100%" role="img"><title>Heatmap año por mes</title></svg>
+    <div class="sc" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:2px"><span>▨ cobertura reducida</span><span>┄ estimado desde 2022</span><span style="color:var(--text-accent)">▢ A</span><span style="color:var(--text-warning)">▢ B</span></div>
+    <div class="sc" data-es="Clic = fija A · Mayús + clic = fija B" data-en="Click = set A · Shift + click = set B">Clic = fija A · Mayús + clic = fija B</div>
+  </div>
+  <!-- 8 · Comparar años -->
+  <div class="pn">
+    <div class="hd"><span class="nb">8</span><span data-es="Comparar años" data-en="Compare years">Comparar años</span></div>
+    <svg id="cmp" viewBox="0 0 300 150" width="100%" role="img"><title>Líneas por año con banda de incertidumbre</title></svg>
+    <div class="sc" style="display:flex;gap:10px;flex-wrap:wrap"><span style="color:var(--text-accent)">━ 2024</span><span style="color:var(--text-warning)">━ 2023</span><span>┄ mediana</span><span>▒ p05–p95</span></div>
+  </div>
+</div>
+
+<div class="grid-2b">
+  <!-- 9 · FRP -->
+  <div class="pn"><div class="hd"><span class="nb">9</span><span data-es="Intensidad (FRP)" data-en="Intensity (FRP)">Intensidad (FRP)</span></div><svg id="frp" viewBox="0 0 300 90" width="100%" role="img"><title>Histograma de FRP</title></svg><div class="sc" data-es="Descriptivo: % de detecciones por familia de sensor; no comparable entre sensores ni entre años" data-en="Descriptive: % of detections per sensor family; not comparable across sensors or years">Descriptivo: % de detecciones por familia de sensor; no comparable entre sensores ni entre años</div></div>
+  <!-- 10 · Calidad del dato -->
+  <div class="pn"><div class="hd"><span class="nb">10</span><span data-es="Calidad del dato" data-en="Data quality">Calidad del dato</span></div>
+    <div class="sc" style="margin-bottom:4px" data-es="Cobertura del período" data-en="Period coverage">Cobertura del período</div>
+    <div style="height:8px;background:var(--surface-1);border-radius:4px;margin-bottom:8px"><div style="width:94%;height:8px;background:var(--text-success);border-radius:4px"></div></div>
+    <div class="sc" data-es="Origen del valor" data-en="Value source">Origen del valor</div>
+    <div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:4px 0 6px"><div style="width:20%;background:var(--text-accent)"></div><div style="width:65%;background:var(--text-warning)"></div><div style="width:15%;background:var(--border-stronger)"></div></div>
+    <div class="sc">MODIS 20 % · VIIRS→MODIS 65 % · Terra 15 %</div></div>
+</div>
+
+<!-- 11 · Pie fijo -->
+<div class="pn" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="nb">11</span><span class="sc" data-es="Pie fijo: un foco no es un incendio confirmado · valores armonizados, no conteos crudos · versión de datos y config_hash · atribución NASA FIRMS" data-en="Fixed footer: a hotspot is not a confirmed fire · harmonized values, not raw counts · data version and config_hash · NASA FIRMS attribution">Pie fijo: un foco no es un incendio confirmado · valores armonizados, no conteos crudos · versión de datos y config_hash · atribución NASA FIRMS</span></div>
+</div>
+
+<script>
+(function(){
+function ramp(t){t=Math.max(0,Math.min(1,t));var s=[[255,255,178],[254,204,92],[253,141,60],[240,59,32],[189,0,38]];var p=t*4,i=Math.min(3,Math.floor(p)),f=p-i;var a=s[i],b=s[i+1];return 'rgb('+Math.round(a[0]+(b[0]-a[0])*f)+','+Math.round(a[1]+(b[1]-a[1])*f)+','+Math.round(a[2]+(b[2]-a[2])*f)+')'}
+function rnd(n){var x=Math.sin(n*127.1)*43758.5453;return x-Math.floor(x)}
+var NS='http://www.w3.org/2000/svg';
+function el(p,n,a,t){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(t)e.textContent=t;p.appendChild(e);return e}
+function drawMap(svg,seed,boost,bg){
+ el(svg,'rect',{x:0,y:0,width:540,height:330,fill:bg});
+ var r=11,w=Math.sqrt(3)*r,h=1.5*r;
+ for(var row=0;row<21;row++)for(var c=0;c<28;c++){var cx=10+c*w+(row%2?w/2:0),cy=10+row*h;var dx=(cx-270)/250,dy=(cy-150)/135;var d=dx*dx+dy*dy;if(d>1)continue;var v=Math.max(0,(1-d)*boost*rnd(row*31+c+seed)+0.3*boost*Math.exp(-(Math.pow(cx-350,2)+Math.pow(cy-110,2))/2200)-0.12);if(v<0.06)continue;var q=[];for(var k=0;k<6;k++){var an=Math.PI/180*(60*k-30);q.push((cx+r*0.98*Math.cos(an)).toFixed(1)+','+(cy+r*0.98*Math.sin(an)).toFixed(1))}el(svg,'polygon',{points:q.join(' '),fill:ramp(v*1.3),opacity:0.85})}
+ el(svg,'path',{d:'M190 80 L270 58 L360 72 L410 120 L395 195 L330 225 L240 208 L185 150 Z',fill:'none',stroke:'#378ADD','stroke-width':1.8,'stroke-dasharray':'5 3'});
+ for(var i=0;i<40*boost;i++)el(svg,'circle',{cx:205+rnd(i+5+seed)*190,cy:85+rnd(i+9+seed)*120,r:1.5+rnd(i)*2,fill:'#185FA5',opacity:0.7})}
+drawMap(document.getElementById('mA'),0,0.95,'#e9e6dc');
+drawMap(document.getElementById('mB'),500,0.5,'#e4e0d3');
+var lg=document.getElementById('lg');for(var i=0;i<30;i++)el(lg,'rect',{x:16+i*3,y:298,width:3,height:8,fill:ramp(i/29)});
+
+var box=document.getElementById('box'),mB=document.getElementById('mB'),dv=document.getElementById('divd'),labA=document.getElementById('labA'),labB=document.getElementById('labB'),hint=document.getElementById('hint'),tl=document.getElementById('tl'),tri=document.getElementById('tri'),cmpBtn=document.getElementById('cmpBtn'),kB=document.getElementById('kB'),kD=document.getElementById('kD'),bchip=document.getElementById('bchip');
+var pos=50,mode='AB',cmp=true;
+function apply(){
+ tri.style.display=cmp?'inline-flex':'none';cmpBtn.classList.toggle('on',cmp);cmpBtn.setAttribute('aria-pressed',cmp);
+ var m=cmp?mode:'A';
+ mB.style.display=(m==='A')?'none':'block';
+ mB.style.clipPath=(m==='AB')?'inset(0 0 0 '+pos+'%)':'inset(0)';
+ dv.style.display=(m==='AB')?'block':'none';dv.style.left=pos+'%';
+ labA.style.display=(m==='B')?'none':'block';labB.style.display=(m==='A')?'none':'block';
+ hint.style.display=(cmp&&m==='AB')?'inline':'none';
+ tl.textContent=m==='B'?'feb 2023 (B)':(m==='AB'?'A feb 2024 | B feb 2023':'feb 2024 (A)');
+ kB.style.display=cmp?'block':'none';kD.style.display=cmp?'block':'none';bchip.style.display=cmp?'inline-block':'none';
+ Array.prototype.forEach.call(tri.children,function(b){b.classList.toggle('on',b.dataset.m===mode)});
+}
+cmpBtn.onclick=function(){cmp=!cmp;if(cmp){mode='AB';pos=50}apply()};
+Array.prototype.forEach.call(tri.children,function(b){b.onclick=function(){mode=b.dataset.m;if(mode==='AB')pos=50;apply()}});
+var drag=false;
+dv.addEventListener('pointerdown',function(e){drag=true;e.preventDefault()});
+window.addEventListener('pointerup',function(){drag=false});
+window.addEventListener('pointermove',function(e){if(!drag)return;var rc=box.getBoundingClientRect();pos=Math.max(4,Math.min(96,(e.clientX-rc.left)/rc.width*100));apply()});
+apply();
+
+document.getElementById('theme').onclick=function(e){var b=e.target.closest('button');if(!b)return;document.documentElement.setAttribute('data-theme',b.dataset.t);Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b)})};
+document.getElementById('lang').onclick=function(e){var b=e.target.closest('button');if(!b)return;var l=b.dataset.l;Array.prototype.forEach.call(this.children,function(x){x.classList.toggle('on',x===b)});document.querySelectorAll('[data-es]').forEach(function(n){n.textContent=n.getAttribute('data-'+l)})};
+
+var cal=document.getElementById('cal');var yrs=[2018,2019,2020,2021,2022,2023,2024,2025],mo='EFMAMJJASOND';
+for(var j=0;j<12;j++)el(cal,'text',{x:44+j*23+11,y:10,'font-size':11,'text-anchor':'middle',fill:'var(--text-secondary)'},mo[j]);
+yrs.forEach(function(y,i){el(cal,'text',{x:2,y:30+i*16,'font-size':11,fill:'var(--text-secondary)'},y);for(var j=0;j<12;j++){var s=Math.exp(-Math.pow((j-1.3)/2.2,2))+0.5*Math.exp(-Math.pow((j-10.5)/1.5,2));var v=s*(0.35+0.65*rnd(i*13+j+3));if(y==2024&&j==1)v=0.95;el(cal,'rect',{x:46+j*23,y:20+i*16,width:21,height:14,rx:2,fill:ramp(v)});if(y==2019&&j==5)el(cal,'rect',{x:46+j*23,y:20+i*16,width:21,height:14,rx:2,fill:'none',stroke:'var(--text-secondary)','stroke-dasharray':'2 2'})}});
+el(cal,'line',{x1:44,x2:322,y1:83,y2:83,stroke:'var(--text-secondary)','stroke-dasharray':'3 3'});
+el(cal,'rect',{x:68,y:115,width:23,height:16,rx:3,fill:'none',stroke:'#378ADD','stroke-width':2});
+el(cal,'rect',{x:68,y:99,width:23,height:16,rx:3,fill:'none',stroke:'#EF9F27','stroke-width':2});
+
+var cp=document.getElementById('cmp');
+for(var g=0;g<4;g++)el(cp,'line',{x1:30,x2:292,y1:15+g*30,y2:15+g*30,stroke:'var(--border)','stroke-width':0.5});
+[['0',105],['600',75],['1.200',45],['1.800',15]].forEach(function(a){el(cp,'text',{x:26,y:a[1]+4,'font-size':11,'text-anchor':'end',fill:'var(--text-secondary)'},a[0])});
+for(var j=0;j<12;j++)el(cp,'text',{x:34+j*22.5,y:128,'font-size':11,fill:'var(--text-secondary)'},mo[j]);
+function ser(sc,off){var a=[];for(var j=0;j<12;j++){var s=Math.exp(-Math.pow((j-1.3)/2,2))+0.45*Math.exp(-Math.pow((j-10.5)/1.5,2));a.push(s*sc*(0.8+0.4*rnd(j+off)))}return a}
+function pth(a){return a.map(function(v,j){return (j?'L':'M')+(38+j*22.5)+' '+(105-v*88)}).join(' ')}
+var A=ser(1.05,40),B=ser(0.55,70),Md=ser(0.6,10);
+var up=A.map(function(v,j){return (38+j*22.5)+','+(105-v*88*1.14)}),lo=A.map(function(v,j){return (38+j*22.5)+','+(105-v*88*0.86)}).reverse();
+el(cp,'polygon',{points:up.concat(lo).join(' '),fill:'#378ADD',opacity:0.2});
+el(cp,'path',{d:pth(Md),fill:'none',stroke:'var(--text-muted)','stroke-width':1,'stroke-dasharray':'4 3'});
+el(cp,'path',{d:pth(B),fill:'none',stroke:'#EF9F27','stroke-width':2});
+el(cp,'path',{d:pth(A),fill:'none',stroke:'#378ADD','stroke-width':2});
+
+var f=document.getElementById('frp');
+for(var i=0;i<14;i++){var a=60*Math.exp(-i*0.33)+3,b=44*Math.exp(-i*0.45)+2;el(f,'rect',{x:10+i*20,y:75-a*0.9,width:9,height:a*0.9,fill:'#378ADD',opacity:0.85});el(f,'rect',{x:19+i*20,y:75-b*0.9,width:9,height:b*0.9,fill:'#EF9F27',opacity:0.85})}
+el(f,'line',{x1:8,x2:295,y1:75,y2:75,stroke:'var(--border-strong)'});
+[[10,'0'],[110,'50'],[210,'100 MW']].forEach(function(t){el(f,'text',{x:t[0],y:88,'font-size':11,fill:'var(--text-secondary)'},t[1])});
+})();
+</script>
+</body>
+</html>

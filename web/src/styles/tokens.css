@@ -1,0 +1,106 @@
+/* Tokens de Terra Australis. Claro por defecto; oscuro con [data-theme='dark'] o, sin elección, con el sistema.
+   Las rampas del mapa (YlOrRd, PuOr) no son tokens: no cambian con el tema. */
+:root {
+  --bg: #fdfdfb;
+  --surface: #ffffff;
+  --surface-2: #f4f4f1;
+  --pill: #ececea;
+  --ink: #0b0b0c;
+  --ink-2: #2b2c2f;
+  --muted: #5f6166;
+  --line: rgba(11, 11, 12, 0.1);
+  --line-strong: rgba(11, 11, 12, 0.22);
+  --btn-bg: #111214;
+  --btn-ink: #ffffff;
+  --btn-bg-hover: #2a2c30;
+  --ok: #1f9d55;
+  --warn: #9a5a07;
+  --warn-bg: #fdf0dd;
+  --period-a: #1d5fd1;
+  --period-b: #9a5208;          /* texto: AA sobre blanco y sobre --period-b-bg */
+  --period-b-mark: #d9780a;     /* líneas, barras y bordes (contraste no textual ≥ 3:1) */
+  --period-a-bg: #e6eefb;
+  --period-b-bg: #fdf0dd;
+  --outline-ink: #0b0b0c;
+  --outline-alpha: 0.09;
+  --focus: #1d5fd1;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px -12px rgba(0, 0, 0, 0.12);
+
+  --radius-s: 8px;
+  --radius-m: 14px;
+  --radius-l: 22px;
+  --radius-pill: 999px;
+
+  --wrap: 1240px;
+  --wrap-wide: 1500px;
+  --gutter: clamp(16px, 4vw, 48px);
+  --nav-h: 84px;
+
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-enter: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-in: 150ms;
+  --t-out: 120ms;
+
+  --font-body: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-brand: 'Montserrat', 'Poppins', system-ui, sans-serif;
+
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  --bg: #0d0e10;
+  --surface: #15171a;
+  --surface-2: #1c1e22;
+  --pill: #22252a;
+  --ink: #f3f3ef;
+  --ink-2: #d9dad5;
+  --muted: #a3a6ad;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.24);
+  --btn-bg: #f3f3ef;
+  --btn-ink: #0d0e10;
+  --btn-bg-hover: #d9dad5;
+  --ok: #3ccf7a;
+  --warn: #f2b45a;
+  --warn-bg: #3a2810;
+  --period-a: #6ea0ff;
+  --period-b: #f2a24a;
+  --period-b-mark: #f2a24a;
+  --period-a-bg: #14233f;
+  --period-b-bg: #3a2810;
+  --outline-ink: #f3f3ef;
+  --outline-alpha: 0.11;
+  --focus: #6ea0ff;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --bg: #0d0e10;
+    --surface: #15171a;
+    --surface-2: #1c1e22;
+    --pill: #22252a;
+    --ink: #f3f3ef;
+    --ink-2: #d9dad5;
+    --muted: #a3a6ad;
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.24);
+    --btn-bg: #f3f3ef;
+    --btn-ink: #0d0e10;
+    --btn-bg-hover: #d9dad5;
+    --ok: #3ccf7a;
+    --warn: #f2b45a;
+    --warn-bg: #3a2810;
+    --period-a: #6ea0ff;
+    --period-b: #f2a24a;
+    --period-b-mark: #f2a24a;
+    --period-a-bg: #14233f;
+    --period-b-bg: #3a2810;
+    --outline-ink: #f3f3ef;
+    --outline-alpha: 0.11;
+    --focus: #6ea0ff;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    color-scheme: dark;
+  }
+}
