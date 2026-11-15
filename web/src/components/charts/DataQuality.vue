@@ -82,7 +82,7 @@ const periods = computed(() => [['A', qa.value], ['B', qb.value]].filter(([, q])
 .dq__fill { display: block; height: 100%; }
 .dq__fill--ok { background: var(--ok); }
 .dq__fill--modis { background: var(--period-a); }
-.dq__fill--viirs { background: var(--period-b); }
+.dq__fill--viirs { background: var(--period-b-mark); }
 .dq__fill--terra { background: var(--muted); }
 .dq__legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.76rem; margin: 6px 0 0; }
 .dq__sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }

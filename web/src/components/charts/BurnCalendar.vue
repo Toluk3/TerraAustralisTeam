@@ -159,14 +159,14 @@ const readout = computed(() => (hover.value ? describe(hover.value) : t('charts.
 }
 .bc__cell:hover { box-shadow: 0 0 0 1.5px var(--ink); z-index: 1; }
 .bc__cell.is-a { box-shadow: 0 0 0 2px var(--period-a); z-index: 2; }
-.bc__cell.is-b { box-shadow: 0 0 0 2px var(--period-b); z-index: 2; }
+.bc__cell.is-b { box-shadow: 0 0 0 2px var(--period-b-mark); z-index: 2; }
 .bc__cell:focus-visible { outline: 2px solid var(--focus); }
 .bc__readout { margin: 10px 0 6px; font-size: 0.8rem; color: var(--ink-2); min-height: 2.6em; }
 .bc__k { display: inline-block; width: 12px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .bc__k--reduced { background: repeating-linear-gradient(135deg, var(--muted) 0 1.5px, transparent 1.5px 4px); border: 1px solid var(--line-strong); }
 .bc__k--est { width: 16px; height: 0; border-top: 1.5px dashed var(--muted); border-radius: 0; vertical-align: 3px; }
 .bc__k--a { box-shadow: inset 0 0 0 2px var(--period-a); }
-.bc__k--b { box-shadow: inset 0 0 0 2px var(--period-b); }
+.bc__k--b { box-shadow: inset 0 0 0 2px var(--period-b-mark); }
 .bc__key-a { color: var(--period-a); }
 .bc__key-b { color: var(--period-b); }
 </style>

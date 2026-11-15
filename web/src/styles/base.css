@@ -148,3 +148,11 @@ a.card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
   }
   [data-enter] > *, [data-enter-item] { opacity: 1 !important; transform: none !important; }
 }
+
+/* Pantallas táctiles: todos los controles fuera de texto corrido miden al menos 44 px. En escritorio
+   (puntero fino) los controles densos del panel científico quedan en 34–40 px. */
+@media (pointer: coarse) {
+  .btn, .btn--sm, .seg > button, .chip, select, .lp__view, .lp__check, .pj__toc-link, .pp__range, .pp__sel,
+  .ts__play, .cmap__lasso, .chart-table > summary, .link { min-height: 44px; }
+  .seg > button { min-width: 44px; }
+}

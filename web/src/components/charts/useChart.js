@@ -18,7 +18,7 @@ export function themeColors() {
   const v = (n) => cs.getPropertyValue(n).trim();
   return {
     ink: v('--ink'), ink2: v('--ink-2'), muted: v('--muted'), line: v('--line'), lineStrong: v('--line-strong'),
-    surface: v('--surface'), a: v('--period-a'), b: v('--period-b'), aBg: v('--period-a-bg'), bBg: v('--period-b-bg'),
+    surface: v('--surface'), a: v('--period-a'), b: v('--period-b-mark'), bText: v('--period-b'), aBg: v('--period-a-bg'), bBg: v('--period-b-bg'),
     font: v('--font-body') || 'Poppins, sans-serif',
   };
 }
@@ -39,12 +39,21 @@ export function useChart(el, build, deps, { onClick } = {}) {
     chart.setOption(option, { notMerge: true, lazyUpdate: true });
   }
 
+  // Se inicializa recién cuando el contenedor tiene tamaño (un gráfico oculto con v-show mide 0)
+  function ensure() {
+    const box = el.value;
+    if (!box || !box.clientWidth || !box.clientHeight) return false;
+    if (!chart) {
+      chart = echarts.init(box, null, { renderer: 'canvas' });
+      if (onClick) chart.on('click', onClick);
+      render();
+    }
+    return true;
+  }
   onMounted(() => {
-    chart = echarts.init(el.value, null, { renderer: 'canvas' });
-    if (onClick) chart.on('click', onClick);
-    ro = new ResizeObserver(() => chart?.resize());
+    ro = new ResizeObserver(() => { if (chart) chart.resize(); else ensure(); });
     ro.observe(el.value);
-    render();
+    ensure();
   });
   onBeforeUnmount(() => { ro?.disconnect(); chart?.dispose(); chart = null; });
 

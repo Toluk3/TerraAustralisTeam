@@ -153,7 +153,7 @@ const anomaly = computed(() => {
 .ss__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
 .ss__card { background: var(--surface-2); border-radius: var(--radius-s); padding: 12px 14px; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .ss__card--a { box-shadow: inset 3px 0 0 var(--period-a); }
-.ss__card--b { box-shadow: inset 3px 0 0 var(--period-b); }
+.ss__card--b { box-shadow: inset 3px 0 0 var(--period-b-mark); }
 .ss__card--warn { background: var(--warn-bg); color: var(--warn); }
 .ss__card--warn .ss__lbl, .ss__card--warn .ss__sub { color: var(--warn); }
 .ss__lbl { font-size: 0.8rem; color: var(--muted); }

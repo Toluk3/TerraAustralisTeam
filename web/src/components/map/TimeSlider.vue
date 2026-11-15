@@ -134,7 +134,7 @@ onBeforeUnmount(() => { stop(); if (raf) cancelAnimationFrame(raf); });
 .ts__reduced { position: absolute; top: 0; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: #e8820c; }
 .ts__est { position: absolute; top: 0; bottom: 30px; right: 0; border-left: 1.5px dashed var(--muted); }
 .ts__est i { position: absolute; top: -2px; left: 5px; font-style: normal; font-size: 0.7rem; color: var(--muted); white-space: nowrap; }
-.ts__b { position: absolute; top: 0; height: 44px; border-left: 2px solid var(--period-b); }
+.ts__b { position: absolute; top: 0; height: 44px; border-left: 2px solid var(--period-b-mark); }
 .ts__b i { position: absolute; bottom: -2px; left: 3px; font-style: normal; font-size: 0.7rem; font-weight: 500; color: var(--period-b); }
 .ts__range {
   position: absolute; left: 0; right: 0; top: 30px; width: 100%; height: 28px; margin: 0; background: transparent;

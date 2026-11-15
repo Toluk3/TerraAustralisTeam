@@ -7,6 +7,7 @@ import { onBeforeUnmount, onMounted, ref, shallowRef, watch, computed } from 'vu
 import { useI18n } from 'vue-i18n';
 import { intlLocale } from '@/stores/ui.js';
 import { periodMonths } from '@/stores/analysis.js';
+import { ramp, PUOR } from '@/features/fire-map/colors.js';
 
 const props = defineProps({
   dataset: { type: Object, required: true },          // { source, meta }
@@ -158,7 +159,6 @@ async function drawDiff() {
   const my = ++diffToken;
   if (!props.diff || !props.layers.cells) { m.setExtraLayers([]); return; }
   H3HexagonLayer ??= (await import('@deck.gl/geo-layers')).H3HexagonLayer;
-  const { ramp, PUOR } = await import('@/features/fire-map/colors.js');
   const meta = props.dataset.meta;
   const res = m.getState().res;
   const available = new Set(meta.map.months);
