@@ -45,6 +45,12 @@ const labels = computed(() => ({
   day: t('map.tip.day'),
   night: t('map.tip.night'),
   confidence: t('map.tip.confidence'),
+  loading: t('map.loadingData'),
+  dataFailed: t('map.dataFailed'),
+  basemapFailed: t('map.basemapFailed'),
+  hotspots: t('map.hotspots'),
+  zoomIn: t('map.zoomIn'),
+  zoomOut: t('map.zoomOut'),
   periodText: periodText(props.period),
 }));
 

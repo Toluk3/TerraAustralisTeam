@@ -46,6 +46,12 @@ export const DEFAULT_LABELS = {
   day: 'día',
   night: 'noche',
   confidence: 'confianza',
+  loading: 'Cargando datos…',
+  dataFailed: 'No se pudieron cargar los datos:',
+  basemapFailed: 'No se pudo cargar el mapa base:',
+  hotspots: 'Focos',
+  zoomIn: 'Acercar',
+  zoomOut: 'Alejar',
 };
 
 /**
@@ -140,7 +146,7 @@ export async function createFireMap(container, options = {}) {
   };
 
   // --- Datos iniciales ---
-  status('Cargando datos…');
+  status(labels.loading);
   const meta = await opts.source.getMeta();
   const switchDay = toDay(meta.switch_date);
   const reduced = new Map(meta.reduced_coverage_months.map((r) => [ym(r.year, r.month), r.coverage_frac]));
@@ -154,6 +160,7 @@ export async function createFireMap(container, options = {}) {
 
   // --- MapLibre ---
   const map = new maplibregl.Map({
+    locale: { 'NavigationControl.ZoomIn': labels.zoomIn, 'NavigationControl.ZoomOut': labels.zoomOut },
     container: $('.tam-map__canvas'),
     style: resolveBasemap(opts.basemap),
     bounds: bbox,
@@ -166,7 +173,7 @@ export async function createFireMap(container, options = {}) {
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
   map.addControl(new maplibregl.AttributionControl({
     compact: true,
-    customAttribution: `Focos: <a href="https://www.earthdata.nasa.gov/data/tools/firms" target="_blank" rel="noopener">${
+    customAttribution: `${labels.hotspots}: <a href="https://www.earthdata.nasa.gov/data/tools/firms" target="_blank" rel="noopener">${
       meta.attribution.replace(/\s*https?:\/\/\S+/g, '').replace(/\.\s*$/, '')}</a>`,
   }), 'bottom-right');
 
@@ -189,7 +196,7 @@ export async function createFireMap(container, options = {}) {
     map.once('load', resolve);
     map.once('error', (e) => (map.loaded() ? null : reject(e.error ?? e)));
   }).catch((e) => {
-    status(`No se pudo cargar el mapa base: ${e.message ?? e}`);
+    status(`${labels.basemapFailed} ${e.message ?? e}`);
     throw e;
   });
   // El contenedor puede cambiar de tamaño (p. ej. al aparecer la barra de tiempo): reajustar y, si el
@@ -291,11 +298,11 @@ export async function createFireMap(container, options = {}) {
 
   async function ensureData() {
     const token = ++loadToken;
-    const slow = setTimeout(() => token === loadToken && status('Cargando datos…'), 250);
+    const slow = setTimeout(() => token === loadToken && status(labels.loading), 250);
     try {
       await Promise.all([loadCells(token), loadPoints(token)]);
     } catch (e) {
-      status(`No se pudieron cargar los datos: ${e.message}`);
+      status(`${labels.dataFailed} ${e.message}`);
       emit('error', e);
       throw e;
     } finally {
@@ -489,6 +496,11 @@ export async function createFireMap(container, options = {}) {
       Object.assign(labels, obj);
       numberLocale = labels.locale;
       selection.updateLabels();
+      // Botones de zoom de MapLibre: su texto se fija al crear el mapa, se actualiza a mano
+      for (const [cls, text] of [['zoom-in', labels.zoomIn], ['zoom-out', labels.zoomOut]]) {
+        const b = root.querySelector(`.maplibregl-ctrl-${cls}`);
+        if (b) { b.title = text; b.setAttribute('aria-label', text); }
+      }
     },
     setSelectionRange(r) { selection.setRange(r); },
     getSelection() { return selection.get(); },

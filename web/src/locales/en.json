@@ -83,7 +83,13 @@
       "confidence": "confidence"
     },
     "tooManyCells": "The selection exceeds {max} r{res} cells: draw a smaller area or zoom in.",
-    "loadFailed": "The selection's data could not be loaded: {msg}"
+    "loadFailed": "The selection's data could not be loaded: {msg}",
+    "loadingData": "Loading data…",
+    "dataFailed": "Data could not be loaded:",
+    "basemapFailed": "The basemap could not be loaded:",
+    "hotspots": "Hotspots",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out"
   },
   "analysis": {
     "title": "Analysis",

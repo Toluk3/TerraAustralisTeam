@@ -83,7 +83,13 @@
       "confidence": "confianza"
     },
     "tooManyCells": "La selección supera las {max} celdas r{res}: dibujá un área más chica o acercá el mapa.",
-    "loadFailed": "No se pudieron cargar los datos de la selección: {msg}"
+    "loadFailed": "No se pudieron cargar los datos de la selección: {msg}",
+    "loadingData": "Cargando datos…",
+    "dataFailed": "No se pudieron cargar los datos:",
+    "basemapFailed": "No se pudo cargar el mapa base:",
+    "hotspots": "Focos",
+    "zoomIn": "Acercar",
+    "zoomOut": "Alejar"
   },
   "analysis": {
     "title": "Análisis",
