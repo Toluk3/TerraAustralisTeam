@@ -80,6 +80,12 @@ Están en el release [`datos-s1-2026-11-15`](https://github.com/Toluk3/TerraAust
 | `S1_mapa_mock-s1.zip` | JSON del mapa (`frontend/map/public/mock-s1/`, 2,2 GB descomprimido) | Ver el mapa directamente |
 | `S1_publish.zip` | Publicación del pipeline (`data/lotes/S1/publish/`, Parquet, 714 MB): serie por celda, `k`, mapa, focos, calendario de la zona, reportes y `meta/version.json` | Análisis, o regenerar los JSON con `build_mocks.py` |
 
+El repo es privado: se descarga desde el navegador con una sesión de GitHub que tenga acceso, o con GitHub CLI:
+
+```bash
+gh release download datos-s1-2026-11-15 --repo Toluk3/TerraAustralisTeam --pattern "S1_mapa_mock-s1.zip"
+```
+
 Ver el mapa:
 
 ```bash
