@@ -5,7 +5,7 @@
   python -m pipeline status                 # qué hay en la base
   python -m pipeline all --config otra.yaml
 
-Pasos: ingest → normalize → support → aggregate → calibrate → rollup → validate → qc → zone → export
+Pasos: ingest → normalize → support → aggregate → detect → calibrate → rollup → validate → qc → zone → export
 """
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ import logging
 import sys
 import time
 
-from . import aggregate, calibrate, export, ingest, normalize, qc, rollup, support, validate, zone
+from . import aggregate, calibrate, detect, export, ingest, normalize, qc, rollup, support, validate, zone
 from .config import load_config
 from .db import connect
 
@@ -24,6 +24,7 @@ STEPS = {
     "normalize": normalize.run,    # pasos 2–8: fires_norm / fires_excluded + static_mask
     "support": support.run,        # calendar, platform_periods, coverage, series_source
     "aggregate": aggregate.run,    # fires_daily
+    "detect": detect.run,          # detect_weights y fires_daily.n_clusters_det
     "calibrate": calibrate.run,    # calibration, calibration_boot, k_by_year
     "rollup": rollup.run,          # fires_monthly, fires_8d
     "validate": validate.run,      # validation (dejando un año afuera + ablación)
@@ -36,7 +37,7 @@ STEPS = {
 def status(cfg, con) -> dict:
     out = {"config_hash": cfg.config_hash, "db": str(cfg.db_path)}
     for t in ("fires_raw", "fires_norm", "fires_excluded", "fires_daily", "fires_monthly", "fires_8d",
-              "calibration", "calibration_boot", "static_mask", "validation", "zone_cells"):
+              "calibration", "calibration_boot", "detect_weights", "static_mask", "validation", "zone_cells"):
         try:
             out[t] = con.execute(f"SELECT count(*) FROM {t}").fetchone()[0]
         except Exception:  # noqa: BLE001 - tabla o vista todavía no creada

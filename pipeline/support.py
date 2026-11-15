@@ -16,7 +16,10 @@ def calendar_end(cfg: Config, con) -> dt.date:
     end = cfg.date("calendar_end")
     if end:
         return end
-    last = con.execute("SELECT max(local_date) FROM fires_norm").fetchone()[0]
+    # Último día UTC, no local: con longitudes al este, un foco del 31/12 a la tarde (UTC) cae el 1/1 en
+    # fecha solar local y abría un mes "completo" de un solo día en el año siguiente. Esos focos quedan
+    # fuera del calendario, igual que los del 31/10/2000 al oeste (rollup lo avisa).
+    last = con.execute("SELECT max(CAST(datetime_utc AS DATE)) FROM fires_norm").fetchone()[0]
     return last or dt.date.today()
 
 
@@ -50,7 +53,7 @@ def run(cfg: Config, con) -> dict:
                     [p["platform"], p["valid_from"], p.get("valid_to"), p["kind"]])
     con.execute(f"""
         INSERT INTO platform_periods
-        WITH fy AS (SELECT platform, year(local_date) AS y, max(local_date) AS last_d
+        WITH fy AS (SELECT platform, year(CAST(datetime_utc AS DATE)) AS y, max(local_date) AS last_d
                     FROM fires_norm GROUP BY ALL),
              grp AS (SELECT CASE WHEN platform IN ('terra', 'aqua') THEN 'modis' ELSE platform END AS g,
                             max(last_d) AS last_d FROM fy GROUP BY 1),

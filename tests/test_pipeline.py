@@ -270,11 +270,11 @@ def _cov(con, platform, year):
 
 def test_anio_sin_archivo_entre_dos_con_datos_es_cero(tmp_path):
     """Si el país no tuvo detecciones un año, FIRMS no publica su archivo: es 0, no "sin datos"."""
-    from pipeline import aggregate, calibrate, rollup, zone
+    from pipeline import aggregate, calibrate, detect, rollup, zone
 
     cfg, con = _hasta_support(tmp_path, lambda d: (d / "modis/2021/modis_2021_Argentina.csv").unlink())
     assert _cov(con, "terra", 2021) == (1.0, 1.0)
-    for step in (aggregate, calibrate, rollup, zone):
+    for step in (aggregate, detect, calibrate, rollup, zone):
         step.run(cfg, con)
     v, st = con.execute("""SELECT n_equiv, status FROM zone_series
                            WHERE period_kind = 'month' AND year = 2021 AND period = 3""").fetchone()
@@ -352,7 +352,7 @@ def test_mes_parcial_no_tiene_anomalia_y_la_base_respeta_baseline_years(pipeline
 
 def test_calibracion_comun_a_varios_lotes(tmp_path):
     """Con calibration_from las sumas del ajuste incluyen los fires_daily de la otra base."""
-    from pipeline import aggregate, calibrate, ingest, normalize, support
+    from pipeline import aggregate, calibrate, detect, ingest, normalize, support
     from pipeline.db import connect
     from .conftest import synthetic
 
@@ -365,7 +365,7 @@ def test_calibracion_comun_a_varios_lotes(tmp_path):
         synthetic(d / "Datos", seed=seed)
         cfg = make_config(d, **over)
         con = connect(cfg)
-        for step in (ingest, normalize, support, aggregate, calibrate):
+        for step in (ingest, normalize, support, aggregate, detect, calibrate):
             step.run(cfg, con)
         return cfg, con
 
@@ -392,3 +392,66 @@ def test_calibracion_comun_a_varios_lotes(tmp_path):
     assert {r[0] for r in con_a.execute("SELECT DISTINCT config_hash FROM calibration").fetchall()} == {comun_a.config_hash}
     rollup.run(comun_a, con_a)          # el k copiado sirve para los rollups del lote
     con_a.close()
+
+
+# --- n_clusters_det (pesos de detectabilidad) ---
+def test_pesos_de_detectabilidad_normalizados_y_con_respaldo():
+    from pipeline.detect import NB, fit_weights
+
+    vn = [100, 100, 100, 100, 100, 100]
+    va = [2, 4, 6, 13, 28, 49]
+    glob, reg = fit_weights([("a", vn, va), ("b", [10] * NB, [5] * NB)], min_count=50)
+    tot = [vn[i] + 10 for i in range(NB)]
+    assert sum(glob[i] * tot[i] for i in range(NB)) == pytest.approx(sum(tot))   # la suma total no cambia
+    assert glob == sorted(glob)                       # más FRP, más peso
+    assert reg["b"] == [None] * NB                    # sin muestra: respaldo al peso global
+    assert reg["a"][0] < reg["a"][5]
+    assert fit_weights([], 10) == ([1.0] * NB, {})    # sin datos, n_clusters_det = n_clusters
+
+
+def test_n_clusters_det_solo_cambia_viirs_de_noche(pipeline_run):
+    _, con = pipeline_run
+    assert con.execute("SELECT count(*) FROM fires_daily WHERE n_clusters_det IS NULL").fetchone()[0] == 0
+    assert con.execute("""SELECT count(*) FROM fires_daily WHERE NOT (sensor = 'VIIRS' AND NOT is_day)
+                          AND n_clusters_det <> n_clusters""").fetchone()[0] == 0
+    vn, cl = con.execute("""SELECT sum(vn_b0 + vn_b1 + vn_b2 + vn_b3 + vn_b4 + vn_b5), sum(n_clusters)
+                            FROM fires_daily WHERE sensor = 'VIIRS' AND NOT is_day""").fetchone()
+    assert vn == cl                                   # los tramos reparten todos los clusters nocturnos
+    assert "k_region_mes_dianoche_clusters_det" in {
+        r[0] for r in con.execute("SELECT DISTINCT variant FROM validation").fetchall()}
+
+
+def test_calibrate_exige_detect(tmp_path):
+    from pipeline import aggregate, ingest, normalize, support
+    from pipeline.db import connect
+    from .conftest import synthetic
+
+    synthetic(tmp_path / "Datos")
+    cfg = make_config(tmp_path)
+    con = connect(cfg)
+    for step in (ingest, normalize, support, aggregate):
+        step.run(cfg, con)
+    with pytest.raises(RuntimeError, match="detect"):
+        calibrate.run(cfg, con)
+    con.close()
+
+
+def test_criterio_de_aceptacion_dia_noche(pipeline_run):
+    cfg, con = pipeline_run
+    from pipeline.validate import acceptance
+
+    res = acceptance(cfg, con, "noaa20")
+    assert {"dia_noche_0.9_1.1", "dia_0.9_1.1", "sesgo_10pct", "noche_fuera_0.85_1.15"} <= set(res)
+
+
+def test_foco_del_31_12_al_este_no_abre_un_mes_en_el_anio_siguiente(tmp_path):
+    """31/12 a las 23:00 UTC en longitud +150 es el 1/1 a las 09:00 locales: no tiene que existir enero."""
+    from .conftest import VIIRS_COLS, viirs_row, write_csv
+
+    def preparar(d):
+        write_csv(d / "extra" / "viirs-jpss1_2022_Argentina.csv", VIIRS_COLS,
+                  [viirs_row(-30.0, 150.0, "2022-12-31", "2300")])
+    cfg, con = _hasta_support(tmp_path, preparar)
+    assert con.execute("SELECT max(date) FROM calendar").fetchone()[0] == dt.date(2022, 12, 31)
+    assert con.execute("SELECT count(*) FROM coverage WHERE year = 2023").fetchone()[0] == 0
+    con.close()

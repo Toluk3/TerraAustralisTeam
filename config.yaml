@@ -35,7 +35,7 @@ h3:
   fallback_res: 2   # región de respaldo
 
 # --- Calibración (§5) ---
-metric: n_clusters            # n_fires | n_clusters | n_clusters_r7 (la que gane la validación)
+metric: n_clusters_det        # n_fires | n_clusters | n_clusters_r7 | n_clusters_det (la que gane la validación)
 reference: terra_aqua         # terra_aqua | aqua
 modis_stable_until: 2021-12-31
 switch_date: 2022-01-01
@@ -57,6 +57,10 @@ calibration_levels: [r3, r2, r1, global]
 calibration_from: []
 bootstrap_reps: 200
 bootstrap_seed: 42
+# n_clusters_det: los clusters VIIRS nocturnos cuentan según la probabilidad de que MODIS los detecte
+# por su FRP, estimada con Aqua (misma hora de pasada que NOAA-20). Ver pipeline/detect.py.
+detect_level: r1              # región de los pesos (con respaldo al total)
+detect_min_count: 200         # clusters VIIRS mínimos por región y tramo de FRP para usar el peso regional
 min_median_count: 5           # bajo esto se sugiere la vista mensual (§5.6)
 # Período base de la mediana y de la anomalía: [desde, hasta] o null (todos los años completos).
 # 2003–2021 = MODIS Terra + Aqua observado, sin el tramo Terra sola ni el estimado con VIIRS, y sin

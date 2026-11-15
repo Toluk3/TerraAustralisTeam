@@ -20,12 +20,14 @@ import duckdb
 
 from .config import METRICS, Config
 from .db import sql_in, sql_str
+from .detect import VA, VN, region_sql, weights_join
 from .qc import data_fingerprint
 
 log = logging.getLogger(__name__)
 
 VIIRS_PLATFORMS = ("snpp", "noaa20", "noaa21")
-DAILY_COLS = "cell, region_r3, region_r2, local_date, sensor, platform, is_day, n_fires, n_clusters, n_clusters_r7"
+DAILY_COLS = ("cell, region_r3, region_r2, local_date, sensor, platform, is_day, n_fires, n_clusters, "
+              "n_clusters_r7, " + ", ".join(VN + VA))
 
 
 def attach_others(cfg: Config, con) -> list[str]:
@@ -56,8 +58,18 @@ def calibration_daily(cfg: Config, con) -> str:
     aliases = attach_others(cfg, con)
     if not aliases:
         return "fires_daily"
+    for a in aliases:
+        cols = {r[0] for r in con.execute(f"DESCRIBE {a}.fires_daily").fetchall()}
+        if "vn_b0" not in cols:
+            db = con.execute("SELECT path FROM duckdb_databases() WHERE database_name = ?", [a]).fetchone()[0]
+            raise RuntimeError(f"calibration_from: {db} es de una versión anterior del pipeline (sin los conteos "
+                               f"por tramo de FRP). Volver a correr ese lote desde `aggregate`.")
     parts = [f"SELECT {DAILY_COLS} FROM fires_daily"] + [f"SELECT {DAILY_COLS} FROM {a}.fires_daily" for a in aliases]
-    con.execute("CREATE OR REPLACE TEMP VIEW _calib_daily AS " + " UNION ALL ".join(parts))
+    # n_clusters_det se recalcula con los pesos de este lote: los otros pueden no haber corrido `detect`
+    # todavía, y con calibration_from los pesos son los mismos en todos.
+    join, expr = weights_join("u", region_sql(cfg, "u"))
+    con.execute(f"""CREATE OR REPLACE TEMP VIEW _calib_daily AS
+                    SELECT u.*, {expr} AS n_clusters_det FROM ({" UNION ALL ".join(parts)}) u {join}""")
     log.info("calibración común: fires_daily + %d bases de calibration_from", len(aliases))
     return "_calib_daily"
 
@@ -176,6 +188,8 @@ def _window(w: int) -> str:
 
 
 def run(cfg: Config, con) -> dict:
+    if con.execute("SELECT count(*) FROM fires_daily WHERE n_clusters_det IS NULL").fetchone()[0]:
+        raise RuntimeError("fires_daily no tiene n_clusters_det: correr `detect` después de `aggregate`")
     windows = fit_windows(cfg, con)
     con.execute("DELETE FROM calibration")
     con.execute("DELETE FROM calibration_boot")

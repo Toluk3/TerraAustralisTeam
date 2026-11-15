@@ -136,7 +136,22 @@ CREATE TABLE IF NOT EXISTS fires_daily (
     n_fires        INTEGER,   -- píxeles detectados
     n_clusters     INTEGER,   -- COUNT(DISTINCT (h3_r8, overpass_bucket))
     n_clusters_r7  INTEGER,   -- COUNT(DISTINCT (h3_r7, overpass_bucket))
-    frp_sum_mw     DOUBLE
+    frp_sum_mw     DOUBLE,
+    n_clusters_det DOUBLE,    -- n_clusters con los clusters VIIRS nocturnos pesados por detectabilidad (detect)
+    -- clusters VIIRS nocturnos por tramo de FRP (vn) y, de esos, con detección de Aqua en la misma celda r7
+    -- y noche (va). Tramos en pipeline/detect.py: < 1, 1–1,5, 1,5–2, 2–5, 5–10, ≥ 10 MW
+    vn_b0          INTEGER,
+    vn_b1          INTEGER,
+    vn_b2          INTEGER,
+    vn_b3          INTEGER,
+    vn_b4          INTEGER,
+    vn_b5          INTEGER,
+    va_b0          INTEGER,
+    va_b1          INTEGER,
+    va_b2          INTEGER,
+    va_b3          INTEGER,
+    va_b4          INTEGER,
+    va_b5          INTEGER
 );
 
 -- Factores k (§5.3): nivel × región × mes × día/noche × plataforma fuente × métrica
@@ -188,6 +203,7 @@ CREATE TABLE IF NOT EXISTS fires_monthly (
     n_clusters      INTEGER,
     n_clusters_r7   INTEGER,
     frp_sum_mw      DOUBLE,
+    n_clusters_det  DOUBLE,
     n_fire_days     INTEGER,
     n_equiv         DOUBLE,     -- métrica × k, aplicado por día (§5.4)
     n_equiv_series  DOUBLE,     -- parte de n_equiv que entra en la serie armonizada (§5.2)
@@ -209,6 +225,7 @@ CREATE TABLE IF NOT EXISTS fires_8d (
     n_clusters      INTEGER,
     n_clusters_r7   INTEGER,
     frp_sum_mw      DOUBLE,
+    n_clusters_det  DOUBLE,
     n_fire_days     INTEGER,
     n_equiv         DOUBLE,
     n_equiv_series  DOUBLE,
@@ -247,3 +264,31 @@ CREATE TABLE IF NOT EXISTS k_by_year (
 CREATE TABLE IF NOT EXISTS zone_cells (
     cell UBIGINT
 );
+
+-- Pesos de detectabilidad MODIS por tramo de FRP para los clusters VIIRS nocturnos (pipeline/detect.py)
+CREATE TABLE IF NOT EXISTS detect_weights (
+    level     VARCHAR,     -- detect_level (r1) | global
+    region    UBIGINT,     -- celda H3 del nivel; 0 en global
+    bin       INTEGER,     -- tramo de FRP (0–5)
+    n_viirs   BIGINT,      -- clusters VIIRS nocturnos del tramo (solo en global)
+    n_aqua    BIGINT,      -- de esos, con detección de Aqua (solo en global)
+    w         DOUBLE,      -- peso normalizado (Σ peso × clusters = Σ clusters en el total)
+    usable    BOOLEAN      -- la región tiene detect_min_count clusters en el tramo
+);
+
+-- Bases creadas antes de n_clusters_det: se agregan las columnas nuevas (los pasos insertan por nombre)
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS n_clusters_det DOUBLE;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS vn_b0 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS vn_b1 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS vn_b2 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS vn_b3 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS vn_b4 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS vn_b5 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS va_b0 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS va_b1 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS va_b2 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS va_b3 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS va_b4 INTEGER;
+ALTER TABLE fires_daily ADD COLUMN IF NOT EXISTS va_b5 INTEGER;
+ALTER TABLE fires_monthly ADD COLUMN IF NOT EXISTS n_clusters_det DOUBLE;
+ALTER TABLE fires_8d ADD COLUMN IF NOT EXISTS n_clusters_det DOUBLE;

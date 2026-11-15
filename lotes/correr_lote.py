@@ -2,7 +2,7 @@
 
   python lotes/correr_lote.py L2                 # pasos por defecto del lote + consolidar
   python lotes/correr_lote.py L1 --solo-consolidar
-  python lotes/correr_lote.py L2 --fase 1        # hasta aggregate; --fase 2 = de calibrate en adelante
+  python lotes/correr_lote.py L2 --fase 1        # hasta aggregate; --fase 2 = de detect en adelante
   bash lotes/correr_todos.sh                     # todos los lotes, en el orden que pide la calibración común
 
 Cada lote tiene su propia base (data/lotes/<L>/prehack.duckdb). Al terminar, sus tablas de resultados
@@ -28,8 +28,8 @@ from pipeline.__main__ import STEPS  # noqa: E402
 from pipeline.config import load_config  # noqa: E402
 from pipeline.db import connect, sql_str  # noqa: E402
 
-CORE = ["ingest", "normalize", "support", "aggregate", "calibrate", "rollup", "validate", "qc"]
-# Fase 1: hasta los agregados diarios. Fase 2: de la calibración en adelante. Los lotes con calibración
+CORE = ["ingest", "normalize", "support", "aggregate", "detect", "calibrate", "rollup", "validate", "qc"]
+# Fase 1: hasta los agregados diarios. Fase 2: de los pesos de detectabilidad (detect) en adelante. Los lotes con calibración
 # común (lotes/_comun.yaml) necesitan la fase 1 de todos antes de la fase 2 de cualquiera.
 FASE_1 = ["ingest", "normalize", "support", "aggregate"]
 # L1 y L5 tienen la zona de la demo; L1 además publica, para compararla con la corrida principal.
@@ -49,11 +49,12 @@ TABLES = {
     # serie mensual por región r3 (no por celda): alcanza para comparar k entre regiones (P1, P3)
     "monthly_r3": """SELECT region_r3, year, month, sensor, platform, is_day,
                             sum(n_fires) n_fires, sum(n_clusters) n_clusters, sum(n_clusters_r7) n_clusters_r7,
-                            sum(n_equiv) n_equiv, sum(n_equiv_series) n_equiv_series, any_value(config_hash) config_hash
+                            sum(n_clusters_det) n_clusters_det, sum(n_equiv) n_equiv, sum(n_equiv_series) n_equiv_series, any_value(config_hash) config_hash
                      FROM l.fires_monthly GROUP BY ALL""",
     # fires_daily por r2 × día: P3 (transferibilidad) necesita sumas por día para reajustar k
     "daily_r2": """SELECT region_r3, region_r2, local_date, platform, is_day,
-                          sum(n_fires) n_fires, sum(n_clusters) n_clusters, sum(n_clusters_r7) n_clusters_r7
+                          sum(n_fires) n_fires, sum(n_clusters) n_clusters, sum(n_clusters_r7) n_clusters_r7,
+                          sum(n_clusters_det) n_clusters_det
                    FROM l.fires_daily GROUP BY ALL""",
 }
 ZONE_TABLES = {"zone_series": "SELECT * FROM l.zone_series", "zone_baseline": "SELECT * FROM l.zone_baseline"}
@@ -93,6 +94,11 @@ def consolidate(lote: str, cfg, times: dict[str, float]) -> dict:
         exists = con.execute("SELECT count(*) FROM duckdb_tables() WHERE database_name = current_database() "
                              "AND table_name = ?", [name]).fetchone()[0]
         if exists:
+            # Una base consolidada de una versión anterior puede no tener columnas nuevas (n_clusters_det)
+            have = {r[0] for r in con.execute(f"DESCRIBE {name}").fetchall()}
+            for col, typ, *_ in con.execute(f"DESCRIBE {sel}").fetchall():
+                if col not in have:
+                    con.execute(f'ALTER TABLE {name} ADD COLUMN "{col}" {typ}')
             con.execute(f"DELETE FROM {name} WHERE lote = ?", [lote])
             con.execute(f"INSERT INTO {name} BY NAME {sel}")
         else:
