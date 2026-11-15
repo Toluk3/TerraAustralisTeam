@@ -230,6 +230,78 @@
       "terra": "Terra sola, convertida a escala MODIS"
     }
   },
+  "selwin": {
+    "title": "Detalle de la selección",
+    "collapse": "Plegar",
+    "expand": "Desplegar",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "kt": "mil t",
+      "mt": "Mt"
+    },
+    "activity": {
+      "of": "{n} de {of}",
+      "fireCells": "Celdas con fuego",
+      "fireArea": "Área de celdas con fuego",
+      "fireAreaNote": "(no es área quemada)",
+      "monthsWithFire": "Meses con fuego",
+      "peakMonth": "Mes pico",
+      "peakValue": "{month} · {v} focos eq."
+    },
+    "expl": {
+      "title": "Exploratorio: biomasa y CO₂",
+      "biomass": "biomasa quemada (materia seca)",
+      "co2": "CO₂ emitido",
+      "warn": "Estimación de primer orden, no validada. Calcularla con MODIS o con VIIRS cambia el resultado típicamente ×2 y hasta ×10: sirve para órdenes de magnitud, no para citar.",
+      "fre": "FRE total",
+      "peakDay": "Día pico (FRE)",
+      "frpSum": "ΣFRP",
+      "formula": "FRE = Σ días (ΣFRP de una familia de sensores ÷ pasadas nominales) × 86 400 s; biomasa = FRE × {coef} kg/MJ (Wooster et al. 2005); CO₂ = biomasa × {ef} kg/kg (Andreae 2019).",
+      "csv": "CSV exploratorio"
+    },
+    "det": {
+      "title": "Detecciones (descriptivo)",
+      "note": "Focos de FIRMS dentro de las celdas. No son comparables entre sensores ni entre años: para comparar, usar los focos equivalentes.",
+      "raw": "Detecciones crudas",
+      "dayNight": "({day} día · {night} noche)",
+      "byPlatform": "Por plataforma",
+      "frp": "FRP mediana / p90 / máx",
+      "days": "Días con detección",
+      "firstLast": "Primera / última",
+      "centroid": "Centroide (pond. FRP)"
+    },
+    "monthly": {
+      "title": "Detalle por mes",
+      "month": "Mes",
+      "nEquiv": "Focos eq.",
+      "origin": "Origen",
+      "cov": "Cob."
+    },
+    "charts": {
+      "fireByMonth": "Fuego por mes",
+      "fireByYear": "Fuego por año",
+      "partialYear": "{year} ({n} meses)",
+      "peak": "Pico en {when} con {v} focos equivalentes; {n} de {of} meses con fuego.",
+      "peakYears": "Pico en {when} con {v} focos equivalentes; {n} de {of} años con fuego.",
+      "noFire": "Sin fuego en la selección en este período.",
+      "sensors": "Qué detectó cada satélite",
+      "rawDet": "detecciones crudas",
+      "ratio": "VIIRS detectó {x} veces lo que MODIS: ve fuegos más chicos. Por eso la serie de arriba lleva todo a una escala común.",
+      "onlyModis": "En este período solo hay MODIS: VIIRS opera desde {since}.",
+      "noCompare": "Sin detecciones de los dos sensores para comparar en este período.",
+      "hint": "Pasá el mouse por el gráfico para ver los valores.",
+      "eqShort": "focos eq.",
+      "error": "No se pudieron cargar los gráficos.",
+      "keys": {
+        "obs": "MODIS directo",
+        "conv": "convertido a escala MODIS",
+        "band": "intervalo p05–p95",
+        "partial": "cobertura parcial",
+        "period": "período A"
+      }
+    }
+  },
   "charts": {
     "table": "Ver los datos como tabla",
     "month": "Mes",

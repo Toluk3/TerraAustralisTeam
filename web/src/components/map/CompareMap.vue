@@ -8,6 +8,7 @@
 import { computed, ref, shallowRef, watch, onBeforeUnmount, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
 import FireMap from './FireMap.vue';
+import SelectionWindow from '@/components/summary/SelectionWindow.vue';
 import MapLegend from './MapLegend.vue';
 import { analysis, setSplit, clampSplit, setMapApi, setLasso, monthIndex } from '@/stores/analysis.js';
 import { intlLocale } from '@/stores/ui.js';
@@ -182,6 +183,9 @@ defineExpose({ mapA, mapB, sameMonths });
       <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true"><path d="M10 3c4.4 0 7 2 7 4.5S14.4 12 10 12c-1.2 0-2.3-.1-3.2-.4M3 7.5C3 5 5.6 3 10 3M3 7.5c0 1.4.8 2.6 2.2 3.4M5.2 10.9 4 17l3-3.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
       <span>{{ t('map.lasso') }}</span>
     </button>
+
+    <!-- Ventana con el detalle de la selección (lo que la ficha de abajo no muestra) -->
+    <SelectionWindow v-if="analysis.selection" :selection="analysis.selection" :dataset="dataset" />
 
     <!-- Barra vertical -->
     <div v-if="mode === 'AB'" class="cmap__divider" :style="{ left: `${analysis.split * 100}%` }"
