@@ -13,8 +13,9 @@ let loading = null
 
 export function loadMapModule() {
   loading ??= (async () => {
-    const [mapModule, gameModule] = await Promise.all([
+    const [mapModule, timebarModule, gameModule] = await Promise.all([
       import('../../map/src/map/index.js'),
+      import('../../map/src/timebar/index.js'),
       import('../../map/src/game/index.js'),
     ])
     const configured = import.meta.env.VITE_MOCK_BASE
@@ -22,7 +23,7 @@ export function loadMapModule() {
       const source = mapModule.createStaticSource(`/${base.replace(/^\/+/, '')}`)
       try {
         await source.getMeta()
-        return { ...mapModule, ...gameModule, source }
+        return { ...mapModule, ...timebarModule, ...gameModule, source }
       } catch {
         // esa carpeta no está: se prueba la siguiente
       }

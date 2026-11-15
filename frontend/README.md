@@ -39,7 +39,7 @@ npm run build
 
 ## Mapa y juego
 
-`src/components/MapView.vue` monta el mapa de focos de [`map/`](map/README.md) (MapLibre + deck.gl) y el juego "Apagá los incendios" en las páginas Mapa y EduAustralis. El slider de la página Mapa elige el mes.
+`src/components/MapView.vue` monta el mapa de focos de [`map/`](map/README.md) (MapLibre + deck.gl) en las páginas Mapa y EduAustralis. La página Mapa lleva debajo la barra de tiempo del mismo módulo (`<MapView timebar />`); el juego "Apagá los incendios" solo aparece en EduAustralis (`<MapView game />`).
 
 - **Datos:** el mapa lee los JSON de `map/public/mock-*` (no están en Git: se generan con `map/scripts/build_mocks.py` o se bajan del release, ver `map/README.md`). `npm run dev` y `npm run preview` los sirven en `/mock-*`. Se usa la primera carpeta que exista entre `mock-s1`, `mock-conosur` y `mock-api`, o la de `VITE_MOCK_BASE`.
 - **Build:** `npm run build` no copia los datos a `dist/`; el servidor web tiene que publicarlos en `/<carpeta>/` (p. ej. `/mock-s1/`). **Pendiente:** `scripts/deploy_vps.sh` todavía no los publica; sin ellos el marco del mapa muestra "No se pudo cargar el mapa".

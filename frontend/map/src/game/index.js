@@ -219,7 +219,9 @@ export function createFireGame(fireMap, options = {}) {
 
   function fit(animate = false) {
     // Arriba queda el marcador y abajo, los mensajes
-    map.fitBounds(board?.bounds ?? bbox, { padding: { top: 70, bottom: 100, left: 24, right: 24 }, animate });
+    const h = map.getContainer().clientHeight;
+    map.fitBounds(board?.bounds ?? bbox, {
+      padding: { top: Math.min(70, h * 0.16), bottom: Math.min(100, h * 0.22), left: 24, right: 24 }, animate });
   }
   // En el próximo turno: el mapa también reencuadra al cambiar de tamaño, y tiene que ganar este encuadre
   const onResize = () => setTimeout(() => { if (phase !== 'closed') fit(); }, 0);
@@ -292,7 +294,8 @@ export function createFireGame(fireMap, options = {}) {
     if (phase !== 'closed') return;
     phase = 'intro';
     const vis = fireMap.getState().layers;
-    saved = { layers: { ...vis }, center: map.getCenter(), zoom: map.getZoom() };
+    saved = { layers: { ...vis }, center: map.getCenter(), zoom: map.getZoom(), minZoom: map.getMinZoom() };
+    map.setMinZoom(0); // en un marco chico, el tablero de una zona grande no entra con el zoom mínimo del mapa
     fireMap.setLassoMode(false);
     fireMap.clearSelection();
     // Se apagan todas las capas del mapa: el tablero se redibuja en cada cuadro y el contorno de una zona
@@ -352,6 +355,7 @@ export function createFireGame(fireMap, options = {}) {
     root.classList.remove('tam-map--game');
     fireMap.setExtraLayers([]);
     for (const name of MAP_LAYERS) fireMap.setLayerVisible(name, saved.layers[name]);
+    map.setMinZoom(saved.minZoom);
     map.jumpTo({ center: saved.center, zoom: saved.zoom });
     emit('exit');
   }
