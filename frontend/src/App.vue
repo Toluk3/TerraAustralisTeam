@@ -1,5 +1,5 @@
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import MapSlider from './components/MapSlider.vue'
 import MapView from './components/MapView.vue'
 import RocketTrajectory from './components/RocketTrajectory.vue'
@@ -516,10 +516,27 @@ const passingClouds = [
   { id: 5, top: '30%', scale: 0.7, opacity: 0.35, duration: '34s', delay: '-26s' },
 ]
 
+// The slider picks the month shown on the map: its value is an index into the
+// list of months the map reports once it has loaded.
 const mapValue = ref(0)
+const mapMonths = ref([])
+const MONTH_NAMES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto',
+  'septiembre', 'octubre', 'noviembre', 'diciembre']
+const mapMonthLabel = computed(() => {
+  const month = mapMonths.value[mapValue.value]
+  if (!month) return 'Mes del mapa'
+  const [year, m] = month.split('-')
+  return `Mes del mapa: ${MONTH_NAMES[Number(m) - 1]} de ${year}`
+})
+
+async function onMapReady({ months, index }) {
+  mapMonths.value = months
+  await nextTick() // the slider needs its new range before the value
+  mapValue.value = index
+}
 
 const pages = [
-  { id: 'mapa', label: 'Mapa', heading: 'Mapa', text: 'Mapa page content goes here.' },
+  { id: 'mapa', label: 'Mapa', heading: 'Mapa' },
   { id: 'about', label: 'Acerca del Equipo', heading: 'This is the Terra Australis team!' },
   { id: 'projects', label: '¿Cómo funciona?', heading: '¿Cómo funciona?' },
   { id: 'simplified', label: 'Cómo funciona: Simplificado', heading: 'Cómo funciona: Simplificado' },
@@ -624,8 +641,12 @@ const pages = [
               <h1 :id="`${page.id}-heading`">{{ page.heading }}</h1>
               <p v-if="page.text">{{ page.text }}</p>
               <template v-if="page.id === 'mapa'">
-                <MapView />
-                <MapSlider v-model="mapValue" label="Mapa slider" />
+                <MapView :month-index="mapMonths.length ? mapValue : null" @ready="onMapReady" />
+                <MapSlider
+                  v-model="mapValue"
+                  :max="Math.max(1, mapMonths.length - 1)"
+                  :label="mapMonthLabel"
+                />
               </template>
 
               <!-- EduAustralis: the same map, with the milestone cards around it -->
