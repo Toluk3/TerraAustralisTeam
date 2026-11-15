@@ -38,7 +38,8 @@ const defaults = () => ({
   mode: 'AB',          // 'A' | 'AB' | 'B'
   split: 0.5,
   view: 'value',       // 'value' | 'anomaly' | 'diff'
-  layers: { cells: true, points: true, outline: true, mask: true },
+  // La máscara (todo menos la zona) va siempre; el contorno de la zona no se dibuja
+  layers: { cells: true, points: true, outline: false, mask: true },
   opacity: 0.75,
   selection: null,     // payload del evento `selection` de la instancia A, o null
   lasso: false,

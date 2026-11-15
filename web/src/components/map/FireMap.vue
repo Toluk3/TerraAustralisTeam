@@ -13,7 +13,7 @@ const props = defineProps({
   dataset: { type: Object, required: true },          // { source, meta }
   period: { type: Object, required: true },           // { from, to } 'YYYY-MM'
   view: { type: String, default: 'value' },           // 'value' | 'anomaly' | 'diff'
-  layers: { type: Object, default: () => ({ cells: true, points: true, outline: true, mask: true }) },
+  layers: { type: Object, default: () => ({ cells: true, points: true, outline: false, mask: true }) },
   opacity: { type: Number, default: 0.75 },
   selectable: { type: Boolean, default: true },
   diff: { type: Object, default: null },              // { a: {from,to}, b: {from,to} } o null

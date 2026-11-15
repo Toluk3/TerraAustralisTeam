@@ -52,17 +52,18 @@ export function outlineBounds(outline) {
 }
 
 /**
- * Máscara: oscurece todo lo que no se analizó. Devuelve dos capas (van con `...` en la lista de capas).
+ * Máscara: oscurece todo el mapa salvo la zona analizada. Devuelve dos capas (van con `...` en la lista de
+ * capas).
  *
- * Una caja holgada alrededor de la zona se pinta en todas partes salvo donde está la zona (máscara
- * invertida de la GPU). No se arma como un polígono con la zona de agujero: si la zona son varios países,
- * los agujeros comparten fronteras, la triangulación se rompe y tapa países enteros (Uruguay, Paraguay).
+ * Una caja que cubre el mundo entero se pinta en todas partes salvo donde está la zona (máscara invertida
+ * de la GPU). Va de −540° a 540° de longitud para tapar también las copias del mundo que MapLibre repite a
+ * los costados con zoom lejano, y hasta el límite de Web Mercator en latitud. No se arma como un polígono
+ * con la zona de agujero: si la zona son varios países, los agujeros comparten fronteras, la triangulación
+ * se rompe y tapa países enteros (Uruguay, Paraguay).
  */
+const MERCATOR_LAT = 85.0511;
 export function maskLayer(outline, { visible = true, opacity = 0.35, beforeId } = {}) {
-  const [[w, s], [e, n]] = outlineBounds(outline);
-  const pad = Math.max(20, (e - w) * 0.6, (n - s) * 0.6);
-  const W = Math.max(-179.9, w - pad), E = Math.min(179.9, e + pad);
-  const S = Math.max(-84, s - pad), N = Math.min(84, n + pad);
+  const W = -540, E = 540, S = -MERCATOR_LAT, N = MERCATOR_LAT;
   const box = [[W, S], [E, S], [E, N], [W, N], [W, S]];
   return [
     // Mismo beforeId que la caja: en el modo intercalado de MapLibre, deck.gl dibuja las capas por grupo de

@@ -6,7 +6,7 @@ import { analysis, setView } from '@/stores/analysis.js';
 
 const { t } = useI18n();
 const open = ref(false); // cajón en pantallas angostas
-const layers = ['cells', 'points', 'mask', 'outline'];
+const layers = ['cells', 'points'];
 const singleMonth = computed(() => analysis.periodA.from === analysis.periodA.to);
 const views = computed(() => [
   { id: 'value', disabled: false, note: null },
