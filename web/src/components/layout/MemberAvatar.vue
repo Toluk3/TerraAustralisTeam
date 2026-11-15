@@ -17,9 +17,7 @@ defineProps({
 .avatar { border-radius: 50%; object-fit: cover; display: block; }
 .avatar--empty {
   width: var(--s); height: var(--s); display: grid; place-items: center;
-  background: #d9d8d3; color: #4a4b4f; font-weight: 400; letter-spacing: 0.02em;
+  background: var(--pill); color: var(--muted); font-weight: 400; letter-spacing: 0.02em;
   font-size: calc(var(--s) * 0.26);
 }
-:global(:root[data-theme='dark']) .avatar--empty { background: #2c2f34; color: #c5c7cc; }
-@media (prefers-color-scheme: dark) { :global(:root:not([data-theme])) .avatar--empty { background: #2c2f34; color: #c5c7cc; } }
 </style>
