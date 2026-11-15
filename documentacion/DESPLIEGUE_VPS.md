@@ -36,3 +36,12 @@ bash scripts/deploy_vps.sh
 ```
 
 El script instala las dependencias de `frontend/`, compila esa app Vue y publica `frontend/dist/` en `/var/www/terra-australis`. Luego configura Nginx para redirigir HTTP a HTTPS y servir el contenido, y habilita Nginx al iniciar el sistema. La web queda disponible en `https://www.terraaustralis.space/`.
+
+## Pendiente: publicar el frontend científico (`web/`)
+
+El frontend científico vive en `web/` (ver [`../web/README.md`](../web/README.md)). **El script todavía no lo publica**: sigue compilando `frontend/` (EduAustralis). El cambio previsto, sin aplicar porque `scripts/` queda fuera del alcance de la rama `feature/frontend-cientifico` hasta que el equipo lo apruebe:
+
+1. Compilar `web/` con `VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/ npm run build` y publicar `web/dist/` en la raíz (`/var/www/terra-australis`), con `rsync --delete --exclude '/edu/' --exclude '/mock-s1/'` para no borrar lo que se publica aparte.
+2. Si existe `frontend/`, compilar EduAustralis con `npm run build -- --base=/edu/` y publicarlo en `/var/www/terra-australis/edu/`.
+3. Copiar la carpeta `mock-s1/` (release `datos-s1-2026-11-15`, `S1_mapa_mock-s1.zip`) a `/var/www/terra-australis/mock-s1/`; sin ella la pantalla Análisis muestra "sin datos".
+4. Nginx no cambia: la app usa historial con `#`, así que `try_files $uri $uri/ =404` alcanza. Opcional: `Cache-Control` para `/mock-s1/`.
