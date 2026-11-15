@@ -5,13 +5,13 @@ import { ui, setLocale, toggleTheme, effectiveTheme } from '@/stores/ui.js';
 
 const { t } = useI18n();
 const REPO = 'https://github.com/Toluk3/TerraAustralisTeam';
-const EDU = import.meta.env.VITE_EDU_URL || '/edu/';
 
 const links = [
   { to: '/', key: 'nav.home', name: 'home' },
   { to: '/analisis', key: 'nav.analysis', name: 'analysis' },
   { to: '/proyecto', key: 'nav.project', name: 'project' },
   { to: '/equipo', key: 'nav.team', name: 'team' },
+  { to: '/edu', label: 'EduAustralis', name: 'edu' },
 ];
 
 // --nav-h sigue el alto real de la barra (bajo 1100 px pasa a dos filas): las pantallas de una
@@ -42,10 +42,9 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
         <ul>
           <li v-for="l in links" :key="l.to">
             <RouterLink :to="l.to" v-slot="{ href, navigate, isExactActive }" custom>
-              <a :href="href" class="nav__link" :class="{ 'is-active': isExactActive }" :aria-current="isExactActive ? 'page' : undefined" @click="navigate">{{ t(l.key) }}</a>
+              <a :href="href" class="nav__link" :class="{ 'is-active': isExactActive }" :aria-current="isExactActive ? 'page' : undefined" @click="navigate">{{ l.label ?? t(l.key) }}</a>
             </RouterLink>
           </li>
-          <li><a :href="EDU" class="nav__link">EduAustralis</a></li>
         </ul>
       </nav>
 

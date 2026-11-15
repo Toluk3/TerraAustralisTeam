@@ -19,8 +19,8 @@ function skip() {
 watch(
   () => [route.name, locale.value],
   () => {
-    const page = { home: null, analysis: 'nav.analysis', project: 'nav.project', team: 'nav.team' }[route.name];
-    document.title = page ? `${t(page)} · Terra Australis` : `Terra Australis · ${t('meta.title')}`;
+    const page = { home: null, analysis: 'nav.analysis', project: 'nav.project', team: 'nav.team', edu: 'EduAustralis' }[route.name];
+    document.title = page ? `${page.startsWith('nav.') ? t(page) : page} · Terra Australis` : `Terra Australis · ${t('meta.title')}`;
     document.querySelector('meta[name="description"]')?.setAttribute('content', t('meta.description'));
   },
   { immediate: true },

@@ -8,7 +8,6 @@ import { intlLocale } from '@/stores/ui.js';
 
 const { t, locale } = useI18n();
 const { liveText, years } = useLiveFigure();
-const EDU = import.meta.env.VITE_EDU_URL || '/edu/';
 
 // Hero: los 6 integrantes con el logo en el medio (3 + logo + 3)
 const left = team.slice(0, 3);
@@ -157,7 +156,7 @@ onBeforeUnmount(() => {
         <h2 id="close-title">{{ t('home.close.title') }}</h2>
         <div class="close__actions">
           <RouterLink to="/analisis" class="btn btn--xl">{{ t('home.cta') }}</RouterLink>
-          <a :href="EDU" class="link">{{ t('home.close.edu') }}</a>
+          <RouterLink to="/edu" class="link">{{ t('home.close.edu') }}</RouterLink>
         </div>
       </div>
     </section>
