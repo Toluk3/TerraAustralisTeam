@@ -1,11 +1,12 @@
 /** Capas de deck.gl: máscara y contorno de la zona, grilla H3 armonizada y focos. */
 import { GeoJsonLayer, ScatterplotLayer } from '@deck.gl/layers';
 import { H3HexagonLayer } from '@deck.gl/geo-layers';
-import { DataFilterExtension } from '@deck.gl/extensions';
+import { DataFilterExtension, MaskExtension } from '@deck.gl/extensions';
 import { VIRIDIS, PUOR, FIRE, ramp, logScale, anomalyT, frpT } from './colors.js';
 
 // Una sola instancia: si cambia entre renders, deck.gl vuelve a inicializar la capa.
 const DATE_FILTER = new DataFilterExtension({ filterSize: 1 });
+const ZONE_MASK = new MaskExtension();
 
 /**
  * Suma n_equiv por celda sobre las tablas mensuales del período. `value` es el promedio mensual (lo que
@@ -50,18 +51,30 @@ export function outlineBounds(outline) {
   return b;
 }
 
+/**
+ * Máscara: oscurece todo lo que no se analizó. Devuelve dos capas (van con `...` en la lista de capas).
+ *
+ * Una caja holgada alrededor de la zona se pinta en todas partes salvo donde está la zona (máscara
+ * invertida de la GPU). No se arma como un polígono con la zona de agujero: si la zona son varios países,
+ * los agujeros comparten fronteras, la triangulación se rompe y tapa países enteros (Uruguay, Paraguay).
+ */
 export function maskLayer(outline, { visible = true, opacity = 0.35, beforeId } = {}) {
-  // Caja holgada alrededor de la zona, con la zona como agujero: oscurece todo lo que no se analizó.
   const [[w, s], [e, n]] = outlineBounds(outline);
   const pad = Math.max(20, (e - w) * 0.6, (n - s) * 0.6);
   const W = Math.max(-179.9, w - pad), E = Math.min(179.9, e + pad);
   const S = Math.max(-84, s - pad), N = Math.min(84, n + pad);
   const box = [[W, S], [E, S], [E, N], [W, N], [W, S]];
-  const data = { type: 'Feature', geometry: { type: 'Polygon', coordinates: [box, ...outerRings(outline)] } };
-  return new GeoJsonLayer({
-    id: 'zone-mask', data, visible, beforeId, stroked: false, filled: true,
-    getFillColor: [15, 20, 30, Math.round(255 * opacity)], pickable: false,
-  });
+  return [
+    // Mismo beforeId que la caja: en el modo intercalado de MapLibre, deck.gl dibuja las capas por grupo de
+    // beforeId y la forma de la máscara tiene que estar en el grupo de la capa que la usa.
+    new GeoJsonLayer({ id: 'zone-mask-shape', data: outline, operation: 'mask', beforeId, stroked: false, filled: true }),
+    new GeoJsonLayer({
+      id: 'zone-mask', data: { type: 'Feature', geometry: { type: 'Polygon', coordinates: [box] } },
+      visible, beforeId, stroked: false, filled: true, pickable: false,
+      getFillColor: [15, 20, 30, Math.round(255 * opacity)],
+      extensions: [ZONE_MASK], maskId: 'zone-mask-shape', maskInverted: true,
+    }),
+  ];
 }
 
 export function outlineLayer(outline, { visible = true, beforeId } = {}) {

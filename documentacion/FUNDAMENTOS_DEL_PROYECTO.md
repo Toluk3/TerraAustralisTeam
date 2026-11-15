@@ -67,6 +67,7 @@ Demostración local del mapa y la barra de tiempo
 | Ingesta, normalización, calibración, validación y exportación | Implementados en `pipeline/`; los datos de ejecución no se versionan. |
 | Resúmenes de análisis por lotes | Hay resúmenes versionados para L1, L2 y L3. |
 | Frontend del mapa y la barra temporal | Implementado; preparado para datos JSON generados a partir de `data/publish/`. |
+| Muestra S1 (6 países de Sudamérica, 2018–2025) | Corrida con el pipeline corregido el 2026-11-15; datos procesados descargables. Ver [`REGISTRO_S1.md`](REGISTRO_S1.md). |
 | Adaptador frontend para una API | Presente como opción de integración; no demuestra la existencia de un backend. |
 | Backend Django, API y despliegue en Cloud Run | No implementados en este repositorio. |
 | Publicación web pública | No verificable con la evidencia versionada disponible. |

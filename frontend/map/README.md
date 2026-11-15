@@ -141,6 +141,10 @@ python frontend/map/scripts/build_mocks.py --publish data/lotes/S1/publish --out
 # http://localhost:5173/?datos=mock-s1
 ```
 
+**Sin correr el pipeline:** los JSON de S1 ya generados están en el release [`datos-s1-2026-11-15`](https://github.com/Toluk3/TerraAustralisTeam/releases/tag/datos-s1-2026-11-15) (`S1_mapa_mock-s1.zip`). Descomprimirlo dentro de `public/` (queda `public/mock-s1/`), `npm run dev` y abrir `?datos=mock-s1`. Detalle en [`documentacion/REGISTRO_S1.md`](../../documentacion/REGISTRO_S1.md).
+
+**Máscara con varios países:** `maskLayer()` usa la `MaskExtension` de deck.gl invertida y devuelve dos capas (`...maskLayer(...)`). No usar un polígono con la zona como agujero: si los países comparten fronteras, la triangulación tapa países enteros. La capa de máscara necesita el mismo `beforeId` que la caja, porque en modo intercalado deck.gl dibuja por grupos de `beforeId`.
+
 ## Limitaciones conocidas
 
 - **`anomaly_pct` por celda casi siempre es `null`:** en r6 y r7 la mediana mensual de una celda suele ser 0, y esas celdas se pintan en gris. La anomalía útil es la de la zona entera, que es la que muestra la barra de tiempo.

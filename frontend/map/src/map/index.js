@@ -265,7 +265,7 @@ export async function createFireMap(container, options = {}) {
     const { res, period, layers: vis, beforeId } = state;
     const metric = effectiveMetric();
     const layers = [
-      maskLayer(meta.outline, { visible: vis.mask, opacity: opts.maskOpacity, beforeId }),
+      ...maskLayer(meta.outline, { visible: vis.mask, opacity: opts.maskOpacity, beforeId }),
       hexLayer(state.cells.rows, { res, domain: meta.map.domain[res] ?? 1, metric, opacity: state.hexOpacity,
         visible: vis.cells, beforeId }),
       outlineLayer(meta.outline, { visible: vis.outline, beforeId }),

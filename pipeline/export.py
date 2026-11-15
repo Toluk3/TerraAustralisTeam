@@ -63,11 +63,16 @@ def run(cfg: Config, con) -> dict:
                        WHERE period_kind = 'month' AND coverage_frac = 1),
             -- la mediana se toma solo con los meses completos del período base (baseline_years)
             ok_months AS (SELECT * FROM ok_all WHERE {cfg.baseline_sql()}),
-            cells AS (SELECT DISTINCT cell FROM m),
-            full_grid AS (SELECT c.cell, o.year, o.month, coalesce(m.n_equiv, 0) AS v
-                          FROM cells c CROSS JOIN ok_months o
-                          LEFT JOIN m ON m.cell = c.cell AND m.year = o.year AND m.month = o.month),
-            med AS (SELECT cell, month, median(v) AS median FROM full_grid GROUP BY ALL)
+            -- Mediana sobre todos los meses base, incluidos los meses sin focos (valor 0). En vez de armar la
+            -- grilla completa celda × mes (no entra en memoria a escala continental), se juntan solo los
+            -- valores > 0 de cada celda y se completan con tantos ceros como meses base falten.
+            n_ok AS (SELECT month, count(*) AS n FROM ok_months GROUP BY month),
+            nz AS (SELECT m.cell, m.month, list(m.n_equiv::DOUBLE) AS vals
+                   FROM m JOIN ok_months o ON o.year = m.year AND o.month = m.month GROUP BY ALL),
+            med AS (SELECT nz.cell, nz.month,
+                           list_aggregate(list_concat(vals, list_resize([0::DOUBLE], n_ok.n - len(vals), 0::DOUBLE)),
+                                          'median') AS median
+                    FROM nz JOIN n_ok USING (month))
             SELECT m.cell, m.year, m.month, m.n_equiv,
                    -- sin anomalía en meses de cobertura parcial: el valor está subestimado
                    CASE WHEN ok.year IS NOT NULL AND med.median > 0
