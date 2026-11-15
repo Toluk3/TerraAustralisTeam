@@ -36,6 +36,8 @@ En Windows:
 
 La ejecución completa de descarga y pipeline se describe en [`pipeline/README.md`](pipeline/README.md) y en los casos de uso. Para iniciar el mapa se requiere primero una publicación del pipeline y después generar los JSON según [`frontend/map/README.md`](frontend/map/README.md).
 
+Para desplegar la web en una VPS usando los datos ya procesados, consultar [`documentacion/DESPLIEGUE_VPS.md`](documentacion/DESPLIEGUE_VPS.md).
+
 ## Componentes
 
 | Carpeta | Función |
