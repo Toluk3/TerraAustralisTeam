@@ -40,6 +40,8 @@ Si cambia la configuración hay que volver a correr desde `support`: `rollup` y 
 - `data/`: Parquet de entrada transformada, datos intermedios y productos locales.
 - `data/publish/`: exportación para consumo posterior, incluida la preparación del frontend.
 
+El paso `export` calcula la mediana por celda de `map/` sin armar la grilla completa celda × mes (la versión anterior se quedaba sin memoria en zonas de varios países; ver [`documentacion/REGISTRO_S1.md`](../documentacion/REGISTRO_S1.md)).
+
 El frontend crea sus archivos JSON estáticos desde `data/publish/` mediante `frontend/map/scripts/build_mocks.py`. El cierre actual no depende de un backend Django ni de subir los datos a un bucket.
 
 ## Estado y decisiones pendientes

@@ -17,6 +17,10 @@ Comenzar por [`FUNDAMENTOS_DEL_PROYECTO.md`](FUNDAMENTOS_DEL_PROYECTO.md). Resum
 
 Estos documentos describen el sistema actual y las tareas que todavía están abiertas. Las propuestas técnicas previas solo se conservan cuando ayudan a explicar una decisión o una limitación.
 
+## Registros de corridas y correcciones
+
+- [`REGISTRO_S1.md`](REGISTRO_S1.md) (2026-11-15): corrida S1 (6 países, 2018–2025) con el pipeline corregido, arreglo de memoria en `export`, arreglo de la máscara del mapa para zonas de varios países, y descarga de los datos ya procesados.
+
 ## Registros de auditoría y antecedentes
 
 - [`AUDITORIA_2`](AUDITORIA_2) y [`AUDITORIA_COHERENCIA.md`](AUDITORIA_COHERENCIA.md) documentan la comparación entre las propuestas iniciales y la implementación observada.

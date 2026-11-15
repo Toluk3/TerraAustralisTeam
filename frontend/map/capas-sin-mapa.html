@@ -24,7 +24,7 @@ for (const m of months) {
 const rows = aggregateCells(cells, months.length);
 new Deck({ parent: document.getElementById('c'),
   initialViewState: { longitude: Number(p.get('lon') || -68.5), latitude: Number(p.get('lat') || -39.5), zoom: Number(p.get('z') || 5.3) }, controller: true,
-  layers: [maskLayer(meta.outline), hexLayer(rows, { res, domain: meta.map.domain[res], metric: p.get('metric') || 'value', opacity: 0.8, visible: true }),
+  layers: [...maskLayer(meta.outline),hexLayer(rows, { res, domain: meta.map.domain[res], metric: p.get('metric') || 'value', opacity: 0.8, visible: true }),
     outlineLayer(meta.outline), ...chunks.map((c) => pointsLayer(c.id, c.table, { d0: period.d0, d1: period.d1, fade: true, visible: true }))] });
 window.check = { cells: rows.length, points: chunks.reduce((a, c) => a + c.table.length, 0) };
 </script></body></html>
