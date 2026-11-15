@@ -230,6 +230,57 @@
       "terra": "Terra only, converted to the MODIS scale"
     }
   },
+  "selwin": {
+    "title": "Selection detail",
+    "open": "Selection detail",
+    "close": "Close window",
+    "collapse": "Collapse",
+    "expand": "Expand",
+    "units": {
+      "kg": "kg",
+      "t": "t",
+      "kt": "kt",
+      "mt": "Mt"
+    },
+    "activity": {
+      "of": "{n} of {of}",
+      "fireCells": "Cells with fire",
+      "fireArea": "Area of cells with fire",
+      "fireAreaNote": "(not burned area)",
+      "monthsWithFire": "Months with fire",
+      "peakMonth": "Peak month",
+      "peakValue": "{month} · {v} eq. hotspots"
+    },
+    "expl": {
+      "title": "Exploratory: biomass and CO₂",
+      "biomass": "biomass burned (dry matter)",
+      "co2": "CO₂ emitted",
+      "warn": "First-order estimate, not validated. Computing it with MODIS or with VIIRS typically changes the result ×2 and up to ×10: good for orders of magnitude, not for citing.",
+      "fre": "Total FRE",
+      "peakDay": "Peak day (FRE)",
+      "frpSum": "ΣFRP",
+      "formula": "FRE = Σ days (ΣFRP of one sensor family ÷ nominal overpasses) × 86,400 s; biomass = FRE × {coef} kg/MJ (Wooster et al. 2005); CO₂ = biomass × {ef} kg/kg (Andreae 2019).",
+      "csv": "Exploratory CSV"
+    },
+    "det": {
+      "title": "Detections (descriptive)",
+      "note": "FIRMS hotspots inside the cells. Not comparable across sensors or years: to compare, use equivalent hotspots.",
+      "raw": "Raw detections",
+      "dayNight": "({day} day · {night} night)",
+      "byPlatform": "By platform",
+      "frp": "FRP median / p90 / max",
+      "days": "Days with detections",
+      "firstLast": "First / last",
+      "centroid": "Centroid (FRP-weighted)"
+    },
+    "monthly": {
+      "title": "Monthly detail",
+      "month": "Month",
+      "nEquiv": "Eq. hotspots",
+      "origin": "Origin",
+      "cov": "Cov."
+    }
+  },
   "charts": {
     "table": "Show the data as a table",
     "month": "Month",
