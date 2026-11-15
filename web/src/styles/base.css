@@ -1,0 +1,150 @@
+/* Fuentes autoalojadas, solo los subconjuntos latinos (ES/EN) */
+@import '@fontsource/poppins/latin-300.css';
+@import '@fontsource/poppins/latin-ext-300.css';
+@import '@fontsource/poppins/latin-400.css';
+@import '@fontsource/poppins/latin-ext-400.css';
+@import '@fontsource/poppins/latin-500.css';
+@import '@fontsource/poppins/latin-ext-500.css';
+@import '@fontsource/montserrat/latin-800.css';
+@import '@fontsource/montserrat/latin-ext-800.css';
+@import './tokens.css';
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: calc(var(--nav-h) + 16px); }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.6 var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  transition: background-color var(--t-in) var(--ease), color var(--t-in) var(--ease);
+}
+img, svg, canvas { display: block; max-width: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+a { color: inherit; }
+p { margin: 0 0 1em; }
+
+h1, h2 { font-family: var(--font-body); font-weight: 300; letter-spacing: -0.02em; line-height: 1.08; margin: 0; }
+h1 { font-size: clamp(2.3rem, 5.2vw, 4.4rem); }
+h2 { font-size: clamp(1.9rem, 3.6vw, 3rem); }
+h3 { font-family: var(--font-body); font-weight: 400; font-size: 1.25rem; line-height: 1.3; margin: 0; letter-spacing: -0.005em; }
+
+.brand-word {
+  font-family: var(--font-brand);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.88;
+  letter-spacing: -0.01em;
+}
+
+.wrap { width: 100%; max-width: calc(var(--wrap) + 2 * var(--gutter)); margin-inline: auto; padding-inline: var(--gutter); }
+.wrap--wide { max-width: calc(var(--wrap-wide) + 2 * var(--gutter)); }
+
+.muted { color: var(--muted); }
+.visually-hidden {
+  position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0);
+  clip-path: inset(50%); white-space: nowrap; border: 0; padding: 0; margin: -1px;
+}
+
+.skip-link {
+  position: fixed; top: 12px; left: 12px; z-index: 1000;
+  background: var(--btn-bg); color: var(--btn-ink); padding: 12px 18px; border-radius: var(--radius-pill);
+  text-decoration: none; transform: translateY(-160%); transition: transform var(--t-in) var(--ease);
+}
+.skip-link:focus { transform: none; }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+
+/* --- Botón: una sola familia (píldora) --- */
+.btn {
+  --btn-h: 44px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.5em;
+  min-height: var(--btn-h); padding: 0 1.35em;
+  border: 1px solid transparent; border-radius: var(--radius-pill);
+  background: var(--btn-bg); color: var(--btn-ink);
+  font-weight: 400; font-size: 0.98rem; line-height: 1; text-decoration: none; white-space: nowrap;
+  transition: transform var(--t-in) var(--ease), background-color var(--t-in) var(--ease), border-color var(--t-in) var(--ease), box-shadow var(--t-in) var(--ease);
+}
+.btn:hover { transform: translateY(-1px); background: var(--btn-bg-hover); }
+.btn:active { transform: translateY(0) scale(0.985); transition-duration: var(--t-out); }
+.btn:focus-visible { outline-offset: 3px; border-radius: var(--radius-pill); }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn--xl { --btn-h: 60px; padding: 0 2.1em; font-size: 1.2rem; }
+.btn--sm { --btn-h: 36px; padding: 0 1em; font-size: 0.88rem; }
+.btn--ghost { background: transparent; color: var(--ink); border-color: var(--line-strong); }
+.btn--ghost:hover { background: var(--surface-2); }
+.btn--ghost[aria-pressed='true'] { background: var(--period-a-bg); color: var(--period-a); border-color: var(--period-a); }
+
+/* --- Enlace: el subrayado se dibuja de izquierda a derecha --- */
+.link {
+  color: inherit; text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px; background-position: 0 100%; background-repeat: no-repeat;
+  transition: background-size 260ms var(--ease);
+  padding-bottom: 2px;
+}
+.link:hover, .link:focus-visible { background-size: 100% 1px; }
+.link--under { background-size: 100% 1px; }
+.link--under:hover { background-size: 0% 1px; background-position: 100% 100%; }
+
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); flex: none; }
+
+/* --- Tarjeta: una sola familia --- */
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius-m);
+  padding: clamp(16px, 2vw, 22px);
+}
+a.card { display: block; text-decoration: none; transition: transform var(--t-in) var(--ease), border-color var(--t-in) var(--ease); }
+a.card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+
+/* --- Píldora / chip --- */
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 12px;
+  border: 1px solid var(--line-strong); border-radius: var(--radius-pill); font-size: 0.85rem; color: var(--ink-2);
+  background: var(--surface);
+}
+.chip--a { color: var(--period-a); border-color: var(--period-a); background: var(--period-a-bg); }
+.chip--b { color: var(--period-b); border-color: var(--period-b); background: var(--period-b-bg); }
+.chip--warn { color: var(--warn); border-color: currentColor; background: var(--warn-bg); }
+
+/* --- Control segmentado (A | AB | B, Valor | Anomalía, ES | EN) --- */
+.seg { display: inline-flex; border: 1px solid var(--line-strong); border-radius: var(--radius-pill); overflow: hidden; background: var(--surface); }
+.seg > button {
+  border: 0; background: transparent; min-height: 36px; min-width: 44px; padding: 0 14px;
+  font-size: 0.88rem; color: var(--muted); transition: background-color var(--t-in) var(--ease), color var(--t-in) var(--ease);
+}
+.seg > button + button { border-left: 1px solid var(--line-strong); }
+.seg > button:hover { color: var(--ink); background: var(--surface-2); }
+.seg > button[aria-pressed='true'] { background: var(--period-a-bg); color: var(--period-a); font-weight: 500; }
+.seg > button:focus-visible { outline-offset: -3px; }
+
+/* --- Entrada del hero: una sola vez al cargar --- */
+[data-enter] > * , [data-enter-item] {
+  animation: enter 900ms var(--ease-enter) both;
+  animation-delay: calc(var(--i, 0) * 90ms + 60ms);
+}
+@keyframes enter {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* --- Esqueleto de carga --- */
+.skeleton {
+  background: linear-gradient(90deg, var(--surface-2) 0%, var(--pill) 50%, var(--surface-2) 100%);
+  background-size: 200% 100%; animation: shimmer 1.4s linear infinite; border-radius: var(--radius-s);
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  [data-enter] > *, [data-enter-item] { opacity: 1 !important; transform: none !important; }
+}

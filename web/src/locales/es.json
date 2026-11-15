@@ -1,0 +1,93 @@
+{
+  "meta": {
+    "title": "Armonización MODIS y VIIRS",
+    "description": "Serie armonizada de focos de calor MODIS y VIIRS (NASA FIRMS) para Latinoamérica: mapa, calendario de quema y comparación de períodos."
+  },
+  "nav": {
+    "skip": "Saltar al contenido",
+    "label": "Secciones",
+    "homeLabel": "Terra Australis, inicio",
+    "home": "Inicio",
+    "analysis": "Análisis",
+    "project": "Proyecto",
+    "team": "Equipo",
+    "language": "Idioma",
+    "themeToLight": "Cambiar a tema claro",
+    "themeToDark": "Cambiar a tema oscuro",
+    "repo": "Repositorio",
+    "newTab": "se abre en otra pestaña"
+  },
+  "footer": {
+    "notice": "Los valores son estimaciones armonizadas a partir de observaciones satelitales: un foco no es un incendio confirmado y la ausencia de detecciones no prueba que no hubo fuego.",
+    "credit": "Datos de focos: NASA FIRMS (MODIS C6.1 y VIIRS C2 375 m). Mapa base: OpenFreeMap, © colaboradores de OpenStreetMap."
+  },
+  "home": {
+    "teamLabel": "Equipo Terra Australis",
+    "logoAlt": "Logo de Terra Australis",
+    "memberAlt": "Integrante {n} del equipo",
+    "title": "Armonización MODIS y VIIRS, un sistema enfocado en Latam",
+    "lead": "Un pipeline calibra los focos de calor de NASA FIRMS para que los años de MODIS y los de VIIRS se puedan comparar. {years} años de serie que se exploran en un mapa, un calendario de quema y comparaciones entre meses.",
+    "cta": "Abrir el mapa",
+    "demo": "Ver una comparación",
+    "live": "{n} focos equivalentes en {month}",
+    "liveWait": "Cargando el último mes…",
+    "liveNone": "Sin datos cargados",
+    "problem": {
+      "kicker": "El problema",
+      "title": "Dos sensores, una sola serie",
+      "statement": "VIIRS detecta cerca de cuatro veces más focos que MODIS. Si se suman sin calibrar, el cambio de sensor parece un aumento del fuego."
+    },
+    "steps": {
+      "title": "Del dato al mapa",
+      "gather": {
+        "title": "Reunir",
+        "body": "Focos activos de NASA FIRMS de cuatro satélites: Terra y Aqua (MODIS), NOAA-20 y NOAA-21 (VIIRS), normalizados a un esquema común."
+      },
+      "calibrate": {
+        "title": "Calibrar",
+        "body": "Un factor k por región y mes lleva VIIRS a la escala MODIS. En la validación de NOAA-20 contra MODIS, el sesgo baja de +262 % a +0,05 %."
+      },
+      "explore": {
+        "title": "Explorar",
+        "body": "Celdas H3 en el mapa, con su intervalo p05–p95 y su cobertura. Se comparan meses y años con la misma escala de color."
+      }
+    },
+    "facts": {
+      "title": "La serie en cifras",
+      "yearsLabel": "años de serie ({from}–{to})",
+      "cellLabel": "por celda H3 r7",
+      "biasLabel": "sesgo tras calibrar (antes +262 %)",
+      "intervalLabel": "intervalo de cada estimación",
+      "note": "Los valores son estimaciones derivadas de observaciones satelitales: un foco no es un incendio confirmado."
+    },
+    "close": {
+      "title": "Mirá el fuego a través del tiempo",
+      "edu": "Versión para escuelas: EduAustralis"
+    }
+  },
+  "map": {
+    "lasso": "Lazo",
+    "lassoTitle": "Dibujar una selección con el mouse (tecla L). Se desactiva al soltar; Mayús suma, Esc borra.",
+    "loading": "Cargando el mapa…",
+    "failed": "No se pudo cargar el mapa.",
+    "tip": {
+      "equivalent": "focos equivalentes",
+      "perMonth": "por mes en promedio",
+      "anomalyLabel": "Anomalía",
+      "anomaly": "contra la mediana del mes",
+      "hotspot": "Foco del",
+      "day": "día",
+      "night": "noche",
+      "confidence": "confianza"
+    }
+  },
+  "analysis": {
+    "title": "Análisis"
+  },
+  "project": {
+    "title": "Proyecto"
+  },
+  "team": {
+    "title": "El equipo"
+  }
+}
