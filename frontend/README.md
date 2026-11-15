@@ -1,40 +1,38 @@
-# Frontend y visualización
+# .
 
-## Resumen
+This template should help get you started developing with Vue 3 in Vite.
 
-La implementación del frontend es una demostración web centrada en un mapa y una barra de navegación temporal. Se encuentra en [`map/`](map/), y usa Vite, MapLibre GL, deck.gl y H3. El estado general y las limitaciones del producto se describen en [`documentacion/FUNDAMENTOS_DEL_PROYECTO.md`](../documentacion/FUNDAMENTOS_DEL_PROYECTO.md).
+## Recommended IDE Setup
 
-La interfaz muestra focos detectados y valores armonizados en celdas espaciales. Los focos son observaciones satelitales; no son equivalentes a los valores calibrados de la serie.
+[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
 
-## Flujo de datos
+## Recommended Browser Setup
 
-```text
-pipeline → data/publish/ → scripts/build_mocks.py → JSON estáticos → frontend/map
+- Chromium-based browsers (Chrome, Edge, Brave, etc.):
+  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
+  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
+- Firefox:
+  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
+  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+
+## Customize configuration
+
+See [Vite Configuration Reference](https://vite.dev/config/).
+
+## Project Setup
+
+```sh
+npm install
 ```
 
-Los JSON se generan localmente a partir de una publicación del pipeline y no se versionan por defecto. El flujo principal del frontend consume archivos estáticos. También existe un adaptador de fuente API, pero el repositorio no incluye el backend ni endpoints desplegados.
+### Compile and Hot-Reload for Development
 
-## Ejecución local
-
-Desde la carpeta del mapa:
-
-```bash
-cd frontend/map
-npm install
-python scripts/build_mocks.py
+```sh
 npm run dev
 ```
 
-El generador necesita los productos de `data/publish/` y las dependencias Python del pipeline. Las instrucciones para seleccionar una publicación concreta, generar otras muestras, construir el frontend y conocer el formato de los JSON están en [`map/README.md`](map/README.md).
+### Compile and Minify for Production
 
-## Alcance y límites
-
-- Implementado: mapa de la zona, celdas H3, capa de focos, selección de mapas base y navegación mensual o por ventanas de ocho días.
-- Los mapas base de OpenFreeMap/OSM y Esri dependen de servicios de teselas externos y requieren conectividad.
-- El repositorio no acredita una publicación pública del frontend.
-- La propuesta inicial incluía vistas y entregables adicionales —como un calendario independiente, panel completo de indicadores y descargas— que no deben darse por implementados sin verificación en el código.
-- La prioridad inmediata es generar los datos estáticos de la configuración acordada, construir la aplicación y verificar su publicación.
-
-## Evolución posible
-
-Una interfaz conectada a API, un backend o nuevas vistas pueden evaluarse en una etapa posterior. No son requisitos de la ruta estática inmediata; cualquier extensión debe acordar el alcance con las áreas de datos y producto.
+```sh
+npm run build
+```

@@ -1,0 +1,832 @@
+:root {
+  --golden-pollen: #ffcd4bff;
+  --baltic-blue: #315a8fff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  /* Receiver sky: mostly light blue, only a hint of dusk at the very top */
+  background: linear-gradient(180deg, #1e3654 0%, #315a8f 30%, #4a7db8 70%, #6a9bd1 100%);
+}
+
+/* Taller than the viewport so the field can drift down without a gap at the top */
+#stars {
+  position: fixed;
+  top: -40vh;
+  left: 0;
+  right: 0;
+  height: 140vh;
+  z-index: 1; /* above the launch darkness so the stars stay visible in "space" */
+  pointer-events: none;
+}
+
+#stars img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+}
+
+/* As the rocket climbs the stars stream down past it, then land with a small
+   gravitational bounce as the main page arrives. They stay there afterwards. */
+#stars.is-launching {
+  animation: stars-fall 3.9s forwards;
+}
+
+@keyframes stars-fall {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.4, 0, 0.75, 0.6);
+  }
+
+  /* ~3.2s: impact, slightly past the resting point */
+  82% {
+    transform: translateY(32vh);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+
+  90% {
+    transform: translateY(27.5vh);
+    animation-timing-function: cubic-bezier(0.6, 0, 0.8, 0.4);
+  }
+
+  95% {
+    transform: translateY(30.5vh);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+
+  98% {
+    transform: translateY(29.6vh);
+  }
+
+  100% {
+    transform: translateY(30vh);
+  }
+}
+
+/* Darkness that creeps down from the top of the sky while the rocket climbs.
+   160vh tall: the top 100vh is the main page's opaque gradient, followed by a
+   long 60vh fade into the light sky so the leading edge has no visible line. */
+.launch-cover {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 0;
+  height: 160vh;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    #080a0d 0%,
+    #1e3654 54%,
+    #315a8f 62.5%,
+    rgba(49, 90, 143, 0.6) 75%,
+    rgba(49, 90, 143, 0.2) 88%,
+    rgba(49, 90, 143, 0) 100%
+  );
+  transform: translateY(-160vh);
+}
+
+/* One continuous ease (no mid-way stop). The opaque part reaches 70% of the
+   screen at ~2.2s, which is when the rocket starts ascending. It then stays
+   in place as the main page background. */
+.launch-cover.is-active {
+  animation: sky-darken 3.2s cubic-bezier(0.35, 0, 0.55, 1) forwards;
+}
+
+@keyframes sky-darken {
+  from {
+    transform: translateY(-160vh);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+.receiver-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden; /* clouds drift in and out past the edges */
+}
+
+.launch-button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 0; /* only the rocket itself is clickable */
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-size: 1.25rem;
+  background: transparent; /* no box behind the rocket */
+  cursor: pointer;
+}
+
+/* Cloud made of circles: a rounded base plus two puffs on top.
+   Everything is in em, so font-size sets the cloud's size. */
+.cloud {
+  position: absolute;
+  width: 8em;
+  height: 2.6em;
+  border-radius: 1.3em;
+  background: #fff;
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: inherit;
+}
+
+.cloud::before {
+  left: 1.1em;
+  bottom: 1.2em;
+  width: 3em;
+  height: 3em;
+}
+
+.cloud::after {
+  right: 1.2em;
+  bottom: 0.9em;
+  width: 4em;
+  height: 4em;
+}
+
+.launch-label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 3.1rem; /* same spot as before the button lost its padding */
+  font-size: 0.9em; /* 10% smaller; the cloud scales with it */
+  white-space: nowrap;
+  pointer-events: none; /* clicking the label/cloud does nothing */
+  transform: translateX(-50%);
+  animation: label-float 3s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+}
+
+.launch-label-text {
+  position: relative;
+  font-family: "Playpen Sans", cursive;
+  color: #1e3654;
+  font-weight: bold;
+}
+
+/* Sits behind the text, centred on it */
+.label-cloud {
+  top: 50%;
+  left: 50%;
+  font-size: 1.45em;
+  transform: translate(-50%, -42%);
+  filter: drop-shadow(0 4px 10px rgba(8, 10, 13, 0.25));
+}
+
+@keyframes label-float {
+  0%, 100% {
+    transform: translate(-50%, 0);
+  }
+
+  50% {
+    transform: translate(-50%, -8px);
+  }
+}
+
+/* Medium clouds passing along the bottom 20% of the screen */
+.passing-clouds {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 20%;
+  pointer-events: none;
+  transition: transform 2.2s cubic-bezier(0.5, 0, 0.75, 0), opacity 2.2s ease-in;
+}
+
+.passing-cloud {
+  top: var(--cloud-top);
+  left: 0;
+  font-size: calc(24px * var(--cloud-scale));
+  opacity: var(--cloud-opacity); /* 0.5 at most */
+  animation: cloud-drift var(--cloud-duration) linear var(--cloud-delay) infinite;
+}
+
+@keyframes cloud-drift {
+  from {
+    transform: translateX(-10em);
+  }
+
+  to {
+    transform: translateX(calc(100vw + 1em));
+  }
+}
+
+/* As the rocket lifts off the clouds fall away below it */
+.receiver-screen.is-launching .passing-clouds {
+  opacity: 0;
+  transform: translateY(25vh);
+}
+
+/* .coheteReceiver {
+  display: block;
+} */
+
+.coheteReceiver img {
+  display: block;
+  width: 50px;
+  height: 50px;
+  transform-origin: center;
+  animation: receiver-pulse 3s ease-in-out infinite;
+  transition: transform 0.3s ease-in-out;
+}
+
+.coheteReceiver:hover img {
+  animation: none;
+  transform: scale(1.4);
+}
+
+@keyframes receiver-pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.08);
+  }
+}
+
+/* Rocket launch sequence */
+.receiver-screen.is-launching .launch-button {
+  background-color: transparent;
+  cursor: default;
+}
+
+.receiver-screen.is-launching .launch-label {
+  opacity: 0;
+}
+
+/* 1) tilt upright and hold while the sky darkens (the "flying" illusion),
+   2) once the darkness covers 70% of the screen (2.2s), climb off the top */
+.receiver-screen.is-launching .coheteReceiver {
+  animation:
+    rocket-tilt 0.4s ease-out forwards,
+    rocket-ascend 1.1s cubic-bezier(0.55, 0, 0.85, 0.35) 2.2s forwards;
+}
+
+/* Turbulence: constant shake on the image for the whole launch */
+.receiver-screen.is-launching .coheteReceiver img {
+  animation: rocket-turbulence 0.18s linear infinite;
+  transform: scale(1.4);
+  filter: drop-shadow(0 6px 14px rgba(255, 196, 0, 0.85));
+}
+
+@keyframes rocket-tilt {
+  from {
+    transform: translate(0, 0) rotate(0deg);
+  }
+
+  to {
+    transform: translate(0, 0) rotate(-45deg);
+  }
+}
+
+@keyframes rocket-ascend {
+  from {
+    transform: translate(0, 0) rotate(-45deg);
+  }
+
+  to {
+    transform: translate(0, -110vh) rotate(-45deg);
+  }
+}
+
+@keyframes rocket-turbulence {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg) scale(1.4);
+  }
+
+  20% {
+    transform: translate(-1.5px, 1px) rotate(-1.5deg) scale(1.4);
+  }
+
+  40% {
+    transform: translate(1.5px, -1px) rotate(1deg) scale(1.4);
+  }
+
+  60% {
+    transform: translate(-1px, -1.5px) rotate(1.5deg) scale(1.4);
+  }
+
+  80% {
+    transform: translate(1px, 1.5px) rotate(-1deg) scale(1.4);
+  }
+}
+
+.website-screen {
+  position: relative;
+  z-index: 3;
+  /* Two regions: the navigation bar on top, the active section filling the rest */
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  padding: 0 1.5rem 1rem;
+  /* Transparent so the stars show through; the dark sky behind them is the
+     launch cover, which stays in place after the launch */
+  background: transparent;
+}
+
+/* Header sits above the page cover so the rockets stay visible while it sweeps */
+.site-header {
+  position: relative;
+  z-index: 2;
+  flex: none;
+  display: flex;
+  align-items: flex-end; /* bar at the bottom of the band, hover rockets above it */
+  justify-content: center;
+  /* The navigation bar takes the top 10% of the page (never so little that
+     the hover rockets get cut off on short screens) */
+  height: 10vh;
+  height: 10dvh;
+  min-height: 5.25rem;
+}
+
+
+/* Minimal, tactile bar: thick baltic-blue borders and a solid "ledge"
+   underneath so it reads like a physical row of keys */
+.site-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  border: 4px solid var(--baltic-blue);
+  border-radius: 14px;
+  background: var(--baltic-blue); /* shows through the gaps as dividers */
+  box-shadow: 0 6px 0 rgba(8, 10, 13, 0.45);
+}
+
+.navigation-button {
+  position: relative;
+  padding: 0.5rem 1.1rem;
+  border: 0;
+  border-radius: 9px;
+  color: inherit;
+  font: inherit;
+  font-weight: bold;
+  background: #15263d;
+  box-shadow: inset 0 -4px 0 rgba(8, 10, 13, 0.35);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.navigation-button.is-active {
+  background: #1e3654;
+}
+
+.navigation-button:hover,
+.navigation-button:focus-visible {
+  color: #15263d;
+  background: var(--golden-pollen);
+}
+
+/* Pressed: the key sinks into the bar */
+.navigation-button:active {
+  transform: translateY(2px);
+  box-shadow: inset 0 -2px 0 rgba(8, 10, 13, 0.35);
+}
+
+.navigation-button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: -3px;
+}
+
+/* Rocket that appears on top of the hovered nav button */
+.nav-rocket {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  margin-bottom: 0.35rem;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.nav-rocket img {
+  display: block;
+  width: 32px;
+  height: 32px;
+  opacity: 0;
+  transform: translateY(10px) rotate(-45deg);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.navigation-button:hover .nav-rocket img,
+.navigation-button:focus-visible .nav-rocket img {
+  opacity: 1;
+  transform: translateY(0) rotate(-45deg);
+}
+
+/* The nav rocket hands off to the full-screen flying copy */
+.navigation-button.is-flying .nav-rocket img {
+  opacity: 0;
+  transition: none;
+}
+
+/* Bezier-flight rocket, positioned every frame from App.vue in window
+   coordinates so it can fly out of the navigation bar. Laid out at its
+   largest size and only scaled down, so it stays crisp while it grows. */
+.flying-rocket {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 10;
+  max-width: none;
+  pointer-events: none;
+  /* width, height and transform-origin are set from App.vue per flight */
+}
+
+/* The active section: everything below the navigation bar. Its content
+   scrolls on its own. */
+.active-section {
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  min-height: 0;
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.content-layout {
+  position: relative;
+  width: min(100%, 1400px);
+  height: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  overflow-y: auto;
+  /* Scrolls, but without a visible scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.content-layout::-webkit-scrollbar {
+  display: none;
+}
+
+/* Panels share one grid cell so the outgoing and incoming pages overlap
+   exactly while the rocket's reveal mask swaps them */
+.page-content {
+  display: grid;
+  min-width: 0;
+}
+
+.page-panel {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+
+/* "Acerca del Equipo" */
+.about-block {
+  max-width: 70ch;
+  margin-top: 2rem;
+  line-height: 1.6;
+}
+
+.about-block h2 {
+  margin: 0 0 0.5rem;
+}
+
+.about-block p {
+  margin: 0;
+}
+
+.team-photo {
+  max-width: 70ch;
+  margin: 2.5rem 0 0;
+}
+
+.team-photo img,
+.team-photo-placeholder {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 0.5rem;
+  object-fit: cover;
+}
+
+.team-photo-placeholder {
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(8, 10, 13, 0.3);
+}
+
+/* Long-form text pages ("¿Cómo funciona?" and the simplified version) */
+.prose {
+  max-width: 75ch;
+  line-height: 1.65;
+}
+
+.prose h2 {
+  margin: 2.25rem 0 0.75rem;
+}
+
+.prose h3 {
+  margin: 2rem 0 0.6rem;
+  color: var(--golden-pollen);
+}
+
+.prose p,
+.prose ul {
+  margin: 0 0 1rem;
+}
+
+.prose li + li {
+  margin-top: 0.5rem;
+}
+
+.prose code {
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  font-size: 0.9em;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.prose .note {
+  padding: 1rem 1.25rem;
+  border-left: 4px solid var(--golden-pollen);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: rgba(8, 10, 13, 0.35);
+}
+
+/* Tables scroll sideways on narrow screens instead of squashing */
+.table-wrap {
+  margin: 0 0 1.25rem;
+  overflow-x: auto;
+}
+
+.prose table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.prose th,
+.prose td {
+  padding: 0.6rem 0.75rem;
+  border: 2px solid var(--baltic-blue);
+  text-align: left;
+  vertical-align: top;
+}
+
+.prose th {
+  background: rgba(49, 90, 143, 0.45);
+}
+
+.prose td {
+  background: rgba(8, 10, 13, 0.3);
+}
+
+/* EduAustralis: the map in the middle, milestone cards in a column on each
+   side so they never sit on top of the map or each other */
+.edu-layout {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(0, 2.2fr) minmax(200px, 1fr);
+  grid-template-areas:
+    "left map right"
+    "left bottom right";
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 1.5rem;
+}
+
+.edu-left { grid-area: left; }
+.edu-map { grid-area: map; }
+.edu-right { grid-area: right; }
+.edu-bottom { grid-area: bottom; }
+
+.edu-column {
+  display: grid;
+  gap: 1.5rem;
+}
+
+/* Cards share the navigation buttons' look: dark key face, thick
+   baltic-blue border and a solid ledge underneath */
+.milestone-card {
+  padding: 1rem;
+  border: 4px solid var(--baltic-blue);
+  border-radius: 14px;
+  color: #fff;
+  background: #15263d;
+  box-shadow: inset 0 -4px 0 rgba(8, 10, 13, 0.35), 0 6px 0 rgba(8, 10, 13, 0.45);
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.milestone-card {
+  cursor: pointer;
+}
+
+.milestone-card h3 {
+  margin: 0 0 0.6rem;
+  font-family: "Playpen Sans", cursive;
+  font-size: 1.1rem;
+}
+
+.milestone-toggle {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  background: none;
+  cursor: pointer;
+}
+
+.milestone-toggle:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* Chevron that flips when the card opens */
+.milestone-chevron {
+  flex: none;
+  width: 0.6em;
+  height: 0.6em;
+  margin-top: 0.35em;
+  border-right: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.3s ease;
+}
+
+.milestone-card.is-open .milestone-chevron {
+  transform: translateY(0.25em) rotate(-135deg);
+}
+
+/* Collapsed: a two-line preview that fades out. Open: the full text. */
+.milestone-body {
+  max-height: 2.7em;
+  overflow: hidden;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #c8d1df;
+  -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent);
+  mask-image: linear-gradient(180deg, #000 40%, transparent);
+  transition: color 0.2s ease, max-height 0.4s ease;
+}
+
+.milestone-card.is-open .milestone-body {
+  max-height: 40rem;
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
+.milestone-body p,
+.milestone-body ul {
+  margin: 0 0 0.6rem;
+}
+
+.milestone-body > :last-child {
+  margin-bottom: 0;
+}
+
+/* The emoji at the start of each item act as the bullets */
+.milestone-body ul {
+  padding: 0;
+  list-style: none;
+}
+
+.milestone-body li + li {
+  margin-top: 0.4rem;
+}
+
+.milestone-body strong {
+  color: #fff;
+  transition: color 0.2s ease;
+}
+
+/* Hover: same golden light-up as the navigation buttons, scaled to 110% */
+.milestone-card:hover {
+  color: #15263d;
+  background: var(--golden-pollen);
+  transform: scale(1.1);
+}
+
+.milestone-card:hover .milestone-body,
+.milestone-card:hover .milestone-body strong {
+  color: #15263d;
+}
+
+/* Hidden (but holding its space) until the rocket reaches it, then it pops
+   up with a slight bounce (from RocketTrajectory) */
+.milestone-card:not(.is-shown) {
+  visibility: hidden;
+}
+
+.milestone-card.is-shown {
+  animation: card-pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes card-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4) translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Narrower screens: map on top, the four cards in a 2 × 2 grid below */
+@media (max-width: 900px) {
+  .edu-layout {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "map"
+      "right"
+      "bottom"
+      "left";
+  }
+
+  /* One column: read the cards in the order the rocket reaches them */
+  .edu-left {
+    display: flex;
+    flex-direction: column-reverse;
+  }
+}
+
+@media (max-width: 640px) {
+  .website-screen {
+    padding: 1rem;
+  }
+
+  .content-layout {
+    padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Without animations, jump straight to the post-launch sky */
+  .launch-cover.is-active {
+    transform: translateY(0);
+  }
+
+  #stars.is-launching {
+    transform: translateY(30vh);
+  }
+}
+
+
+.screen-enter-active,
+.screen-leave-active {
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+
+.screen-enter-from,
+.screen-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.receiver-screen.screen-leave-active {
+  pointer-events: none;
+}
+
+.receiver-screen.screen-leave-to {
+  transform: scale(0.97);
+}
