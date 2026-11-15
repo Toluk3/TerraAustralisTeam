@@ -115,14 +115,17 @@ onBeforeUnmount(() => { stop(); if (raf) cancelAnimationFrame(raf); });
 </template>
 
 <style scoped>
-.ts { display: grid; grid-template-columns: auto minmax(110px, auto) minmax(0, 1fr); align-items: center; gap: 12px 14px; }
+/* La columna del mes tiene ancho fijo (el del mes más largo, "septiembre de 2025"): la barra no cambia de
+   tamaño al pasar de un mes a otro */
+.ts { display: grid; grid-template-columns: auto 10.5rem minmax(0, 1fr); align-items: center; gap: 12px 14px; }
 .ts__play {
   width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface);
   color: var(--ink); display: grid; place-items: center; transition: transform var(--t-in) var(--ease), background-color var(--t-in) var(--ease);
 }
 .ts__play:hover { transform: translateY(-1px); background: var(--surface-2); }
-.ts__now { display: flex; flex-direction: column; line-height: 1.25; }
-.ts__month { font-weight: 500; font-size: 0.95rem; text-transform: capitalize; white-space: nowrap; }
+.ts__now { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
+.ts__month { display: block; font-weight: 500; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ts__month::first-letter { text-transform: uppercase; }
 .ts__value { font-size: 0.8rem; }
 .ts__track { position: relative; height: 72px; }
 .ts__spark { position: absolute; left: 0; right: 0; top: 0; width: 100%; height: 44px; }
@@ -149,7 +152,7 @@ onBeforeUnmount(() => { stop(); if (raf) cancelAnimationFrame(raf); });
 .ts__range::-moz-range-thumb { width: 8px; height: 26px; border-radius: 3px; background: var(--period-a); border: 2px solid var(--surface); }
 .ts__range:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 @media (max-width: 560px) {
-  .ts { grid-template-columns: auto 1fr; }
+  .ts { grid-template-columns: auto minmax(0, 1fr); }
   .ts__track { grid-column: 1 / -1; }
 }
 </style>

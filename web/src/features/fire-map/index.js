@@ -171,11 +171,10 @@ export async function createFireMap(container, options = {}) {
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
-  map.addControl(new maplibregl.AttributionControl({
-    compact: true,
-    customAttribution: `${labels.hotspots}: <a href="https://www.earthdata.nasa.gov/data/tools/firms" target="_blank" rel="noopener">${
-      meta.attribution.replace(/\s*https?:\/\/\S+/g, '').replace(/\.\s*$/, '')}</a>`,
-  }), 'bottom-right');
+  const attribText = () => `${labels.hotspots}: <a href="https://www.earthdata.nasa.gov/data/tools/firms" target="_blank" rel="noopener">${
+    meta.attribution.replace(/\s*https?:\/\/\S+/g, '').replace(/\.\s*$/, '')}</a>`;
+  const attribution = new maplibregl.AttributionControl({ compact: true, customAttribution: attribText() });
+  map.addControl(attribution, 'bottom-right');
 
   const overlay = new MapboxOverlay({
     interleaved: true,
@@ -496,6 +495,9 @@ export async function createFireMap(container, options = {}) {
       Object.assign(labels, obj);
       numberLocale = labels.locale;
       selection.updateLabels();
+      // Atribución: MapLibre la arma con options.customAttribution
+      attribution.options.customAttribution = attribText();
+      attribution._updateAttributions?.();
       // Botones de zoom de MapLibre: su texto se fija al crear el mapa, se actualiza a mano
       for (const [cls, text] of [['zoom-in', labels.zoomIn], ['zoom-out', labels.zoomOut]]) {
         const b = root.querySelector(`.maplibregl-ctrl-${cls}`);
