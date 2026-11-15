@@ -1,0 +1,107 @@
+/* Juego "Apagá los incendios": se dibuja dentro de .tam-map y usa sus variables de color. */
+
+.tam-game__open {
+  position: absolute; left: 10px; bottom: 10px; z-index: 2; display: inline-flex; gap: 6px; align-items: center;
+  font: inherit; font-size: 14px; font-weight: 700; color: #fff; background: #d9481c; border: 0; border-radius: 999px;
+  padding: 8px 14px; cursor: pointer; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.tam-game__open:hover { background: #c23c12; }
+.tam-game__open:focus-visible { outline: 2px solid #00beff; outline-offset: 2px; }
+.tam-game__open[hidden] { display: none; }
+
+/* Mientras se juega, el mapa queda quieto y sin sus controles */
+.tam-map--game .tam-map__top,
+.tam-map--game .tam-map__tool,
+.tam-map--game .tam-sel,
+.tam-map--game .tam-game__open,
+.tam-map--game .maplibregl-ctrl-top-right { display: none !important; }
+.tam-map--game .maplibregl-canvas { cursor: crosshair !important; touch-action: none; }
+
+.tam-game { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.tam-game[hidden] { display: none; }
+
+.tam-game__hud {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: min(560px, calc(100% - 20px));
+  box-sizing: border-box; display: flex; align-items: center; gap: 10px; pointer-events: auto;
+  background: var(--tam-solid); border-radius: 999px; padding: 7px 8px 7px 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4); font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums;
+}
+.tam-game__time { min-width: 2.6em; }
+.tam-game__time.is-ending { color: #ff8a65; }
+.tam-game__meter {
+  position: relative; flex: 1; height: 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.16); overflow: hidden;
+}
+.tam-game__fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 999px; transition: width 0.15s linear, background 0.3s; }
+.tam-game__fill[data-level="ok"] { background: #58c26b; }
+.tam-game__fill[data-level="warn"] { background: #ffa726; }
+.tam-game__fill[data-level="danger"] { background: #ef4335; }
+.tam-game__goal { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: #fff; }
+.tam-game__pct { min-width: 4.4em; text-align: right; white-space: nowrap; }
+.tam-game__score { min-width: 4.6em; white-space: nowrap; color: #ffd54a; }
+.tam-game__time { color: var(--tam-muted); }
+.tam-game__points { font-size: 17px; }
+.tam-game__points b { font-size: 30px; color: #ffd54a; }
+.tam-game__points small { color: var(--tam-muted); margin-left: 6px; }
+.tam-game__record { margin-left: 6px; background: #ffd54a; color: #1b1f27; font-weight: 700; border-radius: 999px; padding: 2px 9px; font-size: 13px; }
+.tam-game__quit {
+  font: inherit; font-size: 20px; line-height: 1; width: 30px; height: 30px; border-radius: 50%; border: 0;
+  color: var(--tam-text); background: rgba(255, 255, 255, 0.12); cursor: pointer;
+}
+.tam-game__quit:hover { background: rgba(255, 255, 255, 0.24); }
+
+/* Mensaje breve: abajo, sin tapar el tablero ni frenar el juego */
+.tam-game__tip {
+  position: absolute; left: 50%; bottom: 40px; transform: translateX(-50%); width: max-content; max-width: min(520px, calc(100% - 24px));
+  box-sizing: border-box; display: flex; gap: 10px; align-items: center;
+  background: #fff; color: #1b1f27; border-left: 5px solid #d9481c; border-radius: 10px; padding: 10px 14px;
+  font-size: 15px; font-weight: 600; line-height: 1.3; box-shadow: 0 3px 14px rgba(0, 0, 0, 0.4);
+  animation: tam-game-tip 0.35s ease-out;
+}
+.tam-game__tip[hidden] { display: none; }
+.tam-game__tip > span:first-child { font-size: 24px; flex: none; }
+@keyframes tam-game-tip { from { opacity: 0; transform: translate(-50%, 14px); } }
+
+.tam-game__fx { position: absolute; inset: 0; overflow: hidden; }
+.tam-game__drop {
+  position: absolute; margin: -14px 0 0 -11px; font-size: 18px; font-weight: 800; white-space: nowrap; color: #fff;
+  text-shadow: 0 0 3px #01579b, 0 1px 3px #01579b, 0 0 6px #01579b; animation: tam-game-drop 0.55s ease-out forwards;
+}
+@keyframes tam-game-drop {
+  from { opacity: 1; transform: scale(0.6); }
+  to { opacity: 0; transform: translateY(-26px) scale(1.5); }
+}
+
+.tam-game__modal {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: rgba(10, 13, 20, 0.5); pointer-events: auto;
+}
+.tam-game__modal[hidden] { display: none; }
+.tam-game__card {
+  width: min(420px, 100%); max-height: 100%; overflow: auto; box-sizing: border-box; background: var(--tam-solid);
+  border-radius: 14px; padding: 18px 20px; box-shadow: 0 6px 30px rgba(0, 0, 0, 0.5); font-size: 15px; line-height: 1.45;
+}
+.tam-game__card h2 { margin: 0 0 10px; font-size: 21px; }
+.tam-game__card p { margin: 0 0 8px; }
+.tam-game__card ul { margin: 0 0 12px; padding-left: 20px; }
+.tam-game__card li { margin-bottom: 4px; }
+.tam-game__legend { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--tam-muted); font-size: 13px; margin-bottom: 14px; }
+.tam-game__legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.tam-game__stats { color: var(--tam-muted); font-size: 13px; }
+.tam-game__moral { background: rgba(255, 255, 255, 0.08); border-left: 4px solid #d9481c; border-radius: 6px; padding: 8px 10px; }
+.tam-game__actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }
+.tam-game__actions button {
+  font: inherit; font-weight: 700; color: var(--tam-text); background: rgba(255, 255, 255, 0.12); border: 0;
+  border-radius: 8px; padding: 9px 14px; cursor: pointer;
+}
+.tam-game__actions button:hover { background: rgba(255, 255, 255, 0.22); }
+.tam-game__actions button.is-primary { background: #d9481c; color: #fff; }
+.tam-game__actions button.is-primary:hover { background: #c23c12; }
+.tam-game__actions button:focus-visible, .tam-game__quit:focus-visible { outline: 2px solid #00beff; outline-offset: 2px; }
+
+@media (max-width: 480px) {
+  .tam-game__hud { font-size: 13px; gap: 7px; padding-left: 12px; }
+  .tam-game__tip { font-size: 14px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tam-game__tip, .tam-game__drop { animation-duration: 0.01s; }
+}
