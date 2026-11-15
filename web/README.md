@@ -95,4 +95,4 @@ Copiado de `frontend/map/src/map/`. Cambios: opciones `ui: { legend, badges, pan
 
 ## Despliegue
 
-Ver [`../documentacion/DESPLIEGUE_VPS.md`](../documentacion/DESPLIEGUE_VPS.md). Hoy `scripts/deploy_vps.sh` compila `frontend/` (EduAustralis); el cambio para publicar `web/` en la raíz y EduAustralis en `/edu/` está descripto allí como pendiente.
+`scripts/deploy_vps.sh` compila esta app con `VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/`, la publica en la raíz del sitio, publica EduAustralis en `/edu/` y copia `mock-s1/` aparte. Detalle en [`../documentacion/DESPLIEGUE_VPS.md`](../documentacion/DESPLIEGUE_VPS.md).

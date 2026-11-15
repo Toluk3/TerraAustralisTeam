@@ -10,7 +10,7 @@
 > - **Comparar y A | AB | B** van en la línea de controles sobre el mapa (como en el boceto), no en la barra de filtros.
 > - **Barra de tiempo:** componente propio traducible (`TimeSlider.vue`); la de `frontend/map/src/timebar` se copió pero no se usa.
 > - **Selección:** el módulo del mapa se copió a `web/src/features/fire-map/` con parches (`ui`, `labels`, `selectable`, `selectCell`, `setLabels`, `jumpTo`, eventos `lasso` y `notice`); no se separó `selection.js`, el panel interno queda oculto y la ficha se dibuja en Vue.
-> - **Despliegue:** `scripts/deploy_vps.sh` todavía publica `frontend/`; el cambio a `web/` está descripto como pendiente en [`DESPLIEGUE_VPS.md`](DESPLIEGUE_VPS.md).
+> - **Despliegue:** `scripts/deploy_vps.sh` publica `web/` en la raíz, EduAustralis en `/edu/` y `mock-s1/` aparte (ver [`DESPLIEGUE_VPS.md`](DESPLIEGUE_VPS.md)).
 > - Las fases de la sección 6 y la estructura de la sección 7 quedaron reemplazadas por las tareas T0–T13 de `web/PLAN_IMPLEMENTACION.md`.
 
 Documento de trabajo para quien implemente el nuevo frontend (con Claude Code o a mano). Todo lo que figura como decisión ya fue acordado con el equipo. Lo que figura como *propuesta* se puede ajustar, pero conviene avisar antes de cambiarlo.

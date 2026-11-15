@@ -1,6 +1,6 @@
 # Despliegue de la web en una VPS
 
-El despliegue publica la nueva interfaz Vue de `frontend/` como una web estatica; no necesita PostgreSQL ni un backend. Nginx sirve los archivos compilados para `www.terraaustralis.space`; no se abre ningun puerto de aplicacion. La demo científica independiente de `frontend/map/` no es la interfaz que publica este script.
+El despliegue publica el frontend científico de `web/` en la raíz del sitio y EduAustralis (`frontend/`) en `/edu/`, como web estática; no necesita PostgreSQL ni un backend. Nginx sirve los archivos compilados para `www.terraaustralis.space`; no se abre ningun puerto de aplicacion. La demo independiente de `frontend/map/` no se publica.
 
 ## Preparacion previa
 
@@ -23,7 +23,9 @@ El despliegue publica la nueva interfaz Vue de `frontend/` como una web estatica
 3. En Cloudflare DNS, apunta el registro `www` a la IP de la VPS con proxy habilitado (nube naranja) y configura **SSL/TLS → Full (strict)**.
 4. Permite conexiones entrantes al origen en los puertos 80 y 443. No hace falta abrir 8080.
 
-La VPS necesita Git, Nginx, Node.js `^22.18.0` o `>=24.12.0` y npm. El script instala `rsync` si hace falta. No requiere GitHub CLI, Python, unzip ni descargar el archivo de datos.
+La VPS necesita Git, Nginx, Node.js `^22.18.0` o `>=24.12.0` y npm. El script instala `rsync` si hace falta. No requiere GitHub CLI ni Python.
+
+**Datos del mapa:** la pantalla Análisis lee la carpeta `mock-s1/` del release [`datos-s1-2026-11-15`](https://github.com/Toluk3/TerraAustralisTeam/releases/tag/datos-s1-2026-11-15) (`S1_mapa_mock-s1.zip`, 2,2 GB descomprimido). Descomprimirla antes en `web/public/mock-s1/` o en `frontend/map/public/mock-s1/`, o indicar otra ubicación con `MOCK_DIR=/ruta/mock-s1`. Sin ella el sitio se publica igual y Análisis muestra "sin datos".
 
 ## Clonar y desplegar
 
@@ -35,13 +37,15 @@ cd TerraAustralisTeam
 bash scripts/deploy_vps.sh
 ```
 
-El script instala las dependencias de `frontend/`, compila esa app Vue y publica `frontend/dist/` en `/var/www/terra-australis`. Luego configura Nginx para redirigir HTTP a HTTPS y servir el contenido, y habilita Nginx al iniciar el sistema. La web queda disponible en `https://www.terraaustralis.space/`.
+El script:
 
-## Pendiente: publicar el frontend científico (`web/`)
+1. Compila `web/` con `VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/` y publica `web/dist/` en `/var/www/terra-australis` (`rsync --delete`, sin tocar `/edu/` ni `/mock-s1/`).
+2. Si existe `frontend/`, compila EduAustralis con `--base=/edu/` y lo publica en `/var/www/terra-australis/edu/`.
+3. Copia `mock-s1/` a `/var/www/terra-australis/mock-s1/` (primera que encuentre entre `MOCK_DIR`, `web/public/mock-s1` y `frontend/map/public/mock-s1`).
+4. Configura Nginx para redirigir HTTP a HTTPS y servir el contenido (con caché de una hora para `/mock-s1/`), y lo habilita al iniciar el sistema.
 
-El frontend científico vive en `web/` (ver [`../web/README.md`](../web/README.md)). **El script todavía no lo publica**: sigue compilando `frontend/` (EduAustralis). El cambio previsto, sin aplicar porque `scripts/` queda fuera del alcance de la rama `feature/frontend-cientifico` hasta que el equipo lo apruebe:
+La app usa rutas con `#` (`/#/analisis`), así que `try_files $uri $uri/ =404` alcanza. La web queda disponible en `https://www.terraaustralis.space/` y EduAustralis en `https://www.terraaustralis.space/edu/`.
 
-1. Compilar `web/` con `VITE_MOCK_BASE=mock-s1 VITE_EDU_URL=/edu/ npm run build` y publicar `web/dist/` en la raíz (`/var/www/terra-australis`), con `rsync --delete --exclude '/edu/' --exclude '/mock-s1/'` para no borrar lo que se publica aparte.
-2. Si existe `frontend/`, compilar EduAustralis con `npm run build -- --base=/edu/` y publicarlo en `/var/www/terra-australis/edu/`.
-3. Copiar la carpeta `mock-s1/` (release `datos-s1-2026-11-15`, `S1_mapa_mock-s1.zip`) a `/var/www/terra-australis/mock-s1/`; sin ella la pantalla Análisis muestra "sin datos".
-4. Nginx no cambia: la app usa historial con `#`, así que `try_files $uri $uri/ =404` alcanza. Opcional: `Cache-Control` para `/mock-s1/`.
+```bash
+MOCK_DIR=/opt/terra/datos/mock-s1 bash scripts/deploy_vps.sh   # si los datos están en otra carpeta
+```
