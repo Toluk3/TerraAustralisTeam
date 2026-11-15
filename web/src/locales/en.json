@@ -99,7 +99,16 @@
     "title": "Project"
   },
   "team": {
-    "title": "The team"
+    "title": "The team",
+    "kicker": "NASA Space Apps Challenge",
+    "lead": "We built Terra Australis for the NASA Space Apps Challenge: a hotspot series that can be compared between MODIS years and VIIRS years, for people who study or manage fire in Latin America.",
+    "membersLabel": "Members",
+    "photoAlt": "{name}",
+    "linkGithub": "{name} on GitHub",
+    "linkLinkedin": "{name} on LinkedIn",
+    "thanksTitle": "Acknowledgments",
+    "thanks": "To NASA FIRMS for the MODIS and VIIRS active-fire data; to OpenFreeMap and the OpenStreetMap contributors for the basemap; and to the open projects H3, MapLibre, deck.gl and DuckDB.",
+    "repo": "See the repository"
   },
   "time": {
     "label": "Month of period A",

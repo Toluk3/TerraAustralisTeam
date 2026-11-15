@@ -99,7 +99,16 @@
     "title": "Proyecto"
   },
   "team": {
-    "title": "El equipo"
+    "title": "El equipo",
+    "kicker": "NASA Space Apps Challenge",
+    "lead": "Construimos Terra Australis para el NASA Space Apps Challenge: una serie de focos de calor que se puede comparar entre los años de MODIS y los de VIIRS, para quienes estudian o gestionan el fuego en Latinoamérica.",
+    "membersLabel": "Integrantes",
+    "photoAlt": "{name}",
+    "linkGithub": "GitHub de {name}",
+    "linkLinkedin": "LinkedIn de {name}",
+    "thanksTitle": "Agradecimientos",
+    "thanks": "A NASA FIRMS por los datos de focos activos de MODIS y VIIRS; a OpenFreeMap y a los colaboradores de OpenStreetMap por el mapa base; y a los proyectos abiertos H3, MapLibre, deck.gl y DuckDB.",
+    "repo": "Ver el repositorio"
   },
   "time": {
     "label": "Mes del período A",
