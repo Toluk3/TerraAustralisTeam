@@ -12,7 +12,20 @@ export const router = createRouter({
   ],
   scrollBehavior(to, from, saved) {
     if (saved) return saved;
-    if (to.hash) return { el: to.hash, top: 96, behavior: 'smooth' };
-    return { top: 0 };
+    if (!to.hash) return { top: 0 };
+    // Las vistas se cargan bajo demanda: se espera a que el ancla exista (hasta ~2 s)
+    const navH = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-h')) || 84;
+    const smooth = to.path === from.path && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    return new Promise((resolve) => {
+      let tries = 0;
+      const tick = () => {
+        let el = null;
+        try { el = document.querySelector(to.hash); } catch { /* hash que no es un selector */ }
+        if (el) resolve({ el: to.hash, top: navH + 16, behavior: smooth ? 'smooth' : 'auto' });
+        else if (tries++ > 40) resolve({ top: 0 });
+        else setTimeout(tick, 50);
+      };
+      tick();
+    });
   },
 });
