@@ -9,6 +9,9 @@
  *   getCells(res, month)       → columnar { length, cell[], n_equiv[], anomaly_pct[] }
  *   getPointIndex(month)       → { tile_res, tiles: { <h3 r2>: cantidad } }
  *   getPoints(month, tile)     → columnar { length, lat[], lon[], t[], d[], frp[], day[], platform[], conf[] }
+ *   getEst(month)              → columnar { length, cell[], g[], n_est[] }: parte convertida (× k) del valor de
+ *                                cada celda de la serie, por grupo de calibración `g` (-1 = sin grupo)
+ *   getEstRatios()             → { reps, groups[], ratio[g][réplica] }: k de la réplica ÷ k, para el intervalo
  *
  * `createStaticSource` lee los JSON de public/mock-api (scripts/build_mocks.py).
  * `createApiSource` habla con el backend (formato propuesto en README.md).
@@ -53,6 +56,8 @@ function cached(fn) {
 const EMPTY_CELLS = { length: 0, cell: [], n_equiv: [], anomaly_pct: [] };
 const EMPTY_POINTS = { length: 0, lat: [], lon: [], t: [], d: [], frp: [], day: [], platform: [], conf: [] };
 const EMPTY_INDEX = { tiles: {} };
+const EMPTY_EST = { length: 0, cell: [], g: [], n_est: [] };
+const EMPTY_RATIOS = { reps: 0, groups: [], ratio: [] };
 
 export function createStaticSource(baseUrl = '/mock-api') {
   const base = baseUrl.replace(/\/$/, '');
@@ -63,6 +68,8 @@ export function createStaticSource(baseUrl = '/mock-api') {
     getCells: cached((res, month) => getJsonOr(`${base}/map/res=${res}/${month}.json`, EMPTY_CELLS)),
     getPointIndex: cached((month) => getJsonOr(`${base}/points/${month}/index.json`, EMPTY_INDEX)),
     getPoints: cached((month, tile) => getJsonOr(`${base}/points/${month}/${tile}.json`, EMPTY_POINTS)),
+    getEst: cached((month) => getJsonOr(`${base}/est/${month}.json`, EMPTY_EST)),
+    getEstRatios: cached(() => getJsonOr(`${base}/est/ratios.json`, EMPTY_RATIOS)),
   };
 }
 
@@ -75,5 +82,7 @@ export function createApiSource(baseUrl = '/api') {
     getCells: cached((res, month) => getJsonOr(`${base}/map?res=${res}&month=${month}`, EMPTY_CELLS)),
     getPointIndex: cached((month) => getJsonOr(`${base}/points/index?month=${month}`, EMPTY_INDEX)),
     getPoints: cached((month, tile) => getJsonOr(`${base}/points?month=${month}&tile=${tile}`, EMPTY_POINTS)),
+    getEst: cached((month) => getJsonOr(`${base}/uncertainty?month=${month}`, EMPTY_EST)),
+    getEstRatios: cached(() => getJsonOr(`${base}/uncertainty/ratios`, EMPTY_RATIOS)),
   };
 }

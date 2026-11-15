@@ -27,7 +27,7 @@ import './map.css';
 
 export { createStaticSource, createApiSource } from './data.js';
 export { BASEMAPS } from './basemaps.js';
-export { summarize, COMBUSTION_COEF, EF_CO2 } from './selection.js';
+export { summarize, seriesInfo, COMBUSTION_COEF, EF_CO2 } from './summary.js';
 
 /**
  * Resolución H3 según el zoom de MapLibre (ARQUITECTURA.md §4.4). MapLibre usa teselas de 512 px,
@@ -97,8 +97,10 @@ export async function createFireMap(container, options = {}) {
   root.className = 'tam-map';
   root.innerHTML = `
     <div class="tam-map__canvas"></div>
-    <div class="tam-map__badges" aria-live="polite"></div>
-    <div class="tam-map__legend"></div>
+    <div class="tam-map__top">
+      <div class="tam-map__badges" aria-live="polite"></div>
+      <div class="tam-map__legend"></div>
+    </div>
     <div class="tam-map__status" hidden></div>`;
   container.appendChild(root);
   const $ = (s) => root.querySelector(s);

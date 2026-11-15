@@ -9,7 +9,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "mocks": "python scripts/build_mocks.py"
+    "mocks": "python scripts/build_mocks.py",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@deck.gl/core": "9.4.0",

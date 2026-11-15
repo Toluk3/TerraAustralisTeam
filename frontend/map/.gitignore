@@ -4,4 +4,5 @@ dist/
 # Se generan con scripts/build_mocks.py a partir de data/publish/ (~14 MB)
 public/mock-api/
 public/mock-s1/
+public/mock-argentina/
 .claude/

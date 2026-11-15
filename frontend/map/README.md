@@ -97,20 +97,29 @@ map.destroy();
 ### Selección y panel de análisis
 
 - **Clic** en una celda la selecciona; **Mayús + clic** la suma o la saca.
-- **Lazo** (botón debajo del zoom o tecla `L`): se dibuja con el mouse y quedan las celdas H3 de la resolución actual con el centro adentro. Es de un solo uso: al soltar se desactiva y el mapa se vuelve a mover; para otro dibujo, apretar Lazo de nuevo. Mayús suma a la selección y `Esc` la borra.
-- El panel suma los meses de **Desde / Hasta** (por defecto, el período del mapa; como mucho 36). **Seguir incendio** extiende el rango para los dos lados mientras la selección tenga fuego, y **Ver en el mapa** pinta la suma de esos meses.
-- Muestra los focos equivalentes (armonizados), las detecciones crudas por plataforma y día/noche, FRP (mediana, p90, máx.), FRE, días activos, día pico, centroide, y exporta CSV, JSON y la lista de celdas.
-- **Biomasa (estimación de primer orden):** por día local se toma el ΣFRP de una sola familia de sensores (MODIS si hubo, si no VIIRS) ÷ pasadas nominales (2 por satélite activo) × 86 400 s = FRE; biomasa = FRE × 0,368 kg/MJ (Wooster et al. 2005) y CO₂ = biomasa × 1,6 (Andreae 2019). Una detección aislada se extiende a todo el día, así que en fuegos chicos sobrestima; los fuegos entre pasadas o bajo nubes no se ven.
+- **Lazo** (botón debajo del zoom o tecla `L`): se dibuja con el mouse y quedan las celdas con el centro adentro. Es de un solo uso: al soltar se desactiva y el mapa se vuelve a mover; para otro dibujo, apretar Lazo de nuevo. Mayús suma a la selección y `Esc` la borra.
+- **Siempre en r7.** La selección y todos los números se calculan en la resolución de la serie (H3 r7), sea cual sea el zoom: el mismo dibujo da el mismo resultado. Un clic en una celda r5 o r6 selecciona sus hijas r7. El contorno celeste es el borde real de las celdas elegidas. Máximo 300.000 celdas (~1,5 millones de km²).
+- El panel suma los meses de **Desde / Hasta** (mes y año por separado; por defecto, el período del mapa; como mucho 10 años). El extremo que se toca no se mueve: si el rango queda invertido o supera el máximo, se ajusta el otro y se avisa. **◀ ▶** corren el rango por su largo y **1 año / 3 años / 10 años** lo fijan terminando en "Hasta". **Seguir incendio** extiende el rango para los dos lados mientras la selección tenga fuego, y **Ver en el mapa** pinta la suma de esos meses.
+
+El panel tiene tres niveles, de más a menos citable:
+
+1. **Focos equivalentes** (cifra principal): la serie armonizada, en escala MODIS, con su **intervalo p05–p95**, el **origen** de cada mes (`MODIS (directo)`, `VIIRS convertido a escala MODIS` o `Terra sola, convertida`) y su **cobertura**. Debajo van dos gráficos alineados, los dos con líneas escalonadas (un escalón por mes): **Fuego por mes** (focos equivalentes con su intervalo, con eje numerado y una frase que resume el pico) y **Qué detectó cada satélite** (detecciones crudas de MODIS y de VIIRS, con cuántas veces más detecta VIIRS). Al pasar el mouse se leen los valores del mes y un clic lleva el mapa a ese mes; con más de 4 años se agrupan por año (el intervalo anual suma las réplicas de sus meses) y un botón vuelve a meses. Si la selección es más chica que una región de calibración (~12.400 km²), avisa que está por debajo de la escala validada.
+2. **Detecciones** (descriptivo): focos crudos por plataforma y día/noche, FRP, fechas y centroide. No son comparables entre sensores ni entre años.
+3. **Exploratorio: biomasa y CO₂** (abierto por defecto, con su advertencia): por día local se toma el ΣFRP de una sola familia de sensores (MODIS si hubo, si no VIIRS) ÷ pasadas nominales (2 por satélite en operación ese día, según `meta.platform_periods`) × 86 400 s = FRE; biomasa = FRE × 0,368 kg/MJ (Wooster et al. 2005) y CO₂ = biomasa × 1,6 (Andreae 2019). **No está validada**: para un mismo día, calcularla con MODIS o con VIIRS cambia el resultado típicamente ×2 y hasta ×10.
+
+**Intervalo.** Es el mismo cálculo que `pipeline/zone.py` hace para la zona, aplicado a la selección: lo observado con la referencia queda fijo y lo convertido se multiplica por `k_réplica ÷ k` de cada réplica del bootstrap (`est/`). Para la zona entera reproduce `p05`/`p95` de `calendar.json`. Solo refleja la incertidumbre de k, no el error de aplicar un k regional a pocas celdas.
+
+**Exportar.** `CSV` y `JSON` llevan la serie por mes con intervalo, origen y cobertura, más la métrica, la versión de datos y el `config_hash`. La biomasa va aparte, en `CSV exploratorio` y en el bloque `exploratory` del JSON.
 
 ```js
 map.setLassoMode(true);
 map.selectPolygon([[lng, lat], …]);          // mismo efecto que dibujar
 map.setSelectionRange({ from: '2024-12', to: '2025-03' });
-map.getSelection();                           // { res, cells, summary: { rows (por mes), total } }
+map.getSelection();                           // { res: 7, cells, area, summary: { rows (por mes), total } }
 map.on('selection', (s) => …);                // null al borrar
 ```
 
-`summarize(sel, months, cellTables, pointTables)` se exporta para usar el mismo cálculo fuera del mapa.
+El cálculo está en `src/map/summary.js` (sin DOM ni deck.gl): `summarize(sel, months, cellTables, pointTables, { info: seriesInfo(meta), estTables, ratios })`. Pruebas: `npm test` (las que usan datos leen `public/mock-api`).
 
 `map.map` es el `maplibregl.Map` y `map.overlay`, el `MapboxOverlay`.
 
@@ -120,14 +129,17 @@ Todo en JSON **columnar** (un arreglo por columna más `length`): deck.gl lo lee
 
 | Endpoint | Archivo mock | Respuesta |
 |---|---|---|
-| `GET /api/meta` | `meta.json` | `{ zone, outline (GeoJSON), switch_date, coverage: {from, to}, reduced_coverage_months, dataset_version, config_hash, attribution, map: {resolutions, domain: {5, 6, 7}, months[]}, points: {tile_res, min_zoom, max_month, months[]} }` |
+| `GET /api/meta` | `meta.json` | `{ zone, outline (GeoJSON), switch_date, coverage: {from, to}, reduced_coverage_months, dataset_version, config_hash, attribution, metric, reference, cell_res, calibration_levels, platform_periods, uncertainty: {res, reps, months[]}, map: {resolutions, domain: {5, 6, 7}, months[]}, points: {tile_res, min_zoom, max_month, months[]} }` |
 | `GET /api/calendar` | `calendar.json` | `{ length, year[], month[], n_equiv[], p05[], p95[], coverage_frac[], status[], median[], anomaly_abs[], anomaly_pct[], pct_rank[] }`: una fila por mes, sin huecos (`zone/calendar.parquet`) |
 | `GET /api/timeline?step=8d` | `timeline_8d.json` | `{ length, year[], period_8d[], period_start[], n_equiv[], p05[], p95[], coverage_frac[], status[], median[], anomaly_pct[] }` (`zone/timeline_8d.parquet`) |
 | `GET /api/map?res=5\|6\|7&month=` | `map/res=<r>/<mes>.json` | `{ res, month, length, cell[], n_equiv[], anomaly_pct[] }`: solo las celdas con valor mayor a 0 |
 | `GET /api/points/index?month=` | `points/<mes>/index.json` | `{ month, tile_res: 2, tiles: { <h3 r2>: cantidad } }` |
 | `GET /api/points?month=&tile=` | `points/<mes>/<tesela>.json` | `{ month, tile, length, lat[], lon[], t[], d[], frp[], day[], platform[], conf[] }` |
+| `GET /api/uncertainty?month=` | `est/<mes>.json` | `{ month, length, cell[], g[], n_est[] }`: parte convertida (× k) del valor de cada celda r7, por grupo de calibración `g` (`-1` = sin grupo) |
+| `GET /api/uncertainty/ratios` | `est/ratios.json` | `{ reps, groups[], ratio[g][réplica] }`: k de cada réplica del bootstrap ÷ k |
 
-- **`cell` y `tile`** van como **string hex** de H3 (`"87c365c72ffffff"`). Como número no entran en un `Number` de JavaScript (superan 2^53). En DuckDB: `lower(hex(cell))`, y para la tesela, `lower(hex(h3_latlng_to_cell(latitude, longitude, 2)))`.
+- **`cell` y `tile`** van como **string hex** de H3 (`"87c365c72ffffff"`). Como número no entran en un `Number` de JavaScript (superan 2^53). En DuckDB: `lower(hex(cell))`.
+- **La tesela de un foco es la madre de su celda r7**, no la tesela del punto: `h3_cell_to_parent(h3_latlng_to_cell(round(latitude, 5), round(longitude, 5), 7), 2)`. En H3 las hijas no quedan contenidas exactamente en la madre; el panel busca los focos de una celda en `cellToParent(celda, 2)` y con la tesela del punto perdía ~8 % de los focos junto a los bordes. `lat`/`lon` van con 5 decimales y la celda se calcula con ese valor redondeado, para que el navegador obtenga la misma.
 - **`meta.map.domain`** es el percentil 99 de los valores mensuales de cada resolución, para que la escala de color sea la misma en todos los meses.
 - **Los focos van por mes de la fecha local solar (`local_date`).**
   - `t` son los segundos UTC desde 1970.

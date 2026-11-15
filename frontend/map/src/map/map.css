@@ -1,5 +1,6 @@
 .tam-map {
   --tam-panel: rgba(18, 22, 30, 0.86);
+  --tam-solid: rgba(18, 22, 30, 0.96);   /* paneles con texto: casi opacos, para que el mapa no se mezcle con lo escrito */
   --tam-text: #f2f4f7;
   --tam-muted: #b7bfcc;
   position: relative;
@@ -11,12 +12,15 @@
 }
 .tam-map__canvas { position: absolute; inset: 0; }
 
-.tam-map__badges {
-  position: absolute; top: 10px; left: 10px; right: 56px; z-index: 2;
-  display: flex; flex-wrap: wrap; gap: 6px; pointer-events: none;
+/* Carteles y leyenda en una misma columna: si los carteles ocupan más de un renglón, la leyenda baja
+   (antes quedaba fija y los tapaba). El margen derecho deja libres el zoom y el botón Lazo. */
+.tam-map__top {
+  position: absolute; top: 10px; left: 10px; right: 100px; z-index: 2;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px; pointer-events: none;
 }
+.tam-map__badges { display: flex; flex-wrap: wrap; gap: 6px; }
 .tam-badge {
-  background: var(--tam-panel); padding: 4px 9px; border-radius: 999px;
+  background: var(--tam-solid); padding: 4px 9px; border-radius: 999px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 .tam-badge--period { font-weight: 600; }
@@ -24,8 +28,8 @@
 .tam-badge--warn { border: 1px solid #ff8a65; }
 
 .tam-map__legend {
-  position: absolute; left: 10px; top: 52px; z-index: 2; width: 250px; max-width: calc(100% - 70px);
-  background: var(--tam-panel); padding: 10px 12px; border-radius: 8px;
+  width: 250px; max-width: 100%; pointer-events: auto;
+  background: var(--tam-solid); padding: 10px 12px; border-radius: 8px;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
 }
 .tam-map__legend:empty { display: none; }
@@ -66,8 +70,8 @@
 .tam-map__lasso path { fill: rgba(0, 190, 255, 0.12); stroke: #00beff; stroke-width: 2; stroke-dasharray: 5 4; }
 
 .tam-sel {
-  position: absolute; top: 122px; right: 10px; z-index: 2; width: 340px; max-width: calc(100% - 20px);
-  max-height: calc(100% - 180px); overflow: auto; background: var(--tam-panel); border-radius: 8px;
+  position: absolute; top: 122px; right: 10px; z-index: 4; width: 340px; max-width: calc(100% - 20px);
+  max-height: calc(100% - 180px); overflow: auto; background: var(--tam-solid); border-radius: 8px;
   padding: 10px 12px; box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35); font-size: 12px;
 }
 .tam-sel[hidden] { display: none; }
@@ -78,8 +82,17 @@
 .tam-sel details > summary.tam-sel__head b { flex: 1; }
 .tam-sel__x { font: inherit; font-size: 18px; line-height: 1; color: var(--tam-muted); background: none; border: 0; cursor: pointer; padding: 0 4px; }
 .tam-sel__x:hover { color: var(--tam-text); }
-.tam-sel__range { display: flex; gap: 8px; margin: 8px 0 6px; }
-.tam-sel__range label { display: flex; flex-direction: column; gap: 2px; color: var(--tam-muted); flex: 1; }
+.tam-sel__range { display: flex; gap: 10px; margin: 8px 0 6px; }
+.tam-sel__pick { display: flex; flex-direction: column; gap: 2px; color: var(--tam-muted); flex: 1; min-width: 0; }
+.tam-sel__pick > div { display: flex; gap: 3px; }
+.tam-sel__pick select { flex: 1; min-width: 0; }
+.tam-sel__step { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.tam-sel__step > span:first-of-type { color: var(--tam-muted); white-space: nowrap; }
+.tam-sel__step b { color: var(--tam-text); }
+.tam-sel__presets { display: flex; gap: 4px; margin-left: auto; }
+.tam-sel button:disabled { opacity: 0.35; cursor: default; }
+.tam-sel button[aria-pressed="true"] { border-color: #00beff; color: #00beff; }
+.tam-sel select:focus-visible, .tam-sel button:focus-visible { outline: 2px solid #00beff; outline-offset: 1px; }
 .tam-sel select, .tam-sel button:not(.tam-sel__x) {
   font: inherit; color: var(--tam-text); background: rgba(255, 255, 255, 0.06); border: 1px solid #39414d;
   border-radius: 5px; padding: 3px 6px;
@@ -96,24 +109,65 @@
 .tam-sel__big { font-size: 24px; font-weight: 700; color: #ffb74d; font-variant-numeric: tabular-nums; }
 .tam-sel__mid { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .tam-sel__lbl { color: var(--tam-muted); font-size: 11px; }
-.tam-sel__chart { width: 100%; height: 64px; display: block; margin-top: 4px; }
-.tam-sel__bar { fill: #ff9800; opacity: 0.85; }
-.tam-sel__dot { fill: #5ec962; }
-.tam-sel__ticks, .tam-sel__keys { display: flex; justify-content: space-between; color: var(--tam-muted); font-size: 11px; }
-.tam-sel__keys { justify-content: flex-start; gap: 12px; margin-top: 2px; }
-.tam-sel__k-bar, .tam-sel__k-dot { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; }
-.tam-sel__k-bar { background: #ff9800; border-radius: 1px; }
-.tam-sel__k-dot { background: #5ec962; border-radius: 50%; }
+.tam-chart { margin-top: 12px; }
+.tam-chart__head, .tam-chart__sensors > summary { display: flex; align-items: baseline; gap: 6px; }
+.tam-chart__head span, .tam-chart__sensors > summary span { color: var(--tam-muted); font-size: 11px; }
+.tam-chart__head button { margin-left: auto; font-size: 11px; padding: 1px 6px !important; }
+.tam-chart__sensors { margin-top: 12px; }
+.tam-chart__sensors > summary { cursor: pointer; list-style: none; }
+.tam-chart__sensors > summary::before { content: "▸"; color: var(--tam-muted); }
+.tam-chart__sensors[open] > summary::before { content: "▾"; }
+.tam-chart__cap { margin: 2px 0 6px; color: var(--tam-muted); }
+.tam-chart__cap b { color: var(--tam-text); }
+.tam-chart__plot { position: relative; margin-left: 34px; border-bottom: 1px solid rgba(255, 255, 255, 0.35); cursor: pointer; touch-action: none; }
+.tam-chart__plot svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.tam-chart__grid { position: absolute; left: 0; right: 0; height: 0; border-top: 1px dashed rgba(255, 255, 255, 0.14); pointer-events: none; }
+.tam-chart__grid span { position: absolute; right: 100%; margin-right: 4px; transform: translateY(-50%); color: var(--tam-muted); font-size: 10px; white-space: nowrap; }
+.tam-chart__cursor { position: absolute; top: 0; bottom: 0; background: rgba(255, 255, 255, 0.16); pointer-events: none; }
+.tam-chart__x { position: relative; height: 14px; margin-left: 34px; color: var(--tam-muted); font-size: 10px; }
+.tam-chart__x span { position: absolute; top: 2px; transform: translateX(-50%); white-space: nowrap; }
+.tam-chart__x span:first-child { transform: translateX(-20%); }
+.tam-chart__x span:last-child:not(:first-child) { transform: translateX(-80%); }
+.tam-chart__plot rect { shape-rendering: crispEdges; }
+.tam-chart__line { fill: none; stroke-width: 2; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.tam-chart__line--modis { stroke: #ff9800; }
+.tam-chart__line--viirs { stroke: #4fc3f7; }
+.tam-chart__line--obs { stroke: #b6ff5c; }
+.tam-chart__line--conv { stroke: #3fd0b0; }
+.tam-chart__band { fill: #fff; opacity: 0.28; }
+.tam-chart__partial { fill: #fff; opacity: 0.1; }
+.tam-chart__modis { fill: #ff9800; }
+.tam-chart__viirs { fill: #4fc3f7; }
+.tam-chart__keys { display: flex; flex-wrap: wrap; gap: 2px 12px; color: var(--tam-muted); font-size: 11px; margin-top: 2px; }
+.tam-chart__k { display: inline-block; width: 9px; height: 9px; margin-right: 4px; vertical-align: -1px; border-radius: 1px; }
+.tam-chart__k--obs, .tam-chart__k--conv, .tam-chart__k--modis, .tam-chart__k--viirs { height: 3px; width: 12px; vertical-align: 3px; }
+.tam-chart__k--obs { background: #b6ff5c; }
+.tam-chart__k--conv { background: #3fd0b0; }
+.tam-chart__k--partial { background: rgba(255, 255, 255, 0.18); }
+.tam-chart__k--band { background: rgba(255, 255, 255, 0.35); }
+.tam-chart__k--modis { background: #ff9800; }
+.tam-chart__k--viirs { background: #4fc3f7; }
+.tam-chart__read { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-height: 34px; margin-top: 6px; padding: 4px 7px;
+  border-radius: 5px; background: rgba(255, 255, 255, 0.06); color: var(--tam-muted); font-variant-numeric: tabular-nums; }
+.tam-chart__read b, .tam-chart__read span { color: var(--tam-text); white-space: nowrap; }
+.tam-chart__read small { flex-basis: 100%; }
+.tam-sel__warn { margin: 4px 0 0; padding: 4px 7px; border-left: 3px solid #ffb74d; background: rgba(255, 183, 77, 0.12); }
 .tam-sel__grid { display: grid; grid-template-columns: auto 1fr; gap: 3px 10px; margin: 10px 0 0; }
 .tam-sel__grid dt { color: var(--tam-muted); }
 .tam-sel__grid dd { margin: 0; text-align: right; font-variant-numeric: tabular-nums; }
 .tam-sel__grid small { color: var(--tam-muted); }
-.tam-sel__months, .tam-sel__method { margin-top: 10px; }
-.tam-sel__months summary, .tam-sel__method summary { cursor: pointer; color: var(--tam-muted); font-weight: 600; }
-.tam-sel__months table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
-.tam-sel__months th, .tam-sel__months td { padding: 2px 4px; text-align: right; border-bottom: 1px solid rgba(255, 255, 255, 0.08); }
-.tam-sel__months th:first-child, .tam-sel__months td:first-child { text-align: left; }
-.tam-sel__method p { color: var(--tam-muted); margin: 6px 0 0; }
+.tam-sel__sec { margin-top: 10px; }
+.tam-sel__sec > summary { cursor: pointer; color: var(--tam-muted); font-weight: 600; }
+.tam-sel__sec table { width: 100%; border-collapse: collapse; margin-top: 6px; font-variant-numeric: tabular-nums; }
+.tam-sel__sec th, .tam-sel__sec td { padding: 2px 4px; text-align: right; border-bottom: 1px solid rgba(255, 255, 255, 0.08); white-space: nowrap; }
+.tam-sel__sec th:first-child, .tam-sel__sec td:first-child { text-align: left; }
+.tam-sel__sec p { color: var(--tam-muted); margin: 6px 0 0; }
+.tam-sel__sec p b { color: var(--tam-text); }
+.tam-sel__sec code { font-size: 11px; }
+.tam-sel__sec .tam-sel__grid { margin-top: 6px; }
+.tam-sel__expl { border: 1px dashed #5a6472; border-radius: 6px; padding: 6px 8px; }
+.tam-sel__expl .tam-sel__hero { margin: 8px 0 2px; }
+.tam-sel__mid--expl { color: #ffb74d; }
 
 @media (max-width: 600px) {
   .tam-sel { top: auto; bottom: 10px; right: 10px; left: 10px; width: auto; max-height: 55%; }

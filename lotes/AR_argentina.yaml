@@ -1,0 +1,9 @@
+# Argentina completa, 2000–2025: la misma corrida que config.yaml (mismos datos y parámetros) con todo el
+# país como zona del mapa, en vez de Río Negro y Neuquén.
+# Zona: el polígono de Argentina de zona/sudamerica_6.geojson (geoBoundaries ADM0, scripts/descargar_paises.py).
+# Solo lo que cambia respecto de config.yaml (extends). Las rutas son relativas a esta carpeta.
+extends: ../config.yaml
+
+paths: {input_dir: ../Datos, data_dir: ../data/lotes/AR, publish_dir: ../data/lotes/AR/publish}
+countries: [Argentina]
+zone: {name: 'Argentina', outline: ../zona/argentina.geojson}
