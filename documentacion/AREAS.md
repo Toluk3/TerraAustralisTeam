@@ -11,7 +11,7 @@ El estado de cada componente y la ruta de cierre se describen en [`FUNDAMENTOS_D
 | Área | Función | Estado verificable |
 |---|---|---|
 | 1 · Datos | Descargar y procesar FIRMS, normalizar, calibrar, validar y publicar los datos | Pipeline implementado en `pipeline/`; la configuración final y los datos de publicación deben identificarse por corrida |
-| 2 · Análisis | Contrastar la armonización y aportar evidencia para las decisiones metodológicas | Hay resúmenes versionados de los lotes L1–L3; no se encontraron scripts ni resultados finales propios en `analisis/` |
+| 2 · Análisis | Contrastar la armonización y aportar evidencia para las decisiones metodológicas | Hay resúmenes versionados de L1–L5, anteriores a los fixes; no se encontraron scripts ni resultados finales propios en `analisis/` |
 | 3 · Backend e infraestructura | Desarrollar una API y servicios de backend si fueran necesarios | No implementado. No es requisito de la ruta estática inmediata |
 | 4 · Frontend | Mostrar los datos armonizados en el mapa y permitir recorrer el tiempo | Demostración local implementada en `frontend/map/` con Vite, MapLibre y deck.gl |
 | 5 · Producto y documentación | Mantener claro el alcance, las limitaciones y la presentación del proyecto | Documentación e integración requieren alinearse con el estado del código |

@@ -47,7 +47,7 @@ S-NPP no integra la serie: la configuración principal y los lotes usan Terra, A
 | Componente | Responsabilidad actual | Estado |
 |---|---|---|
 | Pipeline de datos | Preparar y publicar los datos para análisis y visualización | Implementado en `pipeline/`; los datos de ejecución no se versionan |
-| Análisis y validación | Contrastar métricas, calibración, deriva y resultados | Hay resúmenes versionados de los lotes L1–L3; la carpeta `analisis/` aún no contiene scripts ni resultados finales propios |
+| Análisis y validación | Contrastar métricas, calibración, deriva y resultados | Hay resúmenes versionados de L1–L5, anteriores a los fixes; la carpeta `analisis/` aún no contiene scripts ni resultados finales propios |
 | Frontend | Mostrar el mapa de celdas y focos, y permitir navegar por el tiempo | Demostración local implementada en `frontend/map/` |
 | Backend e infraestructura | Servir una API y desplegar servicios de producción | Django, API y Cloud Run no están implementados en este repositorio |
 | Producto y documentación | Comunicar alcance, limitaciones y resultados sin confundir propuestas con entregables | Debe mantenerse alineado con la implementación vigente |

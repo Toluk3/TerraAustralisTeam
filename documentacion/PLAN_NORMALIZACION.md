@@ -132,7 +132,7 @@ El pipeline implementa reportes de control de calidad, validación de la calibra
 
 Con `n_clusters_det`, L1–L4 cumplen el criterio principal. Queda un aviso en Argentina: la noche de 2020 da 1,155, casi toda por octubre de 2020 (incendios de Córdoba, fuegos más intensos que el resto del solape). No está explicado del todo.
 
-Los lotes L1–L3 cuentan con resúmenes versionados en `lotes/resumen/`. La carpeta `analisis/` todavía no incluye scripts ni resultados finales propios. Por lo tanto, esta evidencia no permite afirmar que las preguntas de análisis regional, sensibilidad y transferibilidad estén todas respondidas.
+Los lotes L1–L5 cuentan con resúmenes versionados en `lotes/resumen/`, anteriores a los fixes y a `n_clusters_det`. La carpeta `analisis/` todavía no incluye scripts ni resultados finales propios. Por lo tanto, esta evidencia no permite afirmar que las preguntas de análisis regional, sensibilidad y transferibilidad estén todas respondidas.
 
 ## 7. Decisiones y límites vigentes
 
@@ -149,6 +149,14 @@ Los lotes L1–L3 cuentan con resúmenes versionados en `lotes/resumen/`. La car
 | Período base de la mediana | 2003–2021 | Es el tramo de Terra + Aqua observado: sin Terra sola, sin el tramo estimado con VIIRS y sin que el año evaluado entre en su propia mediana. |
 | Confianza mínima | `nominal` | Con `high` las clases de MODIS y VIIRS dejan de ser equivalentes (de noche VIIRS casi no marca `high`) y `k` queda inestable. |
 | Entrega | JSON estáticos, sin backend | Alcanza para la demostración de una zona fija. |
+
+### Corrida de referencia
+
+Corrida principal con `config.yaml` sin cambios: commit `6748b12`, `config_hash` `95a28aff3f36`, procesada el 15/11/2026. Usa MODIS 2000–2025 y NOAA-20 2018–2025 de Argentina (no hay archivos de NOAA-21). La cobertura va del 01/11/2000 al 31/12/2025 y la serie usa VIIRS desde el 01/01/2022. El resultado queda en `data/publish/` (32,8 MB, `meta/version.json`), con 74.098 celdas r7 en la zona.
+
+La validación de NOAA-20 en Argentina confirma la métrica y la transición. Pasa el criterio principal (día + noche, día y sesgo). Queda el aviso conocido de la noche de 2020, con un cociente de 1,155. Con un año afuera y frente a `n_clusters`, el peor año nocturno baja de 18,4 % a 15,5 % y el error mediano nocturno baja de 0,198 a 0,104. El de día + noche baja de 0,090 a 0,087, y el de día no cambia (0,094).
+
+`validate` informa `mejor_variante = k_region_mes` porque ordena por el error total de día + noche con todos los años. Esa variante no separa día y noche, y algún año nocturno se le va al 145 %, así que no sirve para la serie.
 
 ### Límites
 

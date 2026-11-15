@@ -30,16 +30,18 @@ Estas preguntas son objetivos de análisis. La presencia de resultados de un lot
 | Lote | Cobertura prevista | Propósito | Estado en los resúmenes versionados |
 |---|---|---|---|
 | L0 · Inventario | Todos los países; conteos sin ejecutar el pipeline completo | Estimar volumen y seleccionar muestras | No identificado entre los resúmenes disponibles |
-| L1 · Argentina | Argentina | Línea base y comparación con corridas anteriores | Disponible |
-| L2 · Cono Sur | Chile, Uruguay, Paraguay y Bolivia | Contraste regional y transferibilidad | Disponible |
-| L3 · Brasil | Brasil | Evaluar un volumen y régimen distintos | Disponible |
-| L4 · Contrastes | Australia, Estados Unidos, Canadá, Qatar e Islandia | Bosques, fuentes industriales y contextos diversos | Disponible |
-| L5 · Sensibilidad | Argentina con variantes de configuración | Medir sensibilidad al umbral y a la máscara | Disponible (8 variantes) |
-| L6 · Global | Países restantes, por continente | Ampliación exploratoria | Corrida parcial sin versionar; hay que repetirla (ver nota) |
+| L1 · Argentina | Argentina | Línea base y comparación con corridas anteriores | Versionado, desactualizado (ver nota) |
+| L2 · Cono Sur | Chile, Uruguay, Paraguay y Bolivia | Contraste regional y transferibilidad | Versionado, desactualizado |
+| L3 · Brasil | Brasil | Evaluar un volumen y régimen distintos | Versionado, desactualizado |
+| L4 · Contrastes | Australia, Estados Unidos, Canadá, Qatar e Islandia | Bosques, fuentes industriales y contextos diversos | Versionado, desactualizado |
+| L5 · Sensibilidad | Argentina con variantes de configuración | Medir sensibilidad al umbral y a la máscara | Versionado, desactualizado (8 variantes) |
+| L6 · Global | Países restantes, por continente | Ampliación exploratoria | Sin resúmenes; falta correrlo |
 
 El directorio `lotes/resumen/` contiene subdirectorios para L1–L4 y las ocho variantes de L5.
 
-> **Nota:** esos resúmenes son anteriores a las correcciones de cobertura y de niveles de calibración (rama `fixes-juana`). Cambian `config_hash` y los resultados: hay que volver a correr los lotes antes de usarlos en una publicación. Desde la métrica `n_clusters_det`, `aggregate` guarda columnas nuevas: los lotes ya procesados tienen que repetir la fase 1. Los archivos de resultados consolidados que permitirían volver a analizar todas las corridas residen en `data/` y no se versionan.
+> **Nota:** esos resúmenes son del 14/11/2026 (15:50–17:50) y anteriores a las correcciones de cobertura y de niveles de calibración (rama `fixes-juana`) y a la métrica `n_clusters_det`: su ablación no incluye la variante `k_region_mes_dianoche_clusters_det`. Cambian `config_hash` y los resultados: hay que volver a correr los lotes antes de usarlos en una publicación. Los archivos de resultados consolidados que permitirían volver a analizar todas las corridas residen en `data/` y no se versionan.
+>
+> **Estado local (15/11/2026):** la corrida de `lotes/correr_todos.sh` posterior a los fixes se cortó en la fase 1 de `L6_africa_sur`. Las bases de fase 1 que quedaron (L1–L4 y cuatro lotes de África) son anteriores a `n_clusters_det` y no tienen esa columna en `fires_daily`, así que todos los lotes tienen que repetir la fase 1. Se borraron los resúmenes L6 sin versionar (eran de antes de los fixes), la base parcial de `L6_africa_sur` y `data/lotes/L4/raw` (un corte anterior dejó un parquet dañado).
 
 ## 4. Selección de plataformas en esta campaña
 
