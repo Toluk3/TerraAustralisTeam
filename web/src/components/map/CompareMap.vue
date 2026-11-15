@@ -5,7 +5,7 @@
  * Cámara compartida (jumpTo con indicador de movimiento programático), mismo dominio de color.
  * Vista Diferencia: un solo mapa (A) con A − B por celda.
  */
-import { computed, ref, shallowRef, watch, onBeforeUnmount } from 'vue';
+import { computed, ref, shallowRef, watch, onBeforeUnmount, markRaw } from 'vue';
 import { useI18n } from 'vue-i18n';
 import FireMap from './FireMap.vue';
 import MapLegend from './MapLegend.vue';
@@ -72,7 +72,8 @@ const badges = computed(() => {
 
 // --- Mapa A ---
 function onReadyA(api) { setMapApi(api); }
-function onSelection(s) { analysis.selection = s; }
+// markRaw: la selección puede tener cientos de miles de celdas; no hace falta que sea reactiva por dentro
+function onSelection(s) { analysis.selection = s ? markRaw(s) : null; }
 function onLasso(on) { analysis.lasso = on; if (on) notice.value = null; }
 // Avisos del módulo (selección demasiado grande, error de carga), traducidos acá
 const notice = ref(null);

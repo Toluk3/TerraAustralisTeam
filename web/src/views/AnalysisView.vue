@@ -9,11 +9,14 @@ import CompareMap from '@/components/map/CompareMap.vue';
 import MapToolbar from '@/components/map/MapToolbar.vue';
 import FilterBar from '@/components/map/FilterBar.vue';
 import LayerPanel from '@/components/map/LayerPanel.vue';
+import SelectionSummary from '@/components/summary/SelectionSummary.vue';
+import { useSummaries } from '@/features/useSummaries.js';
 
 const { t } = useI18n();
 const route = useRoute();
 const ds = shallowRef(null);
 const rows = shallowRef([]);
+useSummaries(ds, rows);
 
 onMounted(async () => {
   ds.value = await loadDataset();
@@ -43,6 +46,7 @@ const monthA = computed({
             :switch-month="ds.meta.switch_date.slice(0, 7)" class="an__time" />
         </section>
       </div>
+      <SelectionSummary :meta="ds.meta" :rows="rows" />
     </template>
   </div>
 </template>
