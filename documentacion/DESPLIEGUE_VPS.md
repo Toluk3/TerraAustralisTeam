@@ -1,6 +1,6 @@
 # Despliegue de la web en una VPS
 
-La demo actual es una web estatica: no necesita PostgreSQL ni un backend. Los datos no estan en Git; el script descarga los JSON S1 ya generados desde el release privado `datos-s1-2026-11-15` y **no ejecuta el pipeline ni vuelve a crear la base DuckDB**. Nginx sirve los archivos directamente para `www.terraaustralis.space`; no se abre ningun puerto de aplicacion.
+El despliegue publica la nueva interfaz Vue de `frontend/` como una web estatica; no necesita PostgreSQL ni un backend. Nginx sirve los archivos compilados para `www.terraaustralis.space`; no se abre ningun puerto de aplicacion. La demo científica independiente de `frontend/map/` no es la interfaz que publica este script.
 
 ## Preparacion previa
 
@@ -23,14 +23,7 @@ La demo actual es una web estatica: no necesita PostgreSQL ni un backend. Los da
 3. En Cloudflare DNS, apunta el registro `www` a la IP de la VPS con proxy habilitado (nube naranja) y configura **SSL/TLS → Full (strict)**.
 4. Permite conexiones entrantes al origen en los puertos 80 y 443. No hace falta abrir 8080.
 
-La VPS debe tener lo indicado en la preparacion inicial del servidor, incluido Git, Nginx, Node.js 20, npm, Python y `unzip`. También necesita GitHub CLI (`gh`) autenticado con acceso al repo y su release: la llave SSH permite clonar el repo, pero no descargar el release privado mediante la API.
-
-```bash
-sudo apt install -y gh rsync
-gh auth login --hostname github.com --git-protocol ssh
-```
-
-La descarga y descompresion requieren espacio libre suficiente (el ZIP ocupa varios cientos de MB y los datos descomprimidos aproximadamente 2,2 GB).
+La VPS necesita Git, Nginx, Node.js `^22.18.0` o `>=24.12.0` y npm. El script instala `rsync` si hace falta. No requiere GitHub CLI, Python, unzip ni descargar el archivo de datos.
 
 ## Clonar y desplegar
 
@@ -42,4 +35,4 @@ cd TerraAustralisTeam
 bash scripts/deploy_vps.sh
 ```
 
-El script descarga los datos, instala dependencias npm, compila el sitio con `mock-s1`, configura Nginx para redirigir HTTP a HTTPS y servir el contenido en `/var/www/terra-australis`. Habilita Nginx al iniciar el sistema. La web queda disponible en `https://www.terraaustralis.space/`.
+El script instala las dependencias de `frontend/`, compila esa app Vue y publica `frontend/dist/` en `/var/www/terra-australis`. Luego configura Nginx para redirigir HTTP a HTTPS y servir el contenido, y habilita Nginx al iniciar el sistema. La web queda disponible en `https://www.terraaustralis.space/`.

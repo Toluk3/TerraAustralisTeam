@@ -7,9 +7,10 @@ Terra Australis es una demostración de exploración temporal de focos de calor 
 ## Estado actual
 
 - **Datos:** pipeline en Python, DuckDB y H3 para ingesta, normalización, calibración, control de calidad y exportación.
-- **Visualización:** demostración Vite con MapLibre y deck.gl; consume JSON generados a partir de `data/publish/`.
+- **Interfaz web:** aplicación Vue/Vite en `frontend/`, publicada por el despliegue de la VPS.
+- **Demo científica:** aplicación independiente con MapLibre y deck.gl en `frontend/map/`; consume JSON generados a partir de `data/publish/`.
 - **Ejecución:** los datos fuente y procesados se generan localmente y no se versionan.
-- **Backend y despliegue:** no hay backend Django/API ni publicación web verificable en este repositorio. La prioridad inmediata es completar el flujo estático.
+- **Backend y despliegue:** no hay backend Django/API; existe un script para publicar la interfaz Vue estática en una VPS, pero el repositorio no verifica el estado de una publicación externa.
 - **Decisiones vigentes:** métrica `n_clusters_det`, referencia Terra + Aqua, serie VIIRS con NOAA-20 y NOAA-21 (sin S-NPP), celdas H3 r7 y calibración común a los lotes. Están en [`documentacion/PLAN_NORMALIZACION.md`](documentacion/PLAN_NORMALIZACION.md), sección 7.
 
 ## Comenzar
@@ -34,9 +35,9 @@ En Windows:
 .venv\Scripts\python -m pytest
 ```
 
-La ejecución completa de descarga y pipeline se describe en [`pipeline/README.md`](pipeline/README.md) y en los casos de uso. Para iniciar el mapa se requiere primero una publicación del pipeline y después generar los JSON según [`frontend/map/README.md`](frontend/map/README.md).
+La ejecución completa de descarga y pipeline se describe en [`pipeline/README.md`](pipeline/README.md) y en los casos de uso. Para iniciar la demo científica del mapa se requiere primero una publicación del pipeline y después generar los JSON según [`frontend/map/README.md`](frontend/map/README.md).
 
-Para desplegar la web en una VPS usando los datos ya procesados, consultar [`documentacion/DESPLIEGUE_VPS.md`](documentacion/DESPLIEGUE_VPS.md).
+Para desplegar la interfaz Vue en una VPS, consultar [`documentacion/DESPLIEGUE_VPS.md`](documentacion/DESPLIEGUE_VPS.md).
 
 ## Componentes
 
@@ -45,7 +46,8 @@ Para desplegar la web en una VPS usando los datos ya procesados, consultar [`doc
 | [`documentacion/`](documentacion/) | Estado ejecutivo, método, arquitectura y decisiones abiertas |
 | [`pipeline/`](pipeline/) | Procesamiento y publicación de los datos |
 | [`analisis/`](analisis/) | Análisis de validación y resultados |
-| [`frontend/map/`](frontend/map/) | Demostración del mapa y navegación temporal |
+| [`frontend/`](frontend/) | Interfaz web Vue/Vite publicada en la VPS |
+| [`frontend/map/`](frontend/map/) | Demo científica del mapa y navegación temporal |
 | [`lotes/`](lotes/) | Configuraciones y resúmenes de ejecuciones por lote |
 | [`scripts/`](scripts/) | Descarga y utilidades de preparación |
 | [`tests/`](tests/) | Pruebas automáticas del pipeline |
