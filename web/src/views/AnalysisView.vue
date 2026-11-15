@@ -55,6 +55,8 @@ watch(status, async (s) => {
   if (s !== 'ready') return;
   await nextTick();
   if (!mapSlot.value) return;
+  // Si ya está en pantalla (lo normal: va arriba), se crea enseguida sin esperar al observador
+  if (mapSlot.value.getBoundingClientRect().top < window.innerHeight + 200) { mapVisible.value = true; return; }
   io = new IntersectionObserver(([e]) => {
     if (e.isIntersecting) { mapVisible.value = true; io.disconnect(); }
   }, { rootMargin: '200px' });
