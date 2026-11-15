@@ -64,7 +64,7 @@ useChart(el, (c) => {
 </script>
 
 <template>
-  <section class="card frp" aria-labelledby="frp-title">
+  <section class="card frp chart-fill" aria-labelledby="frp-title">
     <header class="chart-head"><h2 id="frp-title" class="chart-title">{{ t('charts.frp.title') }}</h2></header>
     <div v-show="state === 'data'" ref="el" class="chart-canvas" role="img" :aria-label="t('charts.frp.aria')"></div>
     <p v-if="state === 'empty'" class="chart-empty">{{ t('charts.frp.empty') }}</p>
@@ -90,7 +90,7 @@ useChart(el, (c) => {
 
 <style scoped>
 .frp { padding: 14px 16px 16px; min-width: 0; }
-.frp .chart-canvas { height: 240px; }
+.frp .chart-canvas { min-height: 240px; }
 .frp__k i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: currentColor; }
 .frp__k i.is-light { opacity: 0.55; }
 .frp__k--A { color: var(--period-a); }

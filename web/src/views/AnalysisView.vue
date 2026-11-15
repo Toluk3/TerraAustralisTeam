@@ -131,19 +131,22 @@ const expected = CANDIDATES.map((c) => `/${c}/`).join(', ');
 .an__state--err strong { font-weight: 500; }
 .an__sk { width: 100%; height: 320px; }
 .an__filters { padding: 10px 12px; }
-.an__maprow { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px; align-items: start; }
-.an__layers { padding: 16px 14px; position: sticky; top: calc(var(--nav-h) + 12px); }
+.an__maprow { display: grid; grid-template-columns: 168px minmax(0, 1fr); gap: 16px; align-items: stretch; }
+.an__layers { padding: 16px 14px; display: flex; flex-direction: column; }
+.an__layers > * { flex: 1; }
 .an__map { padding: 12px; }
 .an__mapwait { width: 100%; aspect-ratio: 16 / 10; min-height: 420px; border-radius: var(--radius-s); background: #eceae4; }
 .an__time { margin-top: 12px; }
-.an__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+/* Los dos gráficos de cada fila miden lo mismo y su contenido llena la tarjeta (sin huecos abajo) */
+.an__pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: stretch; }
 .an__pair--cal { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
 .an__warn { padding: 12px 16px; font-size: 0.82rem; color: var(--ink-2); }
 .an__warn ul { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 0; }
 .an__warn li + li::before { content: '·'; margin: 0 10px; color: var(--muted); }
 @media (max-width: 900px) {
   .an__maprow, .an__pair, .an__pair--cal { grid-template-columns: 1fr; }
-  .an__layers { position: static; padding: 10px 12px; }
+  .an__layers { padding: 10px 12px; }
+  .an__pair { align-items: start; }
   .an__mapwait { aspect-ratio: 4 / 5; min-height: 360px; }
 }
 </style>

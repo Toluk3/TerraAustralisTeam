@@ -71,6 +71,7 @@ const periods = computed(() => [['A', qa.value], ['B', qb.value]].filter(([, q])
 
 <style scoped>
 .dq { padding: 14px 16px 16px; min-width: 0; display: flex; flex-direction: column; }
+.dq__period { flex: 1; display: flex; flex-direction: column; justify-content: center; margin-bottom: 14px; }
 .dq__period + .dq__period { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
 .dq__p { font-size: 0.8rem; font-weight: 500; }
 .dq__p--A { color: var(--period-a); }
@@ -87,6 +88,6 @@ const periods = computed(() => [['A', qa.value], ['B', qb.value]].filter(([, q])
 .dq__legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 0.76rem; margin: 6px 0 0; }
 .dq__sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
 .dq__est { font-size: 0.82rem; margin: 8px 0 0; }
-.dq__link { align-self: flex-start; margin-top: 14px; font-size: 0.86rem; min-height: 32px; display: inline-flex; align-items: center; background-position: 0 calc(50% + 0.75em); padding: 0; }
+.dq__link { align-self: flex-start; margin-top: auto; font-size: 0.86rem; min-height: 32px; display: inline-flex; align-items: center; background-position: 0 calc(50% + 0.75em); padding: 0; }
 @media (max-width: 520px) { .dq__row { grid-template-columns: 1fr auto; } .dq__row .dq__bar { grid-column: 1 / -1; grid-row: 2; } }
 </style>

@@ -50,9 +50,10 @@ const opacityPct = computed(() => Math.round(analysis.opacity * 100));
 </template>
 
 <style scoped>
-.lp { font-size: 0.88rem; }
+.lp { font-size: 0.88rem; display: flex; flex-direction: column; }
 .lp__toggle { display: none; }
-.lp__body { display: flex; flex-direction: column; gap: 16px; }
+.lp__body { display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.lp__body > .lp__note:last-child { margin-top: auto; }
 .lp__title { font-size: 1.05rem; font-weight: 500; letter-spacing: 0; }
 .lp__group { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .lp__group legend, .lp__legend { color: var(--muted); font-size: 0.8rem; margin-bottom: 4px; padding: 0; }

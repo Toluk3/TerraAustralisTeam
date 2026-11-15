@@ -145,13 +145,13 @@ const readout = computed(() => (hover.value ? describe(hover.value) : t('charts.
 
 <style scoped>
 .bc { padding: 14px 16px 16px; min-width: 0; }
-.bc__grid { display: flex; flex-direction: column; gap: 3px; }
-.bc__row { display: grid; grid-template-columns: 44px repeat(12, minmax(0, 1fr)); gap: 3px; align-items: center; position: relative; }
+.bc__grid { display: flex; flex-direction: column; gap: 2px; }
+.bc__row { display: grid; grid-template-columns: 44px repeat(12, minmax(0, 1fr)); gap: 2px 3px; align-items: center; position: relative; }
 .bc__row--switch::before { content: ''; position: absolute; left: 40px; right: 0; top: -2.5px; border-top: 1.5px dashed var(--muted); }
 .bc__row--head { margin-bottom: 2px; }
 .bc__year { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .bc__mh { font-size: 0.72rem; color: var(--muted); text-align: center; text-transform: uppercase; }
-.bc__cell { height: 16px; border-radius: 3px; cursor: pointer; position: relative; outline-offset: 1px; }
+.bc__cell { height: 14px; border-radius: 3px; cursor: pointer; position: relative; outline-offset: 1px; }
 .bc__cell--empty { cursor: default; }
 .bc__cell.is-reduced::after {
   content: ''; position: absolute; inset: 0; border-radius: 3px;

@@ -5,6 +5,9 @@
 .chart-keys { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.78rem; align-items: center; }
 .chart-note { font-size: 0.78rem; color: var(--muted); margin: 8px 0 0; }
 .chart-canvas { width: 100%; height: 260px; }
+/* Dentro de un par de tarjetas estirado, el gráfico ocupa el alto que sobra */
+.chart-fill { display: flex; flex-direction: column; }
+.chart-fill > .chart-canvas, .chart-fill > .chart-empty { flex: 1 1 auto; min-height: 240px; height: auto; }
 .chart-empty { display: grid; place-items: center; text-align: center; height: 200px; color: var(--muted); font-size: 0.88rem; padding: 0 24px; border: 1px dashed var(--line-strong); border-radius: var(--radius-s); }
 .chart-table { margin-top: 10px; font-size: 0.8rem; }
 .chart-table > summary { cursor: pointer; color: var(--muted); min-height: 32px; display: inline-flex; align-items: center; }

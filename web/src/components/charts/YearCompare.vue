@@ -88,7 +88,7 @@ const tableYears = computed(() => [yearA.value, ...(yearB.value ? [yearB.value] 
 </script>
 
 <template>
-  <section class="card yc" aria-labelledby="yc-title">
+  <section class="card yc chart-fill" aria-labelledby="yc-title">
     <header class="chart-head">
       <h2 id="yc-title" class="chart-title">{{ t('charts.years.title') }}</h2>
       <label class="visually-hidden" for="yc-add">{{ t('charts.years.add') }}</label>
