@@ -88,6 +88,16 @@ onMounted(async () => {
     const onMove = (e) => emit('move', { camera: camera(), user: Boolean(e?.originalEvent) });
     m.map.on('move', onMove);
     offs.push(() => m.map.off('move', onMove));
+    // Lo que cambió mientras el mapa cargaba (los watchers no tenían a quién avisar)
+    const st = m.getState();
+    if (st.period.from !== props.period.from || st.period.to !== (props.period.to ?? props.period.from)) {
+      m.setPeriod({ from: props.period.from, to: props.period.to ?? props.period.from });
+    }
+    m.setMetric(props.view === 'anomaly' ? 'anomaly' : 'value');
+    if (st.hexOpacity !== props.opacity) m.setHexOpacity(props.opacity);
+    for (const k of ['points', 'outline', 'mask']) if (st.layers[k] !== props.layers[k]) m.setLayerVisible(k, props.layers[k]);
+    if (st.layers.cells !== cellsVisible()) m.setLayerVisible('cells', cellsVisible());
+    m.setLabels(labels.value);
     if (props.diff) drawDiff();
     loading.value = false;
     emit('ready', m);
