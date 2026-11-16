@@ -1,6 +1,7 @@
 {
   "name": "terra-australis-web",
   "private": true,
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "Frontend científico de Terra Australis: mapa, comparación de períodos y gráficos de la serie armonizada MODIS + VIIRS",
   "type": "module",

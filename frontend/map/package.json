@@ -1,6 +1,7 @@
 {
   "name": "terraaustralis-map",
   "private": true,
+  "license": "Apache-2.0",
   "version": "0.1.0",
   "description": "Módulo del mapa: MapLibre (OpenStreetMap) + deck.gl con la grilla H3 armonizada y los focos de FIRMS",
   "type": "module",

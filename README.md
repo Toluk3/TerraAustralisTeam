@@ -55,3 +55,7 @@ Para desplegar la web (`web/`, con EduAustralis en `/#/edu`) en una VPS, consult
 | [`tests/`](tests/) | Pruebas automáticas del pipeline |
 
 `Datos/` y `data/` contienen entradas y productos generados localmente y están excluidos de Git.
+
+## Licencia
+
+El código de este repositorio se distribuye bajo la licencia [Apache 2.0](LICENSE). Los datos de focos (NASA FIRMS, MODIS y VIIRS) y los mapas base (OpenStreetMap y otros proveedores) conservan las condiciones de uso de sus fuentes.
