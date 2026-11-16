@@ -59,8 +59,7 @@
       "yearsLabel": "years of series ({from}–{to})",
       "cellLabel": "per H3 r7 cell",
       "biasLabel": "bias after calibration (before +262 %)",
-      "intervalLabel": "interval of every estimate",
-      "note": "Values are estimates derived from satellite observations: a hotspot is not a confirmed fire."
+      "intervalLabel": "interval of every estimate"
     }
   },
   "map": {
@@ -107,7 +106,6 @@
     "membersLabel": "Members",
     "thanksTitle": "Acknowledgments",
     "thanks": "To NASA FIRMS for the MODIS and VIIRS active-fire data; to OpenFreeMap and the OpenStreetMap contributors for the basemap; and to the open projects H3, MapLibre, deck.gl and DuckDB.",
-    "repo": "See the repository",
     "specialTitle": "Special mention",
     "specialRole": "Young collaborator",
     "specialBody": "He contributed ideas for the design and visual identity of the app, so it also appeals to kids."

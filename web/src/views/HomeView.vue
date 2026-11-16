@@ -121,7 +121,7 @@ onBeforeUnmount(() => {
             </p>
           </div>
           <!-- Imagen provisoria: reemplazar public/images/dos-sensores.png por la definitiva (mismo nombre) -->
-          <img src="/images/dos-sensores.png" :alt="t('home.problem.imageAlt')" width="1200" height="900"
+          <img src="/images/dos-sensores.png" :alt="t('home.problem.imageAlt')" width="630" height="400"
             class="problem__img" loading="lazy" decoding="async" />
         </div>
       </div>
@@ -151,7 +151,6 @@ onBeforeUnmount(() => {
             <dd>{{ f.value }}</dd>
           </div>
         </dl>
-        <p class="facts__note muted">{{ t('home.facts.note') }}</p>
       </div>
     </section>
 
@@ -234,7 +233,7 @@ onBeforeUnmount(() => {
 .facts__item + .facts__item { padding-left: 20px; border-left: 1px solid var(--line); }
 .facts__item dd { margin: 0; font-weight: 300; font-size: clamp(2rem, 3.6vw, 3.3rem); line-height: 1; letter-spacing: -0.02em; white-space: nowrap; }
 .facts__item dt { color: var(--muted); font-size: 0.95rem; }
-.facts__note { margin-top: 32px; max-width: 60ch; }
+.facts { min-height: 0; padding-bottom: clamp(24px, 4vh, 48px); }
 
 @media (max-width: 900px) {
   .problem__grid { grid-template-columns: 1fr; }
@@ -249,6 +248,8 @@ onBeforeUnmount(() => {
 }
 @media (max-width: 520px) {
   .hero__title { font-size: 2.05rem; }
+  .hero__live { display: block; text-wrap: balance; }
+  .hero__live .dot { margin-right: 8px; vertical-align: 0.1em; }
   .hero__actions { flex-direction: column; align-items: stretch; width: 100%; }
   .hero__primary .btn { width: 100%; }
   .hero__demo { justify-content: center; align-self: center; }

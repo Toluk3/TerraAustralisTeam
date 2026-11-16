@@ -98,6 +98,21 @@
 .tam-game__actions button.is-primary:hover { background: #c23c12; }
 .tam-game__actions button:focus-visible, .tam-game__quit:focus-visible { outline: 2px solid #00beff; outline-offset: 2px; }
 
+/* Con lugar a los costados, el mensaje aparece al lado del continente (el tablero queda centrado) y más grande */
+@media (min-width: 900px) and (min-height: 520px) {
+  .tam-game__tip[data-pos] {
+    left: auto; right: auto; bottom: auto; transform: none; width: min(300px, 24vw); max-width: none;
+    align-items: flex-start; font-size: 17px; padding: 14px 16px; animation-name: tam-game-tip-side;
+  }
+  .tam-game__tip[data-pos^="left"] { left: max(24px, 6vw); }
+  .tam-game__tip[data-pos^="right"] { right: max(24px, 6vw); border-left: 0; border-right: 5px solid #d9481c; }
+  .tam-game__tip[data-pos$="top"] { top: 22%; }
+  .tam-game__tip[data-pos$="mid"] { top: 44%; }
+  .tam-game__tip[data-pos$="bottom"] { top: 66%; }
+  .tam-game__tip[data-pos] > span:first-child { font-size: 30px; }
+}
+@keyframes tam-game-tip-side { from { opacity: 0; transform: scale(0.9); } }
+
 @media (max-width: 480px) {
   .tam-game__hud { font-size: 13px; gap: 7px; padding-left: 12px; }
   .tam-game__tip { font-size: 14px; }

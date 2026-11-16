@@ -59,8 +59,7 @@
       "yearsLabel": "años de serie ({from}–{to})",
       "cellLabel": "por celda H3 r7",
       "biasLabel": "sesgo tras calibrar (antes +262 %)",
-      "intervalLabel": "intervalo de cada estimación",
-      "note": "Los valores son estimaciones derivadas de observaciones satelitales: un foco no es un incendio confirmado."
+      "intervalLabel": "intervalo de cada estimación"
     }
   },
   "map": {
@@ -107,7 +106,6 @@
     "membersLabel": "Integrantes",
     "thanksTitle": "Agradecimientos",
     "thanks": "A NASA FIRMS por los datos de focos activos de MODIS y VIIRS; a OpenFreeMap y a los colaboradores de OpenStreetMap por el mapa base; y a los proyectos abiertos H3, MapLibre, deck.gl y DuckDB.",
-    "repo": "Ver el repositorio",
     "specialTitle": "Mención especial",
     "specialRole": "Joven colaborador",
     "specialBody": "Aportó ideas sobre el diseño y la identidad visual de la app, para que también resulte atractiva para chicos y chicas."

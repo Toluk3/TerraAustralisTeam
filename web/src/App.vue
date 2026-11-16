@@ -42,5 +42,6 @@ watch(
 </template>
 
 <style>
-#main { outline: none; min-height: 60vh; position: relative; z-index: 0; }
+/* Sin z-index propio: el juego a pantalla completa y el cohete de Edu tienen que quedar sobre el navbar */
+#main { outline: none; min-height: 60vh; }
 </style>

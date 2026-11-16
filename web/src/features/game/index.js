@@ -32,6 +32,7 @@ const STAGE_FILL = [null, [255, 209, 59], [255, 138, 28], [224, 36, 28]];
 const IDLE_FILL = [56, 142, 60, 46];
 const WATER = [0, 176, 255];
 const SPLASH_MS = 650;
+const TIP_SPOTS = ['left-top', 'right-mid', 'left-bottom', 'right-top', 'left-mid', 'right-bottom'];
 const MAP_LAYERS = ['cells', 'points', 'outline', 'mask'];
 const HANDLERS = ['dragPan', 'scrollZoom', 'boxZoom', 'dragRotate', 'keyboard', 'doubleClickZoom', 'touchZoomRotate', 'touchPitch'];
 
@@ -106,6 +107,7 @@ export function createFireGame(fireMap, options = {}) {
   let tips = [];
   let nextTip = 0;
   let hideTip = Infinity;
+  let tipCount = 0;
   const splashes = new Map(); // celda → momento en que se apagó (para el destello azul)
 
   async function ensureBoard() {
@@ -175,6 +177,8 @@ export function createFireGame(fireMap, options = {}) {
     if (!tips.length) tips = shuffled(board.weights ? [...T.tips, T.dataTip] : T.tips);
     const tip = tips.pop();
     el.tip.innerHTML = `<span aria-hidden="true">${tip.icon}</span><span>${tip.text}</span>`;
+    // En pantallas anchas va rotando por los costados del continente (game.css); en angostas queda abajo
+    el.tip.dataset.pos = TIP_SPOTS[tipCount++ % TIP_SPOTS.length];
     el.tip.hidden = false;
     el.tip.style.animation = 'none';
     void el.tip.offsetWidth; // reinicia la animación de entrada

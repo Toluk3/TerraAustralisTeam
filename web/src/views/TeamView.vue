@@ -5,7 +5,6 @@ import { team } from '@/content/team.js';
 import MemberAvatar from '@/components/layout/MemberAvatar.vue';
 
 const { t, locale } = useI18n();
-const REPO = 'https://github.com/Toluk3/TerraAustralisTeam';
 // Mención especial en los agradecimientos
 const special = { id: 'special', name: 'Valentino Melchor', photo: '/team/valentino.png' };
 </script>
@@ -29,7 +28,6 @@ const special = { id: 'special', name: 'Valentino Melchor', photo: '/team/valent
     </section>
 
     <section class="tm__close" aria-labelledby="tm-thanks">
-      <img src="/logo.webp" width="120" height="120" alt="" class="tm__logo" />
       <div>
         <h2 id="tm-thanks">{{ t('team.thanksTitle') }}</h2>
         <p>{{ t('team.thanks') }}</p>
@@ -43,7 +41,6 @@ const special = { id: 'special', name: 'Valentino Melchor', photo: '/team/valent
             <p class="tm__special-body">{{ t('team.specialBody') }}</p>
           </div>
         </div>
-        <a :href="REPO" class="btn" target="_blank" rel="noopener"><span class="dot" aria-hidden="true"></span>{{ t('team.repo') }}<span class="visually-hidden"> ({{ t('nav.newTab') }})</span></a>
       </div>
     </section>
   </div>
@@ -63,15 +60,13 @@ const special = { id: 'special', name: 'Valentino Melchor', photo: '/team/valent
 .tm__name { font-size: 1.3rem; font-weight: 400; }
 .tm__role { margin: 0; color: var(--muted); font-size: 0.95rem; }
 .tm__close {
-  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: clamp(20px, 4vw, 48px); align-items: center;
   margin-top: clamp(56px, 10vh, 112px); padding-top: clamp(32px, 6vh, 56px); border-top: 1px solid var(--line);
 }
-.tm__logo { width: 120px; height: 120px; }
 .tm__close h2 { font-size: clamp(1.6rem, 2.6vw, 2.2rem); margin-bottom: 14px; }
 .tm__close p { color: var(--ink-2); max-width: 64ch; margin-bottom: 22px; }
 .tm__special {
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center;
-  margin: 0 0 24px; padding: 20px 24px; max-width: 640px;
+  margin: 0; padding: 20px 24px; max-width: 640px;
   border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface);
 }
 .tm__special-photo { width: 112px; height: 112px; box-shadow: 0 0 0 1px var(--line); }
@@ -83,8 +78,6 @@ const special = { id: 'special', name: 'Valentino Melchor', photo: '/team/valent
 @media (max-width: 900px) { .tm__card { flex-basis: calc((100% - clamp(14px, 2vw, 24px)) / 2); } }
 @media (max-width: 600px) {
   .tm__card { flex-basis: 100%; }
-  .tm__close { grid-template-columns: 1fr; }
   .tm__special { grid-template-columns: 1fr; justify-items: start; }
-  .tm__close .btn { width: 100%; }
 }
 </style>

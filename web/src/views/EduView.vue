@@ -43,7 +43,11 @@ async function makeGame() {
   const { createFireGame } = await import('@/features/game/index.js');
   if (!mapApi.value || playing.value) return;
   gameApi?.destroy();
-  gameApi = createFireGame(mapApi.value, { locale: locale.value });
+  // Partida de un minuto que se puede ganar: con cerca de un acierto por segundo alcanza
+  gameApi = createFireGame(mapApi.value, {
+    locale: locale.value,
+    rules: { duration: 60, winFrac: 0.3, spawnStart: 1, spawnRamp: 0.7 },
+  });
   gameApi.on('open', () => { playing.value = true; });
   gameApi.on('exit', () => { playing.value = false; });
 }

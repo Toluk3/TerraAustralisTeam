@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ui, setLocale, toggleTheme, effectiveTheme } from '@/stores/ui.js';
 
@@ -17,6 +18,25 @@ const links = [
 // --nav-h sigue el alto real de la barra (bajo 1100 px pasa a dos filas): las pantallas de una
 // pantalla de alto y los anclajes lo usan.
 const header = ref(null);
+
+// En celular la píldora se desplaza de costado: el ítem activo se trae a la vista y, mientras queden
+// ítems a la derecha, un degradé lo insinúa (is-end lo saca al llegar al final)
+const pill = ref(null);
+const atEnd = ref(false);
+const route = useRoute();
+function onPillScroll() {
+  const el = pill.value;
+  if (el) atEnd.value = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+}
+watch(() => route.name, async () => {
+  await nextTick();
+  const el = pill.value;
+  const link = el?.querySelector('.nav__link.is-active');
+  if (el && link && el.scrollWidth > el.clientWidth) {
+    el.scrollLeft = link.offsetLeft - (el.clientWidth - link.offsetWidth) / 2;
+  }
+  onPillScroll();
+});
 let ro = null;
 onMounted(() => {
   ro = new ResizeObserver(() => {
@@ -38,7 +58,7 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
         <span class="brand-word nav__word" aria-hidden="true">Terra<br />Australis</span>
       </RouterLink>
 
-      <nav class="nav__pill" :aria-label="t('nav.label')">
+      <nav ref="pill" class="nav__pill" :class="{ 'is-end': atEnd }" :aria-label="t('nav.label')" @scroll.passive="onPillScroll">
         <ul>
           <li v-for="l in links" :key="l.to">
             <RouterLink :to="l.to" v-slot="{ href, navigate, isExactActive }" custom>
@@ -121,5 +141,10 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
   .nav__word { font-size: 1.05rem; }
   .nav__link { font-size: 0.95rem; padding: 0 12px; min-height: 44px; }
   .nav__pill { padding: 2px 6px; justify-self: stretch; }
+  .nav__pill ul {
+    -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 28px), transparent);
+  }
+  .nav__pill.is-end ul { -webkit-mask-image: none; mask-image: none; }
 }
 </style>

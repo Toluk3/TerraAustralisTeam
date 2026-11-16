@@ -1,6 +1,9 @@
 <script setup>
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 const { t } = useI18n();
+// Análisis ya muestra el aviso y los créditos en su recuadro fijo: acá no se repiten
+const route = useRoute();
 const year = new Date().getFullYear();
 </script>
 
@@ -14,8 +17,10 @@ const year = new Date().getFullYear();
           <div class="muted">NASA Space Apps Challenge · {{ year }}</div>
         </div>
       </div>
-      <p class="foot__note">{{ t('footer.notice') }}</p>
-      <p class="foot__credit muted">{{ t('footer.credit') }}</p>
+      <template v-if="route.name !== 'analysis'">
+        <p class="foot__note">{{ t('footer.notice') }}</p>
+        <p class="foot__credit muted">{{ t('footer.credit') }}</p>
+      </template>
     </div>
   </footer>
 </template>
