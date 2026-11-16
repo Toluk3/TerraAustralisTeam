@@ -1,5 +1,5 @@
 <script setup>
-import { watch } from 'vue';
+import { computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import AppNavbar from './components/layout/AppNavbar.vue';
@@ -7,6 +7,10 @@ import AppFooter from './components/layout/AppFooter.vue';
 
 const { t, locale } = useI18n();
 const route = useRoute();
+
+// Fondo de cielo (y estrellas en oscuro) en todas las pantallas menos Análisis
+const space = computed(() => Boolean(route.name) && route.name !== 'analysis');
+watch(space, (on) => document.documentElement.classList.toggle('space', on), { immediate: true });
 
 // Con historial por hash, href="#main" cambiaría de ruta: el salto se hace a mano
 function skip() {
@@ -28,6 +32,7 @@ watch(
 </script>
 
 <template>
+  <div v-if="space" class="stars" aria-hidden="true"></div>
   <a class="skip-link" href="#main" @click.prevent="skip">{{ t('nav.skip') }}</a>
   <AppNavbar />
   <main id="main" tabindex="-1">
@@ -37,5 +42,5 @@ watch(
 </template>
 
 <style>
-#main { outline: none; min-height: 60vh; }
+#main { outline: none; min-height: 60vh; position: relative; z-index: 0; }
 </style>

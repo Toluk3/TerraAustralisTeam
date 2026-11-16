@@ -44,6 +44,12 @@
   --font-body: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-brand: 'Montserrat', 'Poppins', system-ui, sans-serif;
 
+
+  /* Fondo de todas las pantallas menos Análisis (html.space): cielo claro; en oscuro, negro a azul con estrellas */
+  --sky: linear-gradient(180deg, #f6f9fd 0%, #e3edf8 100%);
+  --stars-opacity: 0;
+  --nav-hover: #0a87c4;         /* subrayado celeste del navbar (≥ 3:1 sobre el fondo claro) */
+
   color-scheme: light;
 }
 
@@ -72,6 +78,9 @@
   --outline-alpha: 0.11;
   --focus: #6ea0ff;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --sky: linear-gradient(180deg, #030406 0%, #0a1322 38%, #13284a 72%, #1e3a66 100%);
+  --stars-opacity: 0.55;
+  --nav-hover: #5ccbff;
   color-scheme: dark;
 }
 
@@ -101,6 +110,9 @@
     --outline-alpha: 0.11;
     --focus: #6ea0ff;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+    --sky: linear-gradient(180deg, #030406 0%, #0a1322 38%, #13284a 72%, #1e3a66 100%);
+    --stars-opacity: 0.55;
+    --nav-hover: #5ccbff;
     color-scheme: dark;
   }
 }

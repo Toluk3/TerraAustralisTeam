@@ -14,7 +14,8 @@ import { gridDisk, latLngToCell, cellToLatLng } from 'h3-js';
 import { outlineBounds } from '../fire-map/layers.js';
 import { createEngine, GAME_DEFAULTS, POINTS } from './engine.js';
 import { buildBoard, cellsBounds, loadWeights } from './board.js';
-import { TIPS, DATA_TIP, shuffled } from './tips.js';
+import { shuffled } from './tips.js';
+import { TEXTS } from './texts.js';
 import './game.css';
 
 const UI_DEFAULTS = {
@@ -24,6 +25,7 @@ const UI_DEFAULTS = {
   tipFirst: 4,         // segundos hasta el primer mensaje
   tipEvery: 13,        // segundos entre mensajes
   tipShow: 7,          // segundos que queda visible cada uno
+  locale: 'es',        // idioma de la interfaz (texts.js)
 };
 
 const STAGE_FILL = [null, [255, 209, 59], [255, 138, 28], [224, 36, 28]];
@@ -35,7 +37,6 @@ const HANDLERS = ['dragPan', 'scrollZoom', 'boxZoom', 'dragRotate', 'keyboard', 
 
 const pct = (x) => `${Math.round(x * 100)} %`;
 const clock = (s) => `${Math.floor(Math.ceil(s) / 60)}:${String(Math.ceil(s) % 60).padStart(2, '0')}`;
-const nf = new Intl.NumberFormat('es-AR');
 
 // Récord del modo infinito, guardado en el navegador (si no se puede, solo dura la sesión)
 const BEST_KEY = 'tam-game-best';
@@ -52,6 +53,8 @@ export function createFireGame(fireMap, options = {}) {
   const opts = { ...UI_DEFAULTS, ...options };
   const rules = { ...GAME_DEFAULTS, ...options.rules };
   const endless = !Number.isFinite(rules.duration);
+  const T = TEXTS[opts.locale] ?? TEXTS.es;
+  const nf = new Intl.NumberFormat(T.numberLocale);
   const { map, root, meta } = fireMap;
   const bbox = outlineBounds(meta.outline);
 
@@ -62,8 +65,8 @@ export function createFireGame(fireMap, options = {}) {
   const openBtn = document.createElement('button');
   openBtn.type = 'button';
   openBtn.className = 'tam-game__open';
-  openBtn.innerHTML = '<span aria-hidden="true">🔥</span> Jugar';
-  openBtn.title = 'Juego: apagá los incendios';
+  openBtn.innerHTML = `<span aria-hidden="true">🔥</span> ${T.open}`;
+  openBtn.title = T.openTitle;
   openBtn.hidden = !opts.button;
   root.appendChild(openBtn);
 
@@ -72,16 +75,16 @@ export function createFireGame(fireMap, options = {}) {
   ui.hidden = true;
   ui.innerHTML = `
     <div class="tam-game__hud">
-      <span class="tam-game__score" title="Puntos">⭐ 0</span>
-      <div class="tam-game__meter" role="meter" aria-label="Parte del mapa en llamas" aria-valuemin="0"
+      <span class="tam-game__score" title="${T.points}">⭐ 0</span>
+      <div class="tam-game__meter" role="meter" aria-label="${T.meter}" aria-valuemin="0"
            aria-valuemax="${Math.round(rules.loseFrac * 100)}" aria-valuenow="0"
-           title="Fuego en el mapa: si se llena la barra (${pct(rules.loseFrac)}), perdés">
+           title="${T.meterTitle(pct(rules.loseFrac))}">
         <i class="tam-game__fill"></i>
-        ${endless ? '' : `<b class="tam-game__goal" style="left:${(rules.winFrac / rules.loseFrac) * 100}%" title="Meta: menos del ${pct(rules.winFrac)}"></b>`}
+        ${endless ? '' : `<b class="tam-game__goal" style="left:${(rules.winFrac / rules.loseFrac) * 100}%" title="${T.goal(pct(rules.winFrac))}"></b>`}
       </div>
-      <span class="tam-game__pct" title="Parte del mapa en llamas">🔥 0 %</span>
-      <span class="tam-game__time" title="${endless ? 'Tiempo de partida' : 'Tiempo restante'}">${clock(endless ? 0 : rules.duration)}</span>
-      <button type="button" class="tam-game__quit" aria-label="Salir del juego" title="Salir (Esc)">×</button>
+      <span class="tam-game__pct" title="${T.meter}">🔥 0 %</span>
+      <span class="tam-game__time" title="${endless ? T.elapsed : T.remaining}">${clock(endless ? 0 : rules.duration)}</span>
+      <button type="button" class="tam-game__quit" aria-label="${T.quit}" title="${T.quitTitle}">×</button>
     </div>
     <div class="tam-game__fx" aria-hidden="true"></div>
     <div class="tam-game__tip" role="status" aria-live="polite" hidden></div>
@@ -169,7 +172,7 @@ export function createFireGame(fireMap, options = {}) {
   function tickTips(t) {
     if (t >= hideTip) { el.tip.hidden = true; hideTip = Infinity; }
     if (t < nextTip) return;
-    if (!tips.length) tips = shuffled(board.weights ? [...TIPS, DATA_TIP] : TIPS);
+    if (!tips.length) tips = shuffled(board.weights ? [...T.tips, T.dataTip] : T.tips);
     const tip = tips.pop();
     el.tip.innerHTML = `<span aria-hidden="true">${tip.icon}</span><span>${tip.text}</span>`;
     el.tip.hidden = false;
@@ -239,24 +242,21 @@ export function createFireGame(fireMap, options = {}) {
   function intro() {
     const mins = rules.duration / 60;
     modal(`
-      <h2><span aria-hidden="true">🔥</span> Apagá los incendios</h2>
+      <h2><span aria-hidden="true">🔥</span> ${T.title}</h2>
       <ul>
-        <li><b>Tocá</b> los hexágonos en llamas para apagarlos y sumar puntos.</li>
-        <li>El fuego <b>crece y se contagia</b>: cuanto antes lo apagás, más puntos.</li>
-        <li>Si arde más del <b>${pct(rules.loseFrac)}</b> del mapa, perdés.</li>
-        ${endless
-          ? '<li>Cada vez aparecen más: <b>¿cuántos puntos hacés?</b></li>'
-          : `<li>A los <b>${Number.isInteger(mins) ? `${mins} minutos` : `${rules.duration} segundos`}</b>, con menos del <b>${pct(rules.winFrac)}</b> en llamas, ganás.</li>`}
+        ${T.rules(pct(rules.loseFrac)).map((r) => `<li>${r}</li>`).join('')}
+        <li>${endless ? T.endlessRule
+          : T.timedRule(Number.isInteger(mins) ? T.minutes(mins) : T.seconds(rules.duration), pct(rules.winFrac))}</li>
       </ul>
-      ${endless && readBest() ? `<p class="tam-game__stats">Récord: <b>${nf.format(readBest())}</b> puntos</p>` : ''}
+      ${endless && readBest() ? `<p class="tam-game__stats">${T.best(nf.format(readBest()))}</p>` : ''}
       <div class="tam-game__legend">
-        <span><i style="background:rgb(${STAGE_FILL[1]})"></i>recién empieza · ${POINTS[1]}</span>
-        <span><i style="background:rgb(${STAGE_FILL[2]})"></i>crece · ${POINTS[2]}</span>
-        <span><i style="background:rgb(${STAGE_FILL[3]})"></i>se contagia · ${POINTS[3]}</span>
+        <span><i style="background:rgb(${STAGE_FILL[1]})"></i>${T.stage1} · ${POINTS[1]}</span>
+        <span><i style="background:rgb(${STAGE_FILL[2]})"></i>${T.stage2} · ${POINTS[2]}</span>
+        <span><i style="background:rgb(${STAGE_FILL[3]})"></i>${T.stage3} · ${POINTS[3]}</span>
       </div>
       <div class="tam-game__actions">
-        <button type="button" data-act="close">Volver al mapa</button>
-        <button type="button" data-act="start" class="is-primary">Empezar</button>
+        <button type="button" data-act="close">${T.back}</button>
+        <button type="button" data-act="start" class="is-primary">${T.start}</button>
       </div>`);
   }
 
@@ -268,23 +268,22 @@ export function createFireGame(fireMap, options = {}) {
     const record = stats.score > previous;
     if (record) saveBest(stats.score);
     const head = status === 'won'
-      ? ['🎉', '¡Controlaste el fuego!', `Terminaste con solo el ${pct(stats.frac)} del mapa en llamas.`]
+      ? ['🎉', T.won, T.wonBody(pct(stats.frac))]
       : reason === 'overrun'
-        ? ['🔥', endless ? 'El fuego ganó esta vez' : 'El fuego se descontroló',
-          endless ? `Aguantaste ${clock(Math.floor(stats.time))} antes de que ardiera más del ${pct(rules.loseFrac)} del mapa.`
-            : `Más del ${pct(rules.loseFrac)} del mapa quedó en llamas.`]
-        : ['⏱️', 'Se acabó el tiempo', `Quedó el ${pct(stats.frac)} del mapa en llamas: había que bajar del ${pct(rules.winFrac)}.`];
-    const tip = TIPS[Math.floor(Math.random() * TIPS.length)];
+        ? ['🔥', endless ? T.lostEndless : T.lost,
+          endless ? T.lostEndlessBody(clock(Math.floor(stats.time)), pct(rules.loseFrac)) : T.lostBody(pct(rules.loseFrac))]
+        : ['⏱️', T.timeUp, T.timeUpBody(pct(stats.frac), pct(rules.winFrac))];
+    const tip = T.tips[Math.floor(Math.random() * T.tips.length)];
     modal(`
       <h2><span aria-hidden="true">${head[0]}</span> ${head[1]}</h2>
-      <p class="tam-game__points"><b>${nf.format(stats.score)}</b> puntos
-        ${record ? '<span class="tam-game__record">¡Récord!</span>' : previous ? `<small>Récord: ${nf.format(previous)}</small>` : ''}</p>
+      <p class="tam-game__points">${T.pointsLine(nf.format(stats.score))}
+        ${record ? `<span class="tam-game__record">${T.record}</span>` : previous ? `<small>${T.recordWas(nf.format(previous))}</small>` : ''}</p>
       <p>${head[2]}</p>
-      <p class="tam-game__stats">Apagaste <b>${stats.extinguished}</b> incendios · ${stats.spread} se contagiaron</p>
+      <p class="tam-game__stats">${T.stats(stats.extinguished, stats.spread)}</p>
       <p class="tam-game__moral"><span aria-hidden="true">${tip.icon}</span> ${tip.text}</p>
       <div class="tam-game__actions">
-        <button type="button" data-act="close">Volver al mapa</button>
-        <button type="button" data-act="start" class="is-primary">Jugar de nuevo</button>
+        <button type="button" data-act="close">${T.back}</button>
+        <button type="button" data-act="start" class="is-primary">${T.again}</button>
       </div>`);
     emit('end', { status, reason, stats });
   }
@@ -378,4 +377,4 @@ export function createFireGame(fireMap, options = {}) {
 }
 
 export { GAME_DEFAULTS } from './engine.js';
-export { TIPS } from './tips.js';
+export { TEXTS } from './texts.js';

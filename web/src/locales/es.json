@@ -36,7 +36,8 @@
     "problem": {
       "kicker": "El problema",
       "title": "Dos sensores, una sola serie",
-      "statement": "VIIRS detecta cerca de cuatro veces más focos que MODIS. Si se suman sin calibrar, el cambio de sensor parece un aumento del fuego."
+      "statement": "VIIRS detecta cerca de cuatro veces más focos que MODIS. Si se suman sin calibrar, el cambio de sensor parece un aumento del fuego.",
+      "imageAlt": "Ilustración de los dos sensores, MODIS y VIIRS"
     },
     "steps": {
       "title": "Del dato al mapa",
@@ -60,10 +61,6 @@
       "biasLabel": "sesgo tras calibrar (antes +262 %)",
       "intervalLabel": "intervalo de cada estimación",
       "note": "Los valores son estimaciones derivadas de observaciones satelitales: un foco no es un incendio confirmado."
-    },
-    "close": {
-      "title": "Mirá el fuego a través del tiempo",
-      "edu": "Versión para escuelas: EduAustralis"
     }
   },
   "map": {
@@ -110,7 +107,10 @@
     "membersLabel": "Integrantes",
     "thanksTitle": "Agradecimientos",
     "thanks": "A NASA FIRMS por los datos de focos activos de MODIS y VIIRS; a OpenFreeMap y a los colaboradores de OpenStreetMap por el mapa base; y a los proyectos abiertos H3, MapLibre, deck.gl y DuckDB.",
-    "repo": "Ver el repositorio"
+    "repo": "Ver el repositorio",
+    "specialTitle": "Mención especial",
+    "specialRole": "Joven colaborador",
+    "specialBody": "Aportó ideas sobre el diseño y la identidad visual de la app, para que también resulte atractiva para chicos y chicas."
   },
   "time": {
     "label": "Mes del período A",
@@ -358,5 +358,12 @@
     "window": "Ventanas menores a ~8 días tienen sesgo.",
     "version": "Datos {version} · config_hash {hash}",
     "attribution": "Focos: NASA FIRMS. Mapa base: OpenFreeMap / © OpenStreetMap."
+  },
+  "edu": {
+    "title": "EduAustralis",
+    "lead": "Mirá cómo los satélites ven el fuego desde el espacio, y probá apagarlo vos.",
+    "mapLabel": "Mapa de focos de calor",
+    "loading": "Cargando el mapa…",
+    "failed": "No se pudo cargar el mapa: {error}"
   }
 }

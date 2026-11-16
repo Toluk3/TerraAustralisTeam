@@ -21,6 +21,16 @@ body {
   overflow-x: hidden;
   transition: background-color var(--t-in) var(--ease), color var(--t-in) var(--ease);
 }
+/* Pantallas con fondo de cielo (todas menos Análisis): el degradé queda fijo al recorrer la página */
+html.space body { background: var(--sky) fixed; background-color: var(--bg); }
+.stars {
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: url('/images/stars.png') center top / cover no-repeat;
+  opacity: var(--stars-opacity);
+  /* Estrellas solo a los costados, donde no hay texto: la columna del contenido queda limpia */
+  -webkit-mask-image: linear-gradient(90deg, #000 0%, #000 8%, transparent 24%, transparent 76%, #000 92%, #000 100%);
+  mask-image: linear-gradient(90deg, #000 0%, #000 8%, transparent 24%, transparent 76%, #000 92%, #000 100%);
+}
 img, svg, canvas { display: block; max-width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
 button { cursor: pointer; }

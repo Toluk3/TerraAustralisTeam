@@ -113,11 +113,16 @@ onBeforeUnmount(() => {
     <!-- (2) Problema: el momento destacado de la página -->
     <section ref="problemEl" class="problem" aria-labelledby="problem-title">
       <div class="problem__sticky">
-        <div class="wrap">
-          <h2 id="problem-title" class="problem__title">{{ t('home.problem.title') }}</h2>
-          <p class="problem__statement">
-            <template v-for="(w, i) in words" :key="i + w"><span class="problem__word" :class="{ 'is-lit': i < lit }">{{ w }}</span>{{ ' ' }}</template>
-          </p>
+        <div class="wrap problem__grid">
+          <div>
+            <h2 id="problem-title" class="problem__title">{{ t('home.problem.title') }}</h2>
+            <p class="problem__statement">
+              <template v-for="(w, i) in words" :key="i + w"><span class="problem__word" :class="{ 'is-lit': i < lit }">{{ w }}</span>{{ ' ' }}</template>
+            </p>
+          </div>
+          <!-- Imagen provisoria: reemplazar public/images/dos-sensores.png por la definitiva (mismo nombre) -->
+          <img src="/images/dos-sensores.png" :alt="t('home.problem.imageAlt')" width="1200" height="900"
+            class="problem__img" loading="lazy" decoding="async" />
         </div>
       </div>
     </section>
@@ -150,16 +155,6 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <!-- (5) Cierre -->
-    <section class="close" aria-labelledby="close-title">
-      <div class="wrap close__inner">
-        <h2 id="close-title">{{ t('home.close.title') }}</h2>
-        <div class="close__actions">
-          <RouterLink to="/analisis" class="btn btn--xl">{{ t('home.cta') }}</RouterLink>
-          <RouterLink to="/edu" class="link">{{ t('home.close.edu') }}</RouterLink>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -204,6 +199,8 @@ onBeforeUnmount(() => {
 .problem__sticky { position: sticky; top: var(--nav-h); min-height: calc(100svh - var(--nav-h)); display: grid; align-content: center; }
 .problem__title { font-size: clamp(1.1rem, 1.6vw, 1.4rem); color: var(--muted); font-weight: 400; letter-spacing: 0; margin-bottom: clamp(18px, 3vh, 32px); }
 .problem__statement { margin: 0; font-weight: 300; font-size: clamp(1.9rem, 4.3vw, 4.2rem); line-height: 1.16; letter-spacing: -0.025em; max-width: 22ch; text-wrap: balance; }
+.problem__grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: clamp(28px, 5vw, 72px); align-items: center; }
+.problem__img { width: 100%; height: auto; max-height: calc(100svh - var(--nav-h) - 96px); object-fit: contain; }
 .problem__word { color: var(--ink); opacity: 0.16; transition: opacity 260ms var(--ease); }
 .problem__word.is-lit { opacity: 1; }
 
@@ -239,14 +236,9 @@ onBeforeUnmount(() => {
 .facts__item dt { color: var(--muted); font-size: 0.95rem; }
 .facts__note { margin-top: 32px; max-width: 60ch; }
 
-/* ---------- Cierre ---------- */
-.close { min-height: calc(70svh - var(--nav-h)); display: grid; align-content: center; padding-block: clamp(56px, 9vh, 96px); }
-.close__inner { display: flex; flex-direction: column; align-items: center; text-align: center; gap: clamp(24px, 4vh, 40px); }
-.close h2 { font-size: clamp(2.1rem, 4.6vw, 4.2rem); max-width: 16ch; text-wrap: balance; }
-.close__actions { display: flex; align-items: center; gap: 18px 32px; flex-wrap: wrap; justify-content: center; }
-.close__actions .link { min-height: 44px; display: inline-flex; align-items: center; background-position: 0 calc(50% + 0.8em); padding: 0; }
-
 @media (max-width: 900px) {
+  .problem__grid { grid-template-columns: 1fr; }
+  .problem__img { max-width: 520px; max-height: 38svh; justify-self: center; }
   .steps__list { grid-template-columns: 1fr; }
   .steps__card { min-height: 0; }
   .steps__n { padding-bottom: 6px; }
@@ -263,8 +255,6 @@ onBeforeUnmount(() => {
   .problem { height: 170svh; }
   .facts__row { grid-template-columns: 1fr; }
   .facts__item + .facts__item { padding-left: 0; border-left: 0; padding-top: 22px; }
-  .close__actions { flex-direction: column; width: 100%; }
-  .close__actions .btn { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .problem { height: auto; }

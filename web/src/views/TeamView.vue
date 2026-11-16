@@ -6,6 +6,8 @@ import MemberAvatar from '@/components/layout/MemberAvatar.vue';
 
 const { t, locale } = useI18n();
 const REPO = 'https://github.com/Toluk3/TerraAustralisTeam';
+// Mención especial en los agradecimientos
+const special = { id: 'special', name: 'Valentino Melchor', photo: '/team/valentino.png' };
 </script>
 
 <template>
@@ -31,6 +33,16 @@ const REPO = 'https://github.com/Toluk3/TerraAustralisTeam';
       <div>
         <h2 id="tm-thanks">{{ t('team.thanksTitle') }}</h2>
         <p>{{ t('team.thanks') }}</p>
+        <div class="tm__special">
+          <!-- Foto provisoria: reemplazar public/team/valentino.png por la definitiva (mismo nombre) -->
+          <MemberAvatar :member="special" :size="112" :alt="special.name" class="tm__special-photo" />
+          <div>
+            <p class="tm__special-kicker">{{ t('team.specialTitle') }}</p>
+            <h3 class="tm__special-name">{{ special.name }}</h3>
+            <p class="tm__special-role">{{ t('team.specialRole') }}</p>
+            <p class="tm__special-body">{{ t('team.specialBody') }}</p>
+          </div>
+        </div>
         <a :href="REPO" class="btn" target="_blank" rel="noopener"><span class="dot" aria-hidden="true"></span>{{ t('team.repo') }}<span class="visually-hidden"> ({{ t('nav.newTab') }})</span></a>
       </div>
     </section>
@@ -57,10 +69,22 @@ const REPO = 'https://github.com/Toluk3/TerraAustralisTeam';
 .tm__logo { width: 120px; height: 120px; }
 .tm__close h2 { font-size: clamp(1.6rem, 2.6vw, 2.2rem); margin-bottom: 14px; }
 .tm__close p { color: var(--ink-2); max-width: 64ch; margin-bottom: 22px; }
+.tm__special {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 20px; align-items: center;
+  margin: 0 0 24px; padding: 20px 24px; max-width: 640px;
+  border: 1px solid var(--line); border-radius: var(--radius-m); background: var(--surface);
+}
+.tm__special-photo { width: 112px; height: 112px; box-shadow: 0 0 0 1px var(--line); }
+.tm__special p { margin: 0; }
+.tm__special-kicker { font-size: 0.85rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.tm__special-name { margin: 4px 0 2px; font-size: 1.3rem; font-weight: 400; }
+.tm__special .tm__special-role { color: var(--muted); font-size: 0.95rem; margin-bottom: 8px; }
+.tm__close .tm__special-body { color: var(--ink-2); font-size: 0.95rem; margin-bottom: 0; }
 @media (max-width: 900px) { .tm__card { flex-basis: calc((100% - clamp(14px, 2vw, 24px)) / 2); } }
 @media (max-width: 600px) {
   .tm__card { flex-basis: 100%; }
   .tm__close { grid-template-columns: 1fr; }
+  .tm__special { grid-template-columns: 1fr; justify-items: start; }
   .tm__close .btn { width: 100%; }
 }
 </style>

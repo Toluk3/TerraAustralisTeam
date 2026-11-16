@@ -3,66 +3,25 @@
  * EduAustralis: la versión para escuelas, dentro de la app.
  *
  * Es lo que antes vivía en frontend/ (mapa + juego "Jugar" + cohete que recorre el mapa y va mostrando
- * las tarjetas de cada hito), con el estilo de la app. El contenido va en español (público escolar).
+ * las tarjetas de cada hito), con el estilo de la app. Textos en content/edu.js (es/en) y en edu.* de locales.
  * El cohete despega solo al entrar a la página, desde el ítem del navbar.
  */
-import { nextTick, onBeforeUnmount, onMounted, ref, shallowRef } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { loadDataset } from '@/features/dataset.js';
+import { eduCards } from '@/content/edu.js';
 import FireMap from '@/components/map/FireMap.vue';
 
-// Cada tarjeta aparece cuando el cohete pasó `at` (0..1) de la trayectoria. `side` la ubica junto a la
-// parte del mapa que va recorriendo. `body` es HTML estático de confianza.
-const milestones = [
-  {
-    id: 1, at: 0.12, side: 'right', title: '¿Qué muestra este mapa? 🤔',
-    body: `
-      <p>🛰️ Hay satélites que dan vueltas alrededor de la Tierra y sacan algo así como "fotos de calor". Cuando ven un lugar muy caliente, como un fuego, lo marcan con un puntito.</p>
-      <p>Este mapa junta los puntitos de muchos años en seis países: Argentina, Chile, Uruguay, Paraguay, Bolivia y Brasil. Así podemos ver dónde y cuándo hubo fuego.</p>`,
-  },
-  {
-    id: 2, at: 0.32, side: 'right', title: '¿Para qué sirve? 🧐',
-    body: `
-      <p>Podemos saber en qué meses hay más fuego y si un año tuvo más o menos que lo normal. No en todos lados pasa en la misma época: en gran parte de Sudamérica los incendios aparecen entre julio y octubre, cuando casi no llueve, y en el sur de Argentina, de diciembre a marzo, en pleno verano. Saberlo ayuda a los brigadistas y guardaparques a estar listos en el momento justo 🚒.</p>
-      <p>Un puntito quiere decir "acá el satélite vio algo muy caliente". No siempre es un incendio grande. Y si hay nubes, a veces el satélite no ve nada.</p>`,
-  },
-  {
-    id: 3, at: 0.52, side: 'bottom', title: 'Tipos de incendios 🔥',
-    body: `
-      <p>Los incendios que pasan en la naturaleza pueden avanzar de tres maneras:</p>
-      <ul>
-        <li>🌾 <strong>El que corre por el piso:</strong> quema pasto, hojas y ramitas.</li>
-        <li>🌲 <strong>El que salta a los árboles:</strong> sube hasta las copas y avanza por arriba.</li>
-        <li>🪨 <strong>El que se esconde abajo:</strong> arde bajo la tierra, quemando raíces.</li>
-      </ul>`,
-  },
-  {
-    id: 4, at: 0.7, side: 'left', title: '¿Qué pasa después de un incendio? 🌱',
-    body: `
-      <ul>
-        <li>🐆 Muchos animales pierden su casa. En 2020, los incendios del Pantanal, en Brasil, afectaron a casi la mitad de los yaguaretés que viven ahí.</li>
-        <li>💨 El humo tiene partículas tan chiquitas que se meten hasta el fondo de los pulmones. Y el viento lo puede llevar hasta otros países.</li>
-        <li>🌧️ El suelo queda pelado y la lluvia y el viento se lo llevan.</li>
-        <li>🌳 Algunas plantas aguantan el fuego y vuelven a crecer rápido, como las del Cerrado de Brasil, que tienen una corteza muy gruesa. Otras no: la lenga, un árbol de la cordillera, puede tardar siglos en volver, y a veces no vuelve nunca.</li>
-      </ul>`,
-  },
-  {
-    id: 5, at: 0.88, side: 'left', title: '¿Cómo podemos cuidarnos? 🧯',
-    body: `
-      <p>¿Sabías que casi todos los incendios forestales empiezan por algo que hizo una persona? Eso quiere decir que entre todos podemos evitarlos.</p>
-      <ul>
-        <li>🚫 <strong>Fósforos y encendedores no son juguetes.</strong> Si encontrás uno, dáselo a un adulto.</li>
-        <li>💧 <strong>Fogón bien apagado.</strong> En un campamento, ayudá a echar mucha agua hasta que las cenizas estén frías.</li>
-        <li>🗑️ <strong>Llevate tu basura.</strong> Las latas y los vidrios pueden hacer de lupa con el sol y empezar un fuego.</li>
-        <li>📞 <strong>Si ves humo, avisá.</strong> Contale enseguida a un adulto para que llame a emergencias.</li>
-      </ul>`,
-  },
-];
+const { t, locale } = useI18n();
+
 // La columna izquierda se lee de arriba abajo como 5 y 4 (el cohete sube por ese lado)
-const columns = [
-  { name: 'left', cards: milestones.filter((m) => m.side === 'left').reverse() },
-  { name: 'right', cards: milestones.filter((m) => m.side === 'right') },
-  { name: 'bottom', cards: milestones.filter((m) => m.side === 'bottom') },
-];
+const columns = computed(() => {
+  const cards = eduCards(locale.value);
+  return [
+    { name: 'left', cards: cards.filter((m) => m.side === 'left').reverse() },
+    { name: 'right', cards: cards.filter((m) => m.side === 'right') },
+  ];
+});
 
 // --- Datos y mapa ---
 const ds = ref(null);
@@ -76,13 +35,19 @@ function onReady(m) {
   mapApi.value = m;
   // Atribución plegada: en un marco chico tapa medio mapa
   m.root?.querySelector('.maplibregl-ctrl-attrib')?.removeAttribute('open');
-  import('@/features/game/index.js').then(({ createFireGame }) => {
-    if (!mapApi.value) return;
-    gameApi = createFireGame(m);
-    gameApi.on('open', () => { playing.value = true; });
-    gameApi.on('exit', () => { playing.value = false; });
-  });
+  makeGame();
 }
+
+// El juego arma su interfaz en el idioma activo: al cambiar de idioma se rehace (si no se está jugando)
+async function makeGame() {
+  const { createFireGame } = await import('@/features/game/index.js');
+  if (!mapApi.value || playing.value) return;
+  gameApi?.destroy();
+  gameApi = createFireGame(mapApi.value, { locale: locale.value });
+  gameApi.on('open', () => { playing.value = true; });
+  gameApi.on('exit', () => { playing.value = false; });
+}
+watch(locale, () => { if (mapApi.value) makeGame(); });
 
 // --- Cohete: el mismo vuelo de siempre ---
 // Despega de arriba del ítem "EduAustralis" del navbar, se mete en la trayectoria dibujada sobre el mapa,
@@ -266,10 +231,10 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="edu wrap" lang="es">
+  <div class="edu wrap">
     <header class="edu__head">
-      <h1>EduAustralis</h1>
-      <p class="edu__lead">Mirá cómo los satélites ven el fuego desde el espacio, y probá apagarlo vos.</p>
+      <h1>{{ t('edu.title') }}</h1>
+      <p class="edu__lead">{{ t('edu.lead') }}</p>
     </header>
 
     <!-- El cohete vuela por encima de todo, desde el navbar -->
@@ -307,11 +272,11 @@ onBeforeUnmount(() => {
             :dataset="ds"
             :period="period"
             :selectable="false"
-            label="Mapa de focos de calor"
+            :label="t('edu.mapLabel')"
             @ready="onReady"
           />
           <p v-else class="edu__state" :role="dsError ? 'alert' : undefined">
-            {{ dsError ? `No se pudo cargar el mapa: ${dsError}` : 'Cargando el mapa…' }}
+            {{ dsError ? t('edu.failed', { error: dsError }) : t('edu.loading') }}
           </p>
 
           <!-- Trayectoria del cohete (invisible): encima del mapa, sin tapar los clics -->
@@ -336,12 +301,11 @@ onBeforeUnmount(() => {
 .edu__layout {
   display: grid; gap: 24px; align-items: start;
   grid-template-columns: minmax(200px, 1fr) minmax(0, 2.2fr) minmax(200px, 1fr);
-  grid-template-areas: 'left map right' 'left bottom right';
+  grid-template-areas: 'left map right';
 }
 .edu__col { display: grid; gap: 24px; }
 .edu__col--left { grid-area: left; }
 .edu__col--right { grid-area: right; }
-.edu__col--bottom { grid-area: bottom; }
 .edu__map { grid-area: map; }
 
 .edu__frame {
@@ -415,7 +379,7 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .edu__layout {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: 'map' 'right' 'bottom' 'left';
+    grid-template-areas: 'map' 'right' 'left';
   }
   .edu__col--left { display: flex; flex-direction: column-reverse; }
 }

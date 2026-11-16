@@ -91,7 +91,7 @@ const themeLabel = computed(() => t(dark.value ? 'nav.themeToLight' : 'nav.theme
   border-radius: 2px; transition: left 220ms var(--ease), right 220ms var(--ease);
 }
 .nav__link:hover { color: var(--ink); }
-.nav__link:hover::after { left: 22%; right: 22%; opacity: 0.45; }
+.nav__link:hover::after { left: 22%; right: 22%; opacity: 1; background: var(--nav-hover); }
 .nav__link.is-active { color: var(--ink); font-weight: 400; }
 .nav__link.is-active::after { left: 18%; right: 18%; opacity: 1; }
 

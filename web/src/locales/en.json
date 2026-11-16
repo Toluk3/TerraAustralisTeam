@@ -36,7 +36,8 @@
     "problem": {
       "kicker": "The problem",
       "title": "Two sensors, one series",
-      "statement": "VIIRS detects about four times more hotspots than MODIS. Added up without calibration, the sensor change looks like an increase in fire."
+      "statement": "VIIRS detects about four times more hotspots than MODIS. Added up without calibration, the sensor change looks like an increase in fire.",
+      "imageAlt": "Illustration of the two sensors, MODIS and VIIRS"
     },
     "steps": {
       "title": "From data to map",
@@ -60,10 +61,6 @@
       "biasLabel": "bias after calibration (before +262 %)",
       "intervalLabel": "interval of every estimate",
       "note": "Values are estimates derived from satellite observations: a hotspot is not a confirmed fire."
-    },
-    "close": {
-      "title": "Watch fire through time",
-      "edu": "Version for schools: EduAustralis"
     }
   },
   "map": {
@@ -110,7 +107,10 @@
     "membersLabel": "Members",
     "thanksTitle": "Acknowledgments",
     "thanks": "To NASA FIRMS for the MODIS and VIIRS active-fire data; to OpenFreeMap and the OpenStreetMap contributors for the basemap; and to the open projects H3, MapLibre, deck.gl and DuckDB.",
-    "repo": "See the repository"
+    "repo": "See the repository",
+    "specialTitle": "Special mention",
+    "specialRole": "Young collaborator",
+    "specialBody": "He contributed ideas for the design and visual identity of the app, so it also appeals to kids."
   },
   "time": {
     "label": "Month of period A",
@@ -358,5 +358,12 @@
     "window": "Windows shorter than ~8 days are biased.",
     "version": "Data {version} · config_hash {hash}",
     "attribution": "Hotspots: NASA FIRMS. Basemap: OpenFreeMap / © OpenStreetMap."
+  },
+  "edu": {
+    "title": "EduAustralis",
+    "lead": "See how satellites spot fire from space, and try putting it out yourself.",
+    "mapLabel": "Hotspot map",
+    "loading": "Loading the map…",
+    "failed": "The map could not be loaded: {error}"
   }
 }
